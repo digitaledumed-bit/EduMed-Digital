@@ -16,8 +16,7 @@ import {
   X,
   Sparkles,
   LogOut,
-  LogIn,
-  Type
+  LogIn
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -26,9 +25,6 @@ export const Navbar: React.FC = () => {
     setLanguage, 
     theme, 
     toggleTheme, 
-    fontSize,
-    setFontSize,
-    toggleFontSize,
     t, 
     activeRole, 
     setActiveRole, 
@@ -45,7 +41,6 @@ export const Navbar: React.FC = () => {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [showFontSizeMenu, setShowFontSizeMenu] = useState(false);
 
   const handleRoleChange = (role: 'public' | 'admin' | 'guardian' | 'student') => {
     setActiveRole(role);
@@ -300,80 +295,6 @@ export const Navbar: React.FC = () => {
                 </>
               )}
             </button>
-
-            {/* Accessibility Font Size Toggle Button */}
-            <div className="relative">
-              <button
-                id="font-size-toggle-btn"
-                onClick={() => setShowFontSizeMenu(!showFontSizeMenu)}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shadow-xs cursor-pointer"
-                title={language === 'es' ? 'Ajustar tamaño de letra en la plataforma' : 'Adjust platform font size'}
-                aria-label="Tamaño de letra"
-              >
-                <Type className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                <span className="hidden sm:inline font-bold">
-                  {fontSize === 'xlarge' ? 'Extra' : fontSize === 'large' ? 'Amplia' : 'Normal'}
-                </span>
-                <span className="sm:hidden font-bold">
-                  {fontSize === 'xlarge' ? 'A++' : fontSize === 'large' ? 'A+' : 'A'}
-                </span>
-                <ChevronDown className="w-3 h-3 opacity-60" />
-              </button>
-
-              {showFontSizeMenu && (
-                <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                  <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-700/60 flex items-center justify-between">
-                    <span>{language === 'es' ? 'Tamaño de Letra' : 'Font Size'}</span>
-                    <span className="text-[10px] text-teal-600 dark:text-teal-400 font-semibold lowercase">accesibilidad</span>
-                  </div>
-                  
-                  <button
-                    id="font-size-large-btn"
-                    onClick={() => { setFontSize('large'); setShowFontSizeMenu(false); }}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-700/60 ${fontSize === 'large' ? 'font-bold text-teal-600 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/30' : 'text-slate-700 dark:text-slate-300'}`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-extrabold text-sm text-teal-600 dark:text-teal-400">A+</span>
-                      <div>
-                        <div className="font-medium">{language === 'es' ? 'Letra Amplia' : 'Large Font'}</div>
-                        <div className="text-[10px] text-slate-400">{language === 'es' ? 'Recomendada (Activa)' : 'Recommended (Active)'}</div>
-                      </div>
-                    </span>
-                    {fontSize === 'large' && <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
-                  </button>
-
-                  <button
-                    id="font-size-xlarge-btn"
-                    onClick={() => { setFontSize('xlarge'); setShowFontSizeMenu(false); }}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-700/60 ${fontSize === 'xlarge' ? 'font-bold text-teal-600 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/30' : 'text-slate-700 dark:text-slate-300'}`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-black text-base text-amber-600 dark:text-amber-400">A++</span>
-                      <div>
-                        <div className="font-medium">{language === 'es' ? 'Extra Amplia' : 'Extra Large'}</div>
-                        <div className="text-[10px] text-slate-400">{language === 'es' ? 'Máxima legibilidad' : 'Maximum visibility'}</div>
-                      </div>
-                    </span>
-                    {fontSize === 'xlarge' && <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
-                  </button>
-
-                  <button
-                    id="font-size-normal-btn"
-                    onClick={() => { setFontSize('normal'); setShowFontSizeMenu(false); }}
-                    className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-700/60 ${fontSize === 'normal' ? 'font-bold text-teal-600 dark:text-teal-400 bg-teal-50/50 dark:bg-teal-950/30' : 'text-slate-700 dark:text-slate-300'}`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="font-semibold text-xs text-slate-500">A</span>
-                      <div>
-                        <div className="font-medium">{language === 'es' ? 'Estándar' : 'Standard'}</div>
-                        <div className="text-[10px] text-slate-400">{language === 'es' ? 'Tamaño compacto' : 'Compact scale'}</div>
-                      </div>
-                    </span>
-                    {fontSize === 'normal' && <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
-                  </button>
-                </div>
-              )}
-            </div>
 
             {/* Notifications Popover */}
             <div className="relative">
