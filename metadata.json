@@ -1,0 +1,8 @@
+{
+  "name": "EduMed Digital 1",
+  "description": "Plataforma oficial de matrícula y gestión académica de la Institución Educativa Félix Henao Botero, con soporte bilingüe (español/inglés) y modo claro/oscuro.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
