@@ -383,11 +383,14 @@ export const Navbar: React.FC = () => {
                 </div>
 
                 <button
+                  id="nav-logout-btn"
                   onClick={logout}
-                  className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-                  title="Cerrar Sesión"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                  title={language === 'es' ? 'Cerrar Sesión' : 'Log Out'}
                 >
-                  <span>Salir</span>
+                  <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                  <span className="hidden sm:inline">{language === 'es' ? 'Cerrar Sesión' : 'Log Out'}</span>
+                  <span className="sm:hidden">{language === 'es' ? 'Salir' : 'Exit'}</span>
                 </button>
               </div>
             ) : (

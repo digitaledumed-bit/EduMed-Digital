@@ -548,18 +548,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               >
                 {language === 'es' ? 'Rellenar contraseña:' : 'Fill in password:'}
               </label>
-              <a 
-                href="#olvido" 
-                onClick={(e) => { 
-                  e.preventDefault(); 
-                  alert(language === 'es' 
-                    ? 'Para restablecer su clave de acceso institucional, comuníquese con secretaría académica: matriculas@iefelixhenaobotero.edu.co' 
-                    : 'To reset your institutional password, contact academic records.'); 
+              <button 
+                type="button"
+                onClick={() => { 
+                  setErrorMsg(language === 'es' 
+                    ? 'Para restablecer su clave institucional, comuníquese con secretaría académica: matriculas@iefelixhenaobotero.edu.co o acérquese a la sede principal.' 
+                    : 'To reset your institutional password, contact academic records at matriculas@iefelixhenaobotero.edu.co'); 
                 }}
-                className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-medium"
+                className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-medium cursor-pointer"
               >
                 {language === 'es' ? '¿Olvidó su clave?' : 'Forgot password?'}
-              </a>
+              </button>
             </div>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">

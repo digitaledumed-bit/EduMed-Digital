@@ -2,6 +2,7 @@ import React from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { AdminSidebar } from './components/layout/AdminSidebar';
+import { LoginScreen } from './components/auth/LoginScreen';
 import { LandingPage } from './components/public/LandingPage';
 import { EnrollmentWizard } from './components/public/EnrollmentWizard';
 import { StatusLookup } from './components/public/StatusLookup';
@@ -16,10 +17,14 @@ import { LinkGuardianView } from './components/admin/LinkGuardianView';
 import { ParentsList } from './components/admin/ParentsList';
 import { DocumentsManagement } from './components/admin/DocumentsManagement';
 import { InstitutionalSettings } from './components/admin/InstitutionalSettings';
-import { Shield, Sparkles } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
-  const { activeRole, activeTab, language, customLogoUrl } = useApp();
+  const { activeRole, activeTab, language, customLogoUrl, currentUser } = useApp();
+
+  // Protect platform: content can only be seen after logging in
+  if (!currentUser) {
+    return <LoginScreen />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200">
