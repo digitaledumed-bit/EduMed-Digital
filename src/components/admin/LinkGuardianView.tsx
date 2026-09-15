@@ -26,8 +26,9 @@ export const LinkGuardianView: React.FC = () => {
 
   const student = students.find((s) => s.id === selectedStudentId) || students[0];
 
-  const [searchDoc, setSearchDoc] = useState('1034567890');
-  const [searchedGuardian, setSearchedGuardian] = useState(() => guardians[0]);
+  const [searchDoc, setSearchDoc] = useState('');
+  const [searchedGuardian, setSearchedGuardian] = useState<typeof guardians[0] | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
   const [isPrimary, setIsPrimary] = useState(true);
   const [livesWith, setLivesWith] = useState(true);
   const [relationship, setRelationship] = useState('Padre');
@@ -47,8 +48,9 @@ export const LinkGuardianView: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setHasSearched(true);
     const found = guardians.find(g => g.documentNumber.replace(/\D/g, '').includes(searchDoc.replace(/\D/g, '')));
-    setSearchedGuardian(found || null as any);
+    setSearchedGuardian(found || null);
   };
 
   const handleConfirmExisting = () => {
@@ -156,7 +158,7 @@ export const LinkGuardianView: React.FC = () => {
                 type="text"
                 value={searchDoc}
                 onChange={(e) => setSearchDoc(e.target.value)}
-                placeholder="Ej. 1034567890"
+                placeholder={language === 'es' ? 'Ingrese número de documento' : 'Enter document number'}
                 className="flex-1 px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
               />
               <button
@@ -192,9 +194,13 @@ export const LinkGuardianView: React.FC = () => {
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : hasSearched ? (
               <div className="mt-4 p-4 text-center text-xs text-slate-400 border border-dashed rounded-xl">
                 {language === 'es' ? 'No se encontraron resultados con ese documento.' : 'No results found with that document.'}
+              </div>
+            ) : (
+              <div className="mt-4 p-4 text-center text-xs text-slate-400 border border-dashed rounded-xl">
+                {language === 'es' ? 'Ingrese un número de documento para buscar el acudiente.' : 'Enter a document number to search for a guardian.'}
               </div>
             )}
           </div>

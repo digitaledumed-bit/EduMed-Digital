@@ -26,30 +26,22 @@ export const StatusLookup: React.FC = () => {
   const [unauthorizedMsg, setUnauthorizedMsg] = useState<string | null>(null);
   const [downloadedToast, setDownloadedToast] = useState(false);
   
-  // Resolve initial enrollment according to logged in user role
+  // Resolve initial enrollment only if current logged-in user has an actual record
   const resolveInitialResult = () => {
-    if (currentUser?.role === 'student') {
-      return (
-        (currentUser.documentNumber && lookupEnrollmentStatus(currentUser.documentNumber)) ||
-        lookupEnrollmentStatus(currentUser.email || '') ||
-        lookupEnrollmentStatus('1001234567') ||
-        lookupEnrollmentStatus('#MAT-24-001')
-      );
+    if (currentUser?.documentNumber) {
+      const found = lookupEnrollmentStatus(currentUser.documentNumber);
+      if (found) return found;
     }
-    if (currentUser?.role === 'guardian') {
-      return (
-        (currentUser.documentNumber && lookupEnrollmentStatus(currentUser.documentNumber)) ||
-        lookupEnrollmentStatus(currentUser.email || '') ||
-        lookupEnrollmentStatus('43892104') ||
-        lookupEnrollmentStatus('#MAT-24-002')
-      );
+    if (currentUser?.email) {
+      const found = lookupEnrollmentStatus(currentUser.email);
+      if (found) return found;
     }
-    // Admin / Directivo: can see any record
-    return lookupEnrollmentStatus('#MAT-24-003') || lookupEnrollmentStatus('1029384756');
+    return null;
   };
 
-  const [searched, setSearched] = useState(true);
-  const [result, setResult] = useState<ReturnType<typeof lookupEnrollmentStatus>>(() => resolveInitialResult());
+  const initialRecord = resolveInitialResult();
+  const [searched, setSearched] = useState(!!initialRecord);
+  const [result, setResult] = useState<ReturnType<typeof lookupEnrollmentStatus>>(initialRecord);
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();

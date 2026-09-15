@@ -84,13 +84,13 @@ export const LoginScreen: React.FC = () => {
       <main className="flex-1 flex flex-col items-center justify-start p-4 sm:p-6 md:p-8">
         <div className="w-full max-w-6xl mx-auto flex flex-col lg:flex-row items-start justify-between gap-8 lg:gap-10 my-4">
           
-          {/* LADO IZQUIERDO: Cuadros desplegables (Cómo funciona, Ventajas del sistema digital, Preguntas frecuentes) */}
+          {/* LADO IZQUIERDO: Cuadros desplegables (Cómo funciona, Ventajas, Preguntas frecuentes) */}
           <div className="w-full lg:w-7/12">
             <InicioAccordions />
           </div>
 
           {/* LADO DERECHO: Panel de sesión activa / inicio de sesión */}
-          <div className="w-full lg:w-5/12 flex justify-center sticky top-20">
+          <div className="w-full lg:w-5/12 flex justify-center sticky top-20 self-start">
             <AuthCard />
           </div>
 

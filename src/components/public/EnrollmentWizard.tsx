@@ -28,51 +28,51 @@ export const EnrollmentWizard: React.FC = () => {
   
   const [currentStep, setCurrentStep] = useState(1);
   const [saveDraftMessage, setSaveDraftMessage] = useState(false);
-  const [termsAccepted, setTermsAccepted] = useState(true);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [generatedRadicado, setGeneratedRadicado] = useState<string | null>(null);
 
-  // Form State
+  // Form State - Limpio para que el usuario ingrese sus propios datos
   const [formData, setFormData] = useState({
     // Step 1: Guardian
     guardianDocType: 'CC',
-    guardianDocNumber: '1034567890',
-    guardianFirstNames: 'Carlos Eduardo',
-    guardianLastNames: 'Ramírez Soto',
-    guardianPhone: '+57 300 123 4567',
-    guardianEmail: 'carlos.ramirez@email.com',
-    guardianAddress: 'Calle 45 # 12-34, Apto 501',
-    guardianNeighborhood: 'El Poblado',
+    guardianDocNumber: '',
+    guardianFirstNames: '',
+    guardianLastNames: '',
+    guardianPhone: '',
+    guardianEmail: '',
+    guardianAddress: '',
+    guardianNeighborhood: '',
     guardianRelationship: 'Padre',
-    guardianPassword: '••••••••••••',
-    guardianConfirmPassword: '••••••••••••',
+    guardianPassword: '',
+    guardianConfirmPassword: '',
 
     // Step 2: Student
     studentDocType: 'TI',
-    studentDocNumber: '100234988',
-    studentFirstNames: 'Mariana',
-    studentLastNames: 'Ríos Osorio',
-    studentBirthDate: '2008-04-12',
+    studentDocNumber: '',
+    studentFirstNames: '',
+    studentLastNames: '',
+    studentBirthDate: '',
     studentGender: 'Femenino',
     studentBloodType: 'O+',
     studentGrade: '10°',
     studentShift: 'Mañana',
-    studentAddress: 'Calle 45 # 12-34, Apto 501',
-    studentNeighborhood: 'El Poblado',
-    studentPhone: '+57 300 123 4567',
-    studentEmail: 'mariana.rios@edumed.edu.co',
+    studentAddress: '',
+    studentNeighborhood: '',
+    studentPhone: '',
+    studentEmail: '',
 
     // Step 3: Academic
-    previousSchool: 'Colegio San José Medellín',
-    medicalNotes: 'Rinitis alérgica controlada. No presenta restricciones físicas para educación física.'
+    previousSchool: '',
+    medicalNotes: ''
   });
 
-  // Step 4: Uploaded Files
+  // Step 4: Uploaded Files - Sin archivos de ejemplo pre-cargados
   const [uploadedFiles, setUploadedFiles] = useState<{ name: string; required: boolean; file: File | null; fileName: string }[]>([
-    { name: 'Documento de Identidad del Estudiante', required: true, file: null, fileName: 'TI_Mariana_Rios.pdf' },
-    { name: 'Documento de Identidad del Acudiente', required: true, file: null, fileName: 'CC_Carlos_Ramirez.pdf' },
-    { name: 'Certificado Médico EPS (Últimos 3 meses)', required: true, file: null, fileName: 'Certificado_Medico_EPS_2024.pdf' },
-    { name: 'Certificado de Calificaciones Año Anterior', required: true, file: null, fileName: 'Certificado_Notas_Grado9.pdf' },
-    { name: 'Paz y Salvo Institución Anterior', required: false, file: null, fileName: 'Paz_Salvo_SanJose.pdf' }
+    { name: 'Documento de Identidad del Estudiante', required: true, file: null, fileName: '' },
+    { name: 'Documento de Identidad del Acudiente', required: true, file: null, fileName: '' },
+    { name: 'Certificado Médico EPS (Últimos 3 meses)', required: true, file: null, fileName: '' },
+    { name: 'Certificado de Calificaciones Año Anterior', required: true, file: null, fileName: '' },
+    { name: 'Paz y Salvo Institución Anterior', required: false, file: null, fileName: '' }
   ]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -100,6 +100,13 @@ export const EnrollmentWizard: React.FC = () => {
   };
 
   const handleNextStep = () => {
+    if (currentStep === 1 && !termsAccepted) {
+      alert(language === 'es'
+        ? 'Debe marcar la autorización de tratamiento de datos personales para continuar.'
+        : 'You must check the authorization to process personal data to continue.');
+      return;
+    }
+
     if (currentStep < 5) {
       setCurrentStep((prev) => prev + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -362,44 +369,7 @@ export const EnrollmentWizard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Section 3: Account Security */}
-                  <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-teal-600" />
-                      {t.wizard.sections.accountSecurity}
-                    </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                          {t.wizard.fields.password} *
-                        </label>
-                        <input
-                          type="password"
-                          name="guardianPassword"
-                          value={formData.guardianPassword}
-                          onChange={handleInputChange}
-                          placeholder={t.wizard.placeholders.passwordMin}
-                          className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                          {t.wizard.fields.confirmPassword} *
-                        </label>
-                        <input
-                          type="password"
-                          name="guardianConfirmPassword"
-                          value={formData.guardianConfirmPassword}
-                          onChange={handleInputChange}
-                          placeholder={t.wizard.placeholders.passwordMin}
-                          className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Terms & Conditions Checkbox */}
+                  {/* Terms & Conditions / Data Treatment Authorization */}
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
                     <label className="flex items-start gap-3 cursor-pointer select-none">
                       <input
@@ -635,16 +605,26 @@ export const EnrollmentWizard: React.FC = () => {
                                   </span>
                                 )}
                               </div>
-                              <span className="text-xs text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-1 font-medium">
-                                <CheckCircle className="w-3.5 h-3.5" />
-                                {docItem.fileName}
-                              </span>
+                              {docItem.fileName ? (
+                                <span className="text-xs text-teal-700 dark:text-teal-400 flex items-center gap-1 mt-1 font-medium">
+                                  <CheckCircle className="w-3.5 h-3.5" />
+                                  {docItem.fileName}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-1">
+                                  {language === 'es' ? 'Ningún archivo seleccionado' : 'No file selected yet'}
+                                </span>
+                              )}
                             </div>
                           </div>
 
                           <label className="px-3.5 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 hover:bg-slate-100 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 text-xs font-semibold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs self-start sm:self-auto">
                             <Upload className="w-3.5 h-3.5" />
-                            <span>{language === 'es' ? 'Cambiar archivo' : 'Change file'}</span>
+                            <span>
+                              {docItem.fileName 
+                                ? (language === 'es' ? 'Cambiar archivo' : 'Change file')
+                                : (language === 'es' ? 'Seleccionar archivo' : 'Select file')}
+                            </span>
                             <input
                               type="file"
                               className="hidden"
@@ -672,17 +652,19 @@ export const EnrollmentWizard: React.FC = () => {
                         <div>
                           <span className="text-slate-400 block text-xs">{language === 'es' ? 'Estudiante' : 'Student'}:</span>
                           <span className="font-bold text-slate-900 dark:text-white text-base">
-                            {formData.studentFirstNames} {formData.studentLastNames}
+                            {formData.studentFirstNames || formData.studentLastNames
+                              ? `${formData.studentFirstNames} ${formData.studentLastNames}`.trim()
+                              : (language === 'es' ? 'No registrado' : 'Not entered')}
                           </span>
                           <span className="text-slate-500 dark:text-slate-400 block text-xs">
-                            {formData.studentDocType}: {formData.studentDocNumber}
+                            {formData.studentDocType}: {formData.studentDocNumber || (language === 'es' ? 'Sin documento' : 'No document')}
                           </span>
                         </div>
 
                         <div>
                           <span className="text-slate-400 block text-xs">{language === 'es' ? 'Grado y Jornada' : 'Grade & Shift'}:</span>
                           <span className="font-bold text-teal-700 dark:text-teal-400 text-base">
-                            {formData.studentGrade} - {formData.studentShift}
+                            {formData.studentGrade || '10°'} - {formData.studentShift || 'Mañana'}
                           </span>
                           <span className="text-slate-500 dark:text-slate-400 block text-xs">
                             Año Académico: 2024 - 2025
@@ -694,10 +676,12 @@ export const EnrollmentWizard: React.FC = () => {
                         <div>
                           <span className="text-slate-400 block text-xs">{language === 'es' ? 'Acudiente Principal' : 'Primary Guardian'}:</span>
                           <span className="font-semibold text-slate-900 dark:text-white">
-                            {formData.guardianFirstNames} {formData.guardianLastNames} ({formData.guardianRelationship})
+                            {formData.guardianFirstNames || formData.guardianLastNames
+                              ? `${formData.guardianFirstNames} ${formData.guardianLastNames} (${formData.guardianRelationship})`.trim()
+                              : (language === 'es' ? 'No registrado' : 'Not entered')}
                           </span>
                           <span className="text-slate-500 dark:text-slate-400 block text-xs">
-                            {formData.guardianPhone} • {formData.guardianEmail}
+                            {formData.guardianPhone || '-'} • {formData.guardianEmail || '-'}
                           </span>
                         </div>
 
@@ -705,7 +689,7 @@ export const EnrollmentWizard: React.FC = () => {
                           <span className="text-slate-400 block text-xs">{language === 'es' ? 'Documentos Adjuntos' : 'Attached Documents'}:</span>
                           <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
                             <CheckCircle2 className="w-4 h-4" />
-                            {uploadedFiles.length} {language === 'es' ? 'archivos listos para radicar' : 'files ready for submission'}
+                            {uploadedFiles.filter(f => f.fileName).length} {language === 'es' ? 'archivos listos para radicar' : 'files ready for submission'}
                           </span>
                         </div>
                       </div>
