@@ -157,26 +157,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     }, 450);
   };
 
-  const quickDemoLogin = (role: 'admin' | 'student' | 'guardian') => {
-    setErrorMsg(null);
-    if (role === 'admin') {
-      setLoginIdentifier('admin@edumed.edu.co');
-      setLoginPassword('admin2025');
-      setLoginRole('admin');
-      login('admin@edumed.edu.co', 'admin2025', 'admin');
-    } else if (role === 'student') {
-      setLoginIdentifier('mateo.restrepo@edumed.edu.co');
-      setLoginPassword('mateo2025');
-      setLoginRole('student');
-      login('mateo.restrepo@edumed.edu.co', 'mateo2025', 'student');
-    } else {
-      setLoginIdentifier('maria.gonzalez@gmail.com');
-      setLoginPassword('maria2025');
-      setLoginRole('guardian');
-      login('maria.gonzalez@gmail.com', 'maria2025', 'guardian');
-    }
-  };
-
   // If user is currently logged in, show active session banner with logout option
   if (currentUser) {
     return (
@@ -615,41 +595,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               </>
             )}
           </button>
-
-          {/* Fast Demo Access Buttons */}
-          <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80">
-            <span className="text-[11px] font-semibold text-slate-400 block mb-2 text-center uppercase tracking-wider">
-              {language === 'es' ? 'Acceso rápido de prueba (1 Clic)' : 'Quick demo accounts'}
-            </span>
-            <div className="grid grid-cols-3 gap-1.5 text-[11px]">
-              <button
-                type="button"
-                onClick={() => quickDemoLogin('guardian')}
-                className="py-1.5 px-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 font-semibold border border-emerald-200 dark:border-emerald-800/60 transition-colors"
-                title="Ingresar como Acudiente (María González)"
-              >
-                👨‍👩‍👦 Acudiente
-              </button>
-
-              <button
-                type="button"
-                onClick={() => quickDemoLogin('student')}
-                className="py-1.5 px-2 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 font-semibold border border-indigo-200 dark:border-indigo-800/60 transition-colors"
-                title="Ingresar como Estudiante (Mateo Restrepo)"
-              >
-                🎓 Estudiante
-              </button>
-
-              <button
-                type="button"
-                onClick={() => quickDemoLogin('admin')}
-                className="py-1.5 px-2 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900/60 font-semibold border border-teal-200 dark:border-teal-800/60 transition-colors"
-                title="Ingresar como Profesor / Docente"
-              >
-                👨‍🏫 Profesor
-              </button>
-            </div>
-          </div>
 
           {/* Switch to Register link */}
           <div className="text-center pt-2">
