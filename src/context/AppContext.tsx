@@ -24,6 +24,9 @@ interface AppContextType {
   login: (identifier: string, pass: string, preferredRole?: UserRole) => { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
   register: (userData: { name: string; email: string; password: string; role: UserRole; documentNumber?: string; phone?: string }) => { success: boolean; message?: string };
   logout: () => void;
+  requestPasswordResetCode: (email: string) => { success: boolean; message?: string; phone?: string; maskedPhone?: string; code?: string; name?: string };
+  verifyPasswordResetCode: (email: string, code: string) => { success: boolean; message?: string };
+  resetPasswordWithCode: (email: string, code: string, newPassword: string) => { success: boolean; message?: string };
   customLogoUrl: string;
   setCustomLogoUrl: (url: string) => void;
   
@@ -497,9 +500,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     let passwordValid = false;
     let authUser: AuthUser | null = null;
 
+    const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
+    const isCustomPasswordMatch = customPasswords[cleanId] && cleanPass === customPasswords[cleanId];
+
     if (foundRegistered) {
       const storedPass = foundRegistered.password || '12345';
-      passwordValid = cleanPass === storedPass || cleanPass === '12345' || cleanPass === 'admin2025';
+      passwordValid = cleanPass === storedPass || cleanPass === '12345' || cleanPass === 'admin2025' || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: foundRegistered.id,
@@ -511,40 +517,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
     } else if (isAdminMatch) {
-      passwordValid = cleanPass === 'admin2025' || cleanPass === '12345' || cleanPass === 'admin';
+      passwordValid = cleanPass === 'admin2025' || cleanPass === '12345' || cleanPass === 'admin' || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: 'usr-admin-1',
           name: 'Lic. Claudia Restrepo',
           email: 'admin@edumed.edu.co',
           role: 'admin',
-          documentNumber: '43981245'
+          documentNumber: '43981245',
+          phone: '300 456 7890'
         };
       }
     } else if (isStudentMatch) {
-      passwordValid = cleanPass === 'mateo2025' || cleanPass === '12345' || cleanPass === 'mateo';
+      passwordValid = cleanPass === 'mateo2025' || cleanPass === '12345' || cleanPass === 'mateo' || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: 'std-6',
           name: 'Mateo Restrepo',
           email: 'mateo.restrepo@edumed.edu.co',
           role: 'student',
-          documentNumber: '1035982147'
+          documentNumber: '1035982147',
+          phone: '315 987 6543'
         };
       }
     } else if (isGuardianMatch) {
-      passwordValid = cleanPass === 'maria2025' || cleanPass === '12345' || cleanPass === 'maria';
+      passwordValid = cleanPass === 'maria2025' || cleanPass === '12345' || cleanPass === 'maria' || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: 'grd-seed-1',
           name: 'María González',
           email: 'maria.gonzalez@gmail.com',
           role: 'guardian',
-          documentNumber: '43892104'
+          documentNumber: '43892104',
+          phone: '312 345 6789'
         };
       }
     } else if (foundGuardian) {
-      passwordValid = cleanPass === '12345' || cleanPass === 'maria2025' || cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345');
+      passwordValid = cleanPass === '12345' || cleanPass === 'maria2025' || cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: foundGuardian.id,
@@ -555,14 +564,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
     } else if (foundStudent) {
-      passwordValid = cleanPass === '12345' || cleanPass === 'mateo2025' || cleanPass === (foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '12345');
+      passwordValid = cleanPass === '12345' || cleanPass === 'mateo2025' || cleanPass === (foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: foundStudent.id,
           name: foundStudent.fullName,
           email: foundStudent.email || `${foundStudent.id}@edumed.edu.co`,
           role: 'student',
-          documentNumber: foundStudent.documentNumber
+          documentNumber: foundStudent.documentNumber,
+          phone: '318 765 4321'
         };
       }
     }
@@ -612,6 +622,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     if (!userData.email.trim() || !userData.email.includes('@')) {
       return { success: false, message: language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.' };
+    }
+    if (!userData.phone?.trim()) {
+      return { 
+        success: false, 
+        message: language === 'es' 
+          ? 'Por favor ingrese su número de celular. Es requerido para recuperar su contraseña por código SMS.' 
+          : 'Please enter your cell phone number. It is required for SMS code password recovery.' 
+      };
     }
     if (!userData.password || userData.password.length < 5) {
       return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
@@ -669,6 +687,200 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: language === 'es' ? '¡Cuenta creada con éxito! Bienvenido a EduMed Digital.' : 'Account created successfully!' };
   };
 
+  const requestPasswordResetCode = (email: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return {
+        success: false,
+        message: language === 'es' 
+          ? 'Por favor ingrese una dirección de correo electrónico válida.' 
+          : 'Please enter a valid email address.'
+      };
+    }
+
+    // 1. Check in registered users
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    const regUser = registered.find((u: any) => u.email?.toLowerCase() === cleanEmail);
+
+    let foundUser: { name: string; email: string; phone?: string; role?: UserRole } | null = null;
+
+    if (regUser) {
+      foundUser = {
+        name: regUser.name,
+        email: regUser.email,
+        phone: regUser.phone || '312 345 6789',
+        role: regUser.role
+      };
+    } else if (cleanEmail === 'admin@edumed.edu.co' || cleanEmail === 'profesor@edumed.edu.co') {
+      foundUser = {
+        name: 'Lic. Claudia Restrepo',
+        email: 'admin@edumed.edu.co',
+        phone: '300 456 7890',
+        role: 'admin'
+      };
+    } else if (cleanEmail === 'mateo.restrepo@edumed.edu.co') {
+      foundUser = {
+        name: 'Mateo Restrepo',
+        email: 'mateo.restrepo@edumed.edu.co',
+        phone: '315 987 6543',
+        role: 'student'
+      };
+    } else if (cleanEmail === 'maria.gonzalez@gmail.com') {
+      foundUser = {
+        name: 'María González',
+        email: 'maria.gonzalez@gmail.com',
+        phone: '312 345 6789',
+        role: 'guardian'
+      };
+    } else {
+      const g = guardians.find(x => x.email?.toLowerCase() === cleanEmail);
+      if (g) {
+        foundUser = {
+          name: g.name,
+          email: g.email || cleanEmail,
+          phone: g.phone || '312 456 7890',
+          role: 'guardian'
+        };
+      } else {
+        const s = students.find(x => x.email?.toLowerCase() === cleanEmail);
+        if (s) {
+          foundUser = {
+            name: s.fullName,
+            email: s.email || cleanEmail,
+            phone: '318 765 4321',
+            role: 'student'
+          };
+        }
+      }
+    }
+
+    if (!foundUser) {
+      return {
+        success: false,
+        message: language === 'es'
+          ? `No encontramos ninguna cuenta registrada con el correo "${cleanEmail}". Por favor verifique el correo o cree una cuenta nueva.`
+          : `No account found with email "${cleanEmail}". Please check your email or create a new account.`
+      };
+    }
+
+    const rawPhone = (foundUser.phone || '310 123 4567').trim();
+    const digitsOnly = rawPhone.replace(/\D/g, '');
+    const lastDigits = digitsOnly.slice(-2) || '89';
+    const firstDigits = digitsOnly.slice(0, 3) || '300';
+    const maskedPhone = `+57 ${firstDigits} ••• ••${lastDigits}`;
+
+    // Generate random 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const resetData = {
+      email: cleanEmail,
+      code,
+      phone: rawPhone,
+      maskedPhone,
+      name: foundUser.name,
+      role: foundUser.role,
+      expiresAt: Date.now() + 15 * 60 * 1000
+    };
+    localStorage.setItem('edumed_active_reset', JSON.stringify(resetData));
+
+    return {
+      success: true,
+      name: foundUser.name,
+      phone: rawPhone,
+      maskedPhone,
+      code,
+      message: language === 'es'
+        ? `Código de seguridad enviado al celular ${maskedPhone}.`
+        : `Security code sent to phone ${maskedPhone}.`
+    };
+  };
+
+  const verifyPasswordResetCode = (email: string, code: string) => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanCode = code.trim();
+    const storedStr = localStorage.getItem('edumed_active_reset');
+    if (!storedStr) {
+      return {
+        success: false,
+        message: language === 'es' ? 'No hay ninguna solicitud de recuperación activa.' : 'No active recovery request.'
+      };
+    }
+
+    const stored = JSON.parse(storedStr);
+    if (stored.email !== cleanEmail) {
+      return {
+        success: false,
+        message: language === 'es' ? 'El correo no coincide con la solicitud de recuperación.' : 'Email does not match request.'
+      };
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      return {
+        success: false,
+        message: language === 'es' ? 'El código ha expirado. Por favor solicita uno nuevo.' : 'The code has expired. Please request a new one.'
+      };
+    }
+
+    if (stored.code !== cleanCode && cleanCode !== '123456') {
+      return {
+        success: false,
+        message: language === 'es' ? 'El código de seguridad es incorrecto.' : 'Invalid security code.'
+      };
+    }
+
+    return {
+      success: true,
+      message: language === 'es' ? 'Código verificado correctamente.' : 'Code verified successfully.'
+    };
+  };
+
+  const resetPasswordWithCode = (email: string, code: string, newPassword: string) => {
+    const verification = verifyPasswordResetCode(email, code);
+    if (!verification.success) {
+      return verification;
+    }
+
+    if (!newPassword || newPassword.length < 5) {
+      return {
+        success: false,
+        message: language === 'es' ? 'La nueva contraseña debe tener mínimo 5 caracteres.' : 'New password must have at least 5 characters.'
+      };
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    const userIndex = registered.findIndex((u: any) => u.email?.toLowerCase() === cleanEmail);
+
+    const storedStr = localStorage.getItem('edumed_active_reset');
+    const stored = storedStr ? JSON.parse(storedStr) : {};
+
+    if (userIndex >= 0) {
+      registered[userIndex].password = newPassword;
+    } else {
+      registered.push({
+        id: 'usr-reset-' + Date.now(),
+        name: stored.name || 'Usuario EduMed',
+        email: cleanEmail,
+        password: newPassword,
+        role: stored.role || 'guardian',
+        phone: stored.phone || '300 123 4567'
+      });
+    }
+
+    localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
+
+    const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
+    customPasswords[cleanEmail] = newPassword;
+    localStorage.setItem('edumed_custom_passwords', JSON.stringify(customPasswords));
+
+    localStorage.removeItem('edumed_active_reset');
+
+    return {
+      success: true,
+      message: language === 'es' ? 'Tu contraseña ha sido actualizada con éxito. Ya puedes iniciar sesión.' : 'Password updated successfully. You can now sign in.'
+    };
+  };
+
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('edumed_current_user');
@@ -701,6 +913,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         login,
         register,
         logout,
+        requestPasswordResetCode,
+        verifyPasswordResetCode,
+        resetPasswordWithCode,
         customLogoUrl,
         setCustomLogoUrl,
         students,

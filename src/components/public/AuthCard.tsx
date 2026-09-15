@@ -22,7 +22,13 @@ import {
   FileText,
   Award,
   LifeBuoy,
-  Globe
+  Globe,
+  Smartphone,
+  KeyRound,
+  ArrowLeft,
+  Copy,
+  RotateCcw,
+  MessageSquare
 } from 'lucide-react';
 
 interface AuthCardProps {
@@ -39,10 +45,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     activeRole,
     setActiveRole,
     setActiveTab,
-    customLogoUrl
+    customLogoUrl,
+    requestPasswordResetCode,
+    verifyPasswordResetCode,
+    resetPasswordWithCode
   } = useApp();
 
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot-password'>('login');
   
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -50,7 +59,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loginRole, setLoginRole] = useState<'guardian' | 'student' | 'admin'>('guardian');
-  const [loginDocType, setLoginDocType] = useState('email');
   
   // Register form state
   const [regName, setRegName] = useState('');
@@ -63,6 +71,16 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
   const [acceptTerms, setAcceptTerms] = useState(true);
+
+  // Recovery form state
+  const [recoveryStep, setRecoveryStep] = useState<'request' | 'verify' | 'new-password'>('request');
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryPhoneMasked, setRecoveryPhoneMasked] = useState('');
+  const [recoveryCodeInput, setRecoveryCodeInput] = useState('');
+  const [recoveryNewPassword, setRecoveryNewPassword] = useState('');
+  const [recoveryConfirmPassword, setRecoveryConfirmPassword] = useState('');
+  const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
+  const [simulatedSmsBanner, setSimulatedSmsBanner] = useState<{ code: string; phone: string; name: string } | null>(null);
 
   // Status & validation messages
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -126,6 +144,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     setErrorMsg(null);
     setSuccessMsg(null);
 
+    if (!regPhone.trim()) {
+      setErrorMsg(language === 'es' 
+        ? 'Por favor ingrese su número de celular. Es requerido para recuperar la cuenta por SMS.' 
+        : 'Please enter your mobile phone number. It is required for SMS account recovery.');
+      return;
+    }
+
     if (regPassword !== regConfirmPassword) {
       setErrorMsg(language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.');
       return;
@@ -153,6 +178,99 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       } else {
         setSuccessMsg(language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!');
         if (onSuccess) onSuccess();
+      }
+    }, 450);
+  };
+
+  const handleRequestRecoveryCode = (e?: React.FormEvent) => {
+    if (e && e.preventDefault) e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    if (!recoveryEmail.trim() || !recoveryEmail.includes('@')) {
+      setErrorMsg(language === 'es' ? 'Ingrese un correo electrónico válido.' : 'Enter a valid email address.');
+      return;
+    }
+
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      const res = requestPasswordResetCode(recoveryEmail);
+      if (!res.success) {
+        setErrorMsg(res.message || (language === 'es' ? 'No fue posible enviar el código.' : 'Could not send code.'));
+      } else {
+        setRecoveryPhoneMasked(res.maskedPhone || '+57 300 *** **89');
+        setSimulatedSmsBanner({
+          code: res.code || '123456',
+          phone: res.maskedPhone || '+57 300 *** **89',
+          name: res.name || 'Usuario'
+        });
+        setRecoveryStep('verify');
+        setSuccessMsg(res.message || (language === 'es' 
+          ? `¡Código enviado al celular ${res.maskedPhone}!`
+          : `Code sent to phone ${res.maskedPhone}!`));
+      }
+    }, 450);
+  };
+
+  const handleVerifyRecoveryCode = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    if (!recoveryCodeInput.trim()) {
+      setErrorMsg(language === 'es' ? 'Por favor ingrese el código recibido.' : 'Please enter the code received.');
+      return;
+    }
+
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      const res = verifyPasswordResetCode(recoveryEmail, recoveryCodeInput);
+      if (!res.success) {
+        setErrorMsg(res.message || (language === 'es' ? 'Código de seguridad incorrecto.' : 'Invalid code.'));
+      } else {
+        setRecoveryStep('new-password');
+        setSuccessMsg(language === 'es' 
+          ? 'Código verificado con éxito. Ingresa tu nueva contraseña.' 
+          : 'Code verified successfully. Enter your new password.');
+      }
+    }, 400);
+  };
+
+  const handleSetNewPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    if (recoveryNewPassword !== recoveryConfirmPassword) {
+      setErrorMsg(language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.');
+      return;
+    }
+
+    if (recoveryNewPassword.length < 5) {
+      setErrorMsg(language === 'es' ? 'La nueva contraseña debe tener mínimo 5 caracteres.' : 'Password must be at least 5 characters.');
+      return;
+    }
+
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+      const res = resetPasswordWithCode(recoveryEmail, recoveryCodeInput, recoveryNewPassword);
+      if (!res.success) {
+        setErrorMsg(res.message || (language === 'es' ? 'Error al actualizar contraseña.' : 'Error resetting password.'));
+      } else {
+        setSuccessMsg(language === 'es' 
+          ? '¡Tu contraseña ha sido restablecida exitosamente! Ya puedes iniciar sesión con tu nueva contraseña.' 
+          : 'Password reset successfully! You can now log in with your new password.');
+        setMode('login');
+        setLoginIdentifier(recoveryEmail);
+        setLoginPassword(recoveryNewPassword);
+        setRecoveryStep('request');
+        setRecoveryCodeInput('');
+        setRecoveryNewPassword('');
+        setRecoveryConfirmPassword('');
+        setSimulatedSmsBanner(null);
       }
     }, 450);
   };
@@ -443,10 +561,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
             </div>
           </div>
           
-          {/* Caja desplegable 1: Tipo de Portal / Rol de acceso */}
+          {/* Caja desplegable: Tipo de Portal / Rol de acceso */}
           <div className="text-left space-y-1">
             <label htmlFor="login-role-dropdown" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {language === 'es' ? 'Portal al que desea ingresar (Caja desplegable)' : 'Portal to enter (Dropdown)'}
+              {language === 'es' ? 'Portal al que desea ingresar:' : 'Portal to enter:'}
             </label>
             <select
               id="login-role-dropdown"
@@ -466,57 +584,39 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
             </select>
           </div>
 
-          {/* Caja desplegable 2: Tipo de dato de identificación / acceso */}
-          <div className="text-left space-y-1">
-            <label htmlFor="login-doctype-dropdown" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {language === 'es' ? 'Tipo de documento o acceso (Caja desplegable)' : 'Document type or access (Dropdown)'}
-            </label>
-            <select
-              id="login-doctype-dropdown"
-              value={loginDocType}
-              onChange={(e) => setLoginDocType(e.target.value)}
-              className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all cursor-pointer"
-            >
-              <option value="email">{language === 'es' ? 'Correo Electrónico (Institucional o Personal)' : 'Email address'}</option>
-              <option value="CC">{language === 'es' ? 'Cédula de Ciudadanía (C.C.)' : 'Citizenship Card (C.C.)'}</option>
-              <option value="TI">{language === 'es' ? 'Tarjeta de Identidad (T.I.)' : 'Identity Card (T.I.)'}</option>
-              <option value="CE">{language === 'es' ? 'Cédula de Extranjería (C.E.)' : 'Foreigner ID (C.E.)'}</option>
-              <option value="radicado">{language === 'es' ? 'Número de Radicado Oficial (#MAT...)' : 'Enrollment Application ID'}</option>
-            </select>
-          </div>
-
-          {/* Campo para rellenar los datos */}
+          {/* Campo Correo Electrónico (Personal o Institucional) */}
           <div className="text-left space-y-1">
             <label 
               htmlFor="login-identifier-input"
               className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
             >
-              {loginDocType === 'email' 
-                ? (language === 'es' ? 'Rellenar correo electrónico:' : 'Fill in email address:')
-                : loginDocType === 'radicado'
-                ? (language === 'es' ? 'Rellenar código de radicado:' : 'Fill in application number:')
-                : (language === 'es' ? `Rellenar número de documento (${loginDocType}):` : `Fill in ID number (${loginDocType}):`)}
+              {language === 'es' ? 'Correo Electrónico (Personal o Institucional):' : 'Email Address (Personal or Institutional):'}
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                <User className="w-4 h-4" />
+                <Mail className="w-4 h-4" />
               </div>
               <input
                 id="login-identifier-input"
-                type="text"
+                type="email"
                 required
                 value={loginIdentifier}
                 onChange={(e) => setLoginIdentifier(e.target.value)}
                 placeholder={
-                  loginDocType === 'email'
-                    ? (loginRole === 'student' ? 'mateo.restrepo@edumed.edu.co' : loginRole === 'admin' ? 'profesor@edumed.edu.co' : 'maria.gonzalez@gmail.com')
-                    : loginDocType === 'radicado'
-                    ? '#MAT-2024-001'
-                    : 'Ej: 43981245'
+                  loginRole === 'student'
+                    ? 'mateo.restrepo@edumed.edu.co'
+                    : loginRole === 'admin'
+                    ? 'profesor@edumed.edu.co'
+                    : 'maria.gonzalez@gmail.com'
                 }
                 className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
               />
             </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 pl-0.5">
+              {language === 'es' 
+                ? 'Ingrese el correo personal o institucional con el que creó su cuenta.'
+                : 'Enter the personal or institutional email used when creating your account.'}
+            </p>
           </div>
 
           {/* Campo para rellenar la contraseña */}
@@ -526,18 +626,22 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 htmlFor="login-password-input"
                 className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
               >
-                {language === 'es' ? 'Rellenar contraseña:' : 'Fill in password:'}
+                {language === 'es' ? 'Contraseña:' : 'Password:'}
               </label>
               <button 
                 type="button"
                 onClick={() => { 
-                  setErrorMsg(language === 'es' 
-                    ? 'Para restablecer su clave institucional, comuníquese con secretaría académica: matriculas@iefelixhenaobotero.edu.co o acérquese a la sede principal.' 
-                    : 'To reset your institutional password, contact academic records at matriculas@iefelixhenaobotero.edu.co'); 
+                  setMode('forgot-password');
+                  setRecoveryStep('request');
+                  setErrorMsg(null);
+                  setSuccessMsg(null);
+                  if (loginIdentifier && loginIdentifier.includes('@')) {
+                    setRecoveryEmail(loginIdentifier);
+                  }
                 }}
                 className="text-[11px] text-teal-600 dark:text-teal-400 hover:underline font-medium cursor-pointer"
               >
-                {language === 'es' ? '¿Olvidó su clave?' : 'Forgot password?'}
+                {language === 'es' ? '¿Olvidó su contraseña?' : 'Forgot password?'}
               </button>
             </div>
             <div className="relative">
@@ -611,6 +715,254 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
           </div>
 
         </form>
+      ) : mode === 'forgot-password' ? (
+        /* TAB 3: RECUPERACIÓN DE CONTRASEÑA POR CÓDIGO SMS AL CELULAR */
+        <div className="mt-5 space-y-4 text-left">
+          
+          {/* Header & Back Button */}
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+            <button
+              type="button"
+              onClick={() => {
+                setMode('login');
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 transition-colors cursor-pointer"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>{language === 'es' ? 'Volver a Iniciar Sesión' : 'Back to Log In'}</span>
+            </button>
+
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+              <Smartphone className="w-3 h-3" />
+              <span>{language === 'es' ? 'Recuperación por Celular' : 'SMS Recovery'}</span>
+            </span>
+          </div>
+
+          {/* STEP 1: SOLICITAR CÓDIGO */}
+          {recoveryStep === 'request' && (
+            <form onSubmit={handleRequestRecoveryCode} className="space-y-4">
+              <div className="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60">
+                <h4 className="text-xs sm:text-sm font-bold text-teal-950 dark:text-teal-200 flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span>{language === 'es' ? 'Recuperar acceso a tu cuenta' : 'Recover account access'}</span>
+                </h4>
+                <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                  {language === 'es'
+                    ? 'Ingresa el correo personal o institucional con el que creaste tu cuenta. Enviaremos un código de seguridad de 6 dígitos al número de celular que registraste al crear la cuenta.'
+                    : 'Enter the email you registered with. We will send a 6-digit verification code to the phone number configured during account registration.'}
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="recovery-email-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {language === 'es' ? 'Correo Electrónico (Personal o Institucional):' : 'Account Email Address:'}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Mail className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="recovery-email-input"
+                    type="email"
+                    required
+                    value={recoveryEmail}
+                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    placeholder="usuario@edumed.edu.co o tu-correo@gmail.com"
+                    className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {isLoading ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Smartphone className="w-4 h-4" />
+                    <span>{language === 'es' ? 'Enviar Código al Celular por SMS' : 'Send Code to Mobile Phone'}</span>
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* STEP 2: VERIFICAR CÓDIGO */}
+          {recoveryStep === 'verify' && (
+            <form onSubmit={handleVerifyRecoveryCode} className="space-y-4">
+              
+              {/* Simulated Phone SMS Received Notification Card */}
+              {simulatedSmsBanner && (
+                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border-2 border-emerald-300 dark:border-emerald-700 shadow-sm animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
+                      <MessageSquare className="w-3.5 h-3.5" />
+                      <span>{language === 'es' ? 'Mensaje SMS Recibido en tu Celular' : 'SMS Message Received on Phone'}</span>
+                    </span>
+                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
+                      {simulatedSmsBanner.phone}
+                    </span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-xs">
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
+                      «<strong>EduMed Digital</strong>: Hola <em>{simulatedSmsBanner.name}</em>, tu código de verificación para recuperar tu cuenta es:{' '}
+                      <span className="inline-block px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 font-mono font-black text-base rounded-md border border-emerald-300 dark:border-emerald-700 tracking-wider">
+                        {simulatedSmsBanner.code}
+                      </span>
+                      . Válido por 15 minutos.»
+                    </p>
+                  </div>
+                  <div className="mt-2.5 flex items-center justify-between">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                      {language === 'es' ? 'Simulador de SMS móvil activo' : 'Live mobile SMS simulation'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setRecoveryCodeInput(simulatedSmsBanner.code)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer transition-colors"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>{language === 'es' ? 'Auto-completar código' : 'Auto-fill code'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-1">
+                <label htmlFor="recovery-code-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {language === 'es' ? 'Código de Seguridad recibido por SMS:' : 'Security Code received via SMS:'}
+                </label>
+                <input
+                  id="recovery-code-input"
+                  type="text"
+                  maxLength={6}
+                  required
+                  value={recoveryCodeInput}
+                  onChange={(e) => setRecoveryCodeInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="123456"
+                  className="w-full px-4 py-3 text-center text-xl font-mono font-black tracking-widest bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading || recoveryCodeInput.length < 5}
+                className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {isLoading ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{language === 'es' ? 'Validar Código y Continuar' : 'Verify Code and Continue'}</span>
+                  </>
+                )}
+              </button>
+
+              <div className="flex items-center justify-between text-xs pt-1">
+                <button
+                  type="button"
+                  onClick={() => handleRequestRecoveryCode()}
+                  className="text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>{language === 'es' ? 'Reenviar código por SMS' : 'Resend code via SMS'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => { setRecoveryStep('request'); setErrorMsg(null); }}
+                  className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  {language === 'es' ? 'Cambiar correo' : 'Change email'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 3: CREAR NUEVA CONTRASEÑA */}
+          {recoveryStep === 'new-password' && (
+            <form onSubmit={handleSetNewPassword} className="space-y-4">
+              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 text-xs flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>
+                  {language === 'es' 
+                    ? `Código validado para ${recoveryEmail}. Escribe tu nueva contraseña.` 
+                    : `Code validated for ${recoveryEmail}. Enter your new password.`}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="new-password-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {language === 'es' ? 'Nueva Contraseña (mínimo 5 caracteres):' : 'New Password (min 5 characters):'}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="new-password-input"
+                    type={showRecoveryPassword ? 'text' : 'password'}
+                    required
+                    value={recoveryNewPassword}
+                    onChange={(e) => setRecoveryNewPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowRecoveryPassword(!showRecoveryPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    tabIndex={-1}
+                  >
+                    {showRecoveryPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label htmlFor="confirm-new-password-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {language === 'es' ? 'Confirmar Nueva Contraseña:' : 'Confirm New Password:'}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <input
+                    id="confirm-new-password-input"
+                    type={showRecoveryPassword ? 'text' : 'password'}
+                    required
+                    value={recoveryConfirmPassword}
+                    onChange={(e) => setRecoveryConfirmPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                {isLoading ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{language === 'es' ? 'Guardar Nueva Contraseña e Iniciar Sesión' : 'Save New Password & Log In'}</span>
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+
+        </div>
       ) : (
         /* TAB 2: CREAR UNA CUENTA */
         <form onSubmit={handleRegister} className="mt-5 space-y-3.5">
@@ -716,11 +1068,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 htmlFor="reg-phone-input"
                 className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
               >
-                Celular / WhatsApp
+                Número de Celular (Para recuperación por SMS) *
               </label>
               <input
                 id="reg-phone-input"
                 type="tel"
+                required
                 value={regPhone}
                 onChange={(e) => setRegPhone(e.target.value)}
                 placeholder="300 123 4567"
