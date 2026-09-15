@@ -586,6 +586,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
+    // Strict portal access isolation: Check that the account role matches the selected portal
+    if (preferredRole && authUser.role !== preferredRole) {
+      const portalNames: Record<string, string> = {
+        admin: language === 'es' ? 'Portal Docente / Directivo' : 'Teacher / Administrative Portal',
+        guardian: language === 'es' ? 'Portal Acudiente' : 'Guardian Portal',
+        student: language === 'es' ? 'Portal Estudiante' : 'Student Portal',
+      };
+      const requestedPortal = portalNames[preferredRole] || preferredRole;
+      const authorizedPortal = portalNames[authUser.role] || authUser.role;
+
+      return {
+        success: false,
+        notFound: false,
+        suggestedRole: authUser.role,
+        message: language === 'es'
+          ? `Esta cuenta pertenece al ${authorizedPortal}. No tiene autorización para ingresar por el ${requestedPortal}. Por favor selecciona el portal correspondiente.`
+          : `This account belongs to ${authorizedPortal}. It cannot access the ${requestedPortal}. Please choose the appropriate portal.`
+      };
+    }
+
     // Successfully log in
     setCurrentUser(authUser);
     localStorage.setItem('edumed_current_user', JSON.stringify(authUser));

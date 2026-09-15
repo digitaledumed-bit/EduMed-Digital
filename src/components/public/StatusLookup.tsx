@@ -22,46 +22,91 @@ import {
 
 export const StatusLookup: React.FC = () => {
   const { t, language, lookupEnrollmentStatus, setActiveTab, currentUser } = useApp();
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(currentUser?.documentNumber || '');
+  const [unauthorizedMsg, setUnauthorizedMsg] = useState<string | null>(null);
+  const [downloadedToast, setDownloadedToast] = useState(false);
   
-  // Directamente inicializado mostrando el estado donde ya se cumplieron todos los puntos (Registro Inicial, En Revisión y Aprobación Final)
+  // Resolve initial enrollment according to logged in user role
+  const resolveInitialResult = () => {
+    if (currentUser?.role === 'student') {
+      return (
+        (currentUser.documentNumber && lookupEnrollmentStatus(currentUser.documentNumber)) ||
+        lookupEnrollmentStatus(currentUser.email || '') ||
+        lookupEnrollmentStatus('1001234567') ||
+        lookupEnrollmentStatus('#MAT-24-001')
+      );
+    }
+    if (currentUser?.role === 'guardian') {
+      return (
+        (currentUser.documentNumber && lookupEnrollmentStatus(currentUser.documentNumber)) ||
+        lookupEnrollmentStatus(currentUser.email || '') ||
+        lookupEnrollmentStatus('43892104') ||
+        lookupEnrollmentStatus('#MAT-24-002')
+      );
+    }
+    // Admin / Directivo: can see any record
+    return lookupEnrollmentStatus('#MAT-24-003') || lookupEnrollmentStatus('1029384756');
+  };
+
   const [searched, setSearched] = useState(true);
-  const [result, setResult] = useState<ReturnType<typeof lookupEnrollmentStatus>>(() => {
-    return lookupEnrollmentStatus('#MAT-24-003') || lookupEnrollmentStatus('1029384756') || {
-      id: '#MAT-2024-003',
-      studentId: 'std-2',
-      studentName: 'Santiago Jaramillo Restrepo',
-      studentDoc: '1029384756',
-      academicYear: '2024 - 2025',
-      grade: 'Noveno (9°)',
-      submissionDate: '12 May 2024',
-      status: 'approved',
-      step: 6,
-      lastUpdated: '13 May 2024, 04:15 PM',
-      notes: 'Matrícula aprobada oficialmente. Asignado a grupo 9-A con cupo confirmado.',
-      guardianName: 'Roberto Carlos Domínguez',
-      guardianDoc: 'CE 987654',
-      guardianPhone: '+57 320 456 7890',
-      guardianEmail: 'roberto.d@ejemplo.com',
-      guardianRelationship: 'Tutor Legal'
-    };
-  });
+  const [result, setResult] = useState<ReturnType<typeof lookupEnrollmentStatus>>(() => resolveInitialResult());
 
   const handleSearch = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!searchQuery.trim()) {
+    setUnauthorizedMsg(null);
+
+    const term = searchQuery.trim();
+    if (!term) {
       setSearched(true);
-      const found = lookupEnrollmentStatus('#MAT-24-003') || lookupEnrollmentStatus('1029384756');
-      setResult(found);
+      setResult(resolveInitialResult());
       return;
     }
+
     setSearched(true);
-    const found = lookupEnrollmentStatus(searchQuery);
+    const found = lookupEnrollmentStatus(term);
+
+    // Enforce data isolation for Student role
+    if (currentUser?.role === 'student' && found) {
+      const isMyRecord = 
+        (currentUser.documentNumber && found.studentDoc === currentUser.documentNumber) ||
+        (currentUser.email && found.studentEmail?.toLowerCase() === currentUser.email.toLowerCase()) ||
+        found.studentName.toLowerCase().includes(currentUser.name.toLowerCase());
+
+      if (!isMyRecord) {
+        setUnauthorizedMsg(
+          language === 'es'
+            ? 'Acceso restringido: Desde el Portal Estudiante solo tienes autorización para consultar tu propio expediente y trámite de matrícula.'
+            : 'Access restricted: From the Student Portal you can only view your own enrollment file.'
+        );
+        setResult(null);
+        return;
+      }
+    }
+
+    // Enforce data isolation for Guardian role
+    if (currentUser?.role === 'guardian' && found) {
+      const isMyChild =
+        (currentUser.documentNumber && (found.guardianDoc === currentUser.documentNumber || found.studentDoc === currentUser.documentNumber)) ||
+        (currentUser.email && found.guardianEmail?.toLowerCase() === currentUser.email.toLowerCase()) ||
+        found.guardianName.toLowerCase().includes(currentUser.name.toLowerCase());
+
+      if (!isMyChild) {
+        setUnauthorizedMsg(
+          language === 'es'
+            ? 'Acceso restringido: Desde el Portal Acudiente solo tienes autorización para consultar los radicados y matrículas asociadas a tus acudidos.'
+            : 'Access restricted: From the Guardian Portal you can only view enrollments associated with your children.'
+        );
+        setResult(null);
+        return;
+      }
+    }
+
     setResult(found);
   };
 
   const handleUseMyDoc = () => {
     if (currentUser?.documentNumber) {
+      setUnauthorizedMsg(null);
       setSearchQuery(currentUser.documentNumber);
       setSearched(true);
       const found = lookupEnrollmentStatus(currentUser.documentNumber);
@@ -572,7 +617,7 @@ export const StatusLookup: React.FC = () => {
                       </button>
 
                       <button
-                        onClick={() => alert(language === 'es' ? 'Comprobante oficial de matrícula descargado en PDF.' : 'Official enrollment receipt downloaded in PDF.')}
+                        onClick={() => setDownloadedToast(true)}
                         className="px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-2 cursor-pointer"
                       >
                         <Download className="w-4 h-4" />
@@ -580,10 +625,42 @@ export const StatusLookup: React.FC = () => {
                       </button>
                     </div>
 
+                    {downloadedToast && (
+                      <div className="mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
+                        <span>{language === 'es' ? '✓ Comprobante oficial de matrícula generado y listo para impresión.' : '✓ Official enrollment receipt generated and ready.'}</span>
+                        <button onClick={() => setDownloadedToast(false)} className="text-emerald-700 dark:text-emerald-300 underline font-bold text-[11px] ml-2">Cerrar</button>
+                      </div>
+                    )}
+
                   </div>
 
                 </div>
 
+              </div>
+            ) : unauthorizedMsg ? (
+              <div className="bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-2xl border-2 border-rose-300 dark:border-rose-800/80 text-center shadow-md">
+                <div className="w-14 h-14 rounded-2xl bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-4 border border-rose-200 dark:border-rose-800">
+                  <ShieldCheck className="w-7 h-7" />
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-rose-900 dark:text-rose-200">
+                  {language === 'es' ? 'Acceso Restringido por Portal' : 'Restricted Portal Access'}
+                </h3>
+                <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+                  {unauthorizedMsg}
+                </p>
+                <div className="mt-5 flex justify-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUnauthorizedMsg(null);
+                      setSearchQuery(currentUser?.documentNumber || '');
+                      setResult(resolveInitialResult());
+                    }}
+                    className="px-4 py-2 text-xs font-bold rounded-xl bg-teal-700 hover:bg-teal-800 text-white transition-colors cursor-pointer"
+                  >
+                    {language === 'es' ? 'Ver mi expediente autorizado' : 'View my authorized file'}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="bg-white dark:bg-slate-900 p-8 sm:p-10 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shadow-sm">

@@ -65,31 +65,33 @@ export const Navbar: React.FC = () => {
           <div 
             id="brand-logo"
             onClick={() => { setActiveRole('public'); setActiveTab('home'); }} 
-            className="flex items-center gap-3 cursor-pointer select-none group"
+            className="flex flex-col items-center justify-center text-center cursor-pointer select-none group py-1"
           >
             <div className="relative shrink-0">
               <img 
                 src={customLogoUrl} 
-                alt="Logo Institucional EduMed Digital - I.E. Félix Henao Botero" 
-                className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-2 ring-amber-400/20 shadow-md group-hover:scale-105 transition-transform bg-white"
+                alt="Escudo Institución Educativa Félix Henao Botero" 
+                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-2 ring-amber-400/20 shadow-xs group-hover:scale-105 transition-transform bg-white"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
                 }}
               />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  EduMed <span className="text-teal-600 dark:text-teal-400">Digital</span>
-                </span>
-              </div>
-              <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[200px] sm:max-w-xs">
-                {language === 'es' ? 'Portal Oficial de Admisiones' : 'Admissions Portal'}
-              </p>
-            </div>
+            <span className="text-[10px] sm:text-xs font-semibold tracking-tight text-slate-600 dark:text-slate-300 mt-1 leading-none">
+              edumed <span className="text-teal-600 dark:text-teal-400 font-bold">digital</span>
+            </span>
           </div>
 
-          {/* Navigation Links: Home and I.E. Félix Henao always visible; Status, Enrollment, Benefits, and Support only after login */}
+          <div className="hidden lg:block text-left ml-4 mr-auto">
+            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+              Institución Educativa Félix Henao Botero
+            </span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400">
+              Medellín, Colombia • DANE 105001002345
+            </span>
+          </div>
+
+          {/* Navigation Links: Clean top bar without redundant buttons */}
           <nav className="hidden md:flex items-center gap-1 lg:gap-2">
             <button
               id="nav-link-home"
@@ -103,140 +105,92 @@ export const Navbar: React.FC = () => {
               {t.nav.home}
             </button>
 
-            {/* DEDICATED SEPARATE BUTTON FOR FÉLIX HENAO BOTERO (NOT IN INICIO) */}
-            <button
-              id="nav-link-felix-henao"
-              onClick={() => setActiveTab('institucion')}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'institucion'
-                  ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-              title="Información y sedes de la I.E. Félix Henao Botero"
-            >
-              {language === 'es' ? 'I.E. Félix Henao' : 'Félix Henao School'}
-            </button>
-
-            {/* Buttons shown ONLY after login: Consultar Estado, Nueva Matrícula, Beneficios, Soporte */}
-            {currentUser && (
+            {/* Admin Management Links */}
+            {currentUser && currentUser.role === 'admin' && (
               <>
                 <button
-                  id="nav-link-status"
-                  onClick={() => setActiveTab('status')}
+                  id="nav-link-dashboard"
+                  onClick={() => setActiveTab('dashboard')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'status'
+                    activeTab === 'dashboard'
                       ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  {t.nav.status}
+                  {t.nav.dashboard}
                 </button>
 
                 <button
-                  id="nav-link-enrollment"
-                  onClick={() => setActiveTab('wizard')}
+                  id="nav-link-enrollments"
+                  onClick={() => setActiveTab('enrollments')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'wizard'
+                    activeTab === 'enrollments'
                       ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  {t.nav.newEnrollment}
+                  {t.nav.enrollment}
                 </button>
 
                 <button
-                  id="nav-link-benefits"
-                  onClick={() => setActiveTab('beneficios')}
+                  id="nav-link-students"
+                  onClick={() => setActiveTab('students')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'beneficios'
+                    activeTab === 'students' || activeTab === 'student-profile'
                       ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  {t.nav.benefits}
+                  {t.nav.students}
                 </button>
 
                 <button
-                  id="nav-link-support"
-                  onClick={() => setActiveTab('soporte')}
+                  id="nav-link-parents"
+                  onClick={() => setActiveTab('parents')}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'soporte'
+                    activeTab === 'parents'
                       ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
-                  {t.nav.support}
+                  {t.nav.parents}
+                </button>
+
+                <button
+                  id="nav-link-documents"
+                  onClick={() => setActiveTab('documents')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'documents'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {t.nav.documents}
                 </button>
               </>
             )}
           </nav>
 
-          {/* Controls: Portal Switcher (after login), Language Toggle, Dark Mode, Notifications */}
+          {/* Controls: Portal Badge (after login), Language Toggle, Dark Mode, Notifications */}
           <div className="flex items-center gap-2 sm:gap-3">
             
-            {/* View / Role Switcher Pill displaying active portal ONLY AFTER LOGIN */}
+            {/* Authenticated Portal Badge */}
             {currentUser && (
-              <div className="relative">
-                <button
-                  id="role-switcher-btn"
-                  onClick={() => setShowRoleDropdown(!showRoleDropdown)}
-                  className="flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 hover:border-teal-500 transition-colors shadow-xs cursor-pointer"
+              <div className="hidden sm:flex items-center">
+                <span 
+                  id="navbar-portal-badge"
+                  className={`px-3 py-1 text-xs font-extrabold rounded-full border shadow-xs ${
+                    currentUser.role === 'admin'
+                      ? 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                      : currentUser.role === 'student'
+                      ? 'bg-blue-50 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800'
+                      : 'bg-teal-50 dark:bg-teal-950/70 text-teal-800 dark:text-teal-300 border-teal-300 dark:border-teal-800'
+                  }`}
                 >
-                  <span className="font-bold">
-                    {activeRole === 'public' && (language === 'es' ? 'Portal Público' : 'Public Portal')}
-                    {activeRole === 'admin' && (language === 'es' ? 'Portal Profesor' : 'Teacher Portal')}
-                    {activeRole === 'student' && (language === 'es' ? 'Portal Estudiante' : 'Student Portal')}
-                    {activeRole === 'guardian' && (language === 'es' ? 'Portal Acudiente' : 'Guardian Portal')}
-                  </span>
-                  <ChevronDown className="w-3.5 h-3.5 opacity-60" />
-                </button>
-
-                {showRoleDropdown && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="px-3 py-1.5 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                      {language === 'es' ? 'Seleccionar Portal' : 'Select Portal'}
-                    </div>
-                    <button
-                      onClick={() => handleRoleChange('public')}
-                      className={`w-full text-left px-3 py-2 text-xs sm:text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700/60 ${activeRole === 'public' ? 'text-teal-600 dark:text-teal-400 font-bold bg-teal-50/50 dark:bg-teal-950/30' : 'text-slate-700 dark:text-slate-200'}`}
-                    >
-                      <div>
-                        <div className="font-semibold">{language === 'es' ? 'Portal Público' : 'Public Portal'}</div>
-                        <div className="text-[11px] text-slate-400">{language === 'es' ? 'Página Principal y Admisiones' : 'Info & Registration'}</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleRoleChange('admin')}
-                      className={`w-full text-left px-3 py-2 text-xs sm:text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700/60 ${activeRole === 'admin' ? 'text-teal-600 dark:text-teal-400 font-bold bg-teal-50/50 dark:bg-teal-950/30' : 'text-slate-700 dark:text-slate-200'}`}
-                    >
-                      <div>
-                        <div className="font-semibold">{language === 'es' ? 'Portal Profesor' : 'Teacher Portal'}</div>
-                        <div className="text-[11px] text-slate-400">{language === 'es' ? 'Docentes y Administración' : 'Teachers & Administration'}</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleRoleChange('guardian')}
-                      className={`w-full text-left px-3 py-2 text-xs sm:text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700/60 ${activeRole === 'guardian' ? 'text-teal-600 dark:text-teal-400 font-bold bg-teal-50/50 dark:bg-teal-950/30' : 'text-slate-700 dark:text-slate-200'}`}
-                    >
-                      <div>
-                        <div className="font-semibold">{language === 'es' ? 'Portal Acudiente' : 'Guardian Portal'}</div>
-                        <div className="text-[11px] text-slate-400">{language === 'es' ? 'Padres de Familia y Tutores' : 'Parents & Guardians'}</div>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleRoleChange('student')}
-                      className={`w-full text-left px-3 py-2 text-xs sm:text-sm flex items-center gap-2 hover:bg-slate-100 dark:hover:bg-slate-700/60 ${activeRole === 'student' ? 'text-teal-600 dark:text-teal-400 font-bold bg-teal-50/50 dark:bg-teal-950/30' : 'text-slate-700 dark:text-slate-200'}`}
-                    >
-                      <div>
-                        <div className="font-semibold">{language === 'es' ? 'Portal Estudiante' : 'Student Portal'}</div>
-                        <div className="text-[11px] text-slate-400">{language === 'es' ? 'Alumnos y Aspirantes' : 'Student Dashboard'}</div>
-                      </div>
-                    </button>
-                  </div>
-                )}
+                  {currentUser.role === 'admin' && (language === 'es' ? 'Portal Docente / Directivo' : 'Teacher / Admin Portal')}
+                  {currentUser.role === 'student' && (language === 'es' ? 'Portal Estudiante' : 'Student Portal')}
+                  {currentUser.role === 'guardian' && (language === 'es' ? 'Portal Acudiente' : 'Guardian Portal')}
+                </span>
               </div>
             )}
 
@@ -350,17 +304,9 @@ export const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* If User Logged In: Quick Iniciar Matrícula button + User badge with logout */}
+            {/* If User Logged In: User profile chip with role and logout button */}
             {currentUser ? (
               <div className="flex items-center gap-2 pl-2">
-                <button
-                  id="btn-quick-matricula"
-                  onClick={() => setActiveTab('wizard')}
-                  className="hidden sm:inline-flex items-center px-3.5 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-semibold shadow-xs transition-all hover:shadow-teal-600/20 active:scale-98 cursor-pointer"
-                >
-                  <span>{t.landing.startEnrollment}</span>
-                </button>
-
                 <div 
                   onClick={() => {
                     if (currentUser.role === 'admin') setActiveTab('dashboard');

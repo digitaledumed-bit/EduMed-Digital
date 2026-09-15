@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AuthCard } from './AuthCard';
+import { InicioAccordions } from '../common/InicioAccordions';
 import { 
   Sparkles, 
   ArrowRight, 
@@ -150,7 +151,7 @@ export const LandingPage: React.FC = () => {
               )}
 
               {/* Institutional guarantee badges */}
-              <div className="mt-8 pt-6 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
+              <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
                   <span>{t.landing.enrolledBadge}</span>
@@ -167,10 +168,15 @@ export const LandingPage: React.FC = () => {
                 </div>
               </div>
 
+              {/* Cuadros desplegables de como funciona, ventajas del sistema digital y preguntas frecuentes */}
+              <div className="mt-8 w-full">
+                <InicioAccordions />
+              </div>
+
             </div>
 
-            {/* RIGHT COLUMN: Interactive Login & Register Card */}
-            <div className="lg:col-span-5 flex justify-center w-full">
+            {/* RIGHT COLUMN: Panel de sesión activa / Tarjeta de Autenticación */}
+            <div className="lg:col-span-5 flex justify-center w-full sticky top-24 self-start">
               <AuthCard />
             </div>
 

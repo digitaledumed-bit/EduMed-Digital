@@ -34,68 +34,182 @@ export const AdminSidebar: React.FC = () => {
 
   const pendingDocsCount = documents.filter(d => d.status === 'in_review' || d.status === 'pending').length;
 
-  const menuItems = [
-    {
-      id: 'dashboard',
-      label: t.nav.dashboard,
-      icon: LayoutDashboard,
-      badge: null
-    },
-    {
-      id: 'wizard',
-      label: language === 'es' ? 'Nueva Matrícula' : 'New Enrollment',
-      icon: FilePlus,
-      badge: null
-    },
-    {
-      id: 'status',
-      label: t.nav.status,
-      icon: Search,
-      badge: null
-    },
-    {
-      id: 'enrollments',
-      label: t.nav.enrollment,
-      icon: FileText,
-      badge: null
-    },
-    {
-      id: 'students',
-      label: t.nav.students,
-      icon: Users,
-      badge: null
-    },
-    {
-      id: 'parents',
-      label: t.nav.parents,
-      icon: UserCheck,
-      badge: null
-    },
-    {
-      id: 'documents',
-      label: t.nav.documents,
-      icon: FolderKanban,
-      badge: pendingDocsCount > 0 ? `${pendingDocsCount}` : null
-    },
-    {
-      id: 'beneficios',
-      label: language === 'es' ? 'Beneficios' : 'Benefits',
-      icon: Award,
-      badge: null
-    },
-    {
-      id: 'soporte',
-      label: language === 'es' ? 'Soporte' : 'Support',
-      icon: LifeBuoy,
-      badge: null
-    },
-    {
-      id: 'settings',
-      label: t.nav.settings,
-      icon: Settings,
-      badge: null
+  const role = currentUser?.role || 'admin';
+
+  // Build role-specific menu items so each portal only accesses its corresponding views
+  const getMenuItems = () => {
+    if (role === 'guardian') {
+      return [
+        {
+          id: 'status',
+          label: language === 'es' ? 'Estado de Matrícula' : 'Enrollment Status',
+          icon: Search,
+          badge: null
+        },
+        {
+          id: 'wizard',
+          label: language === 'es' ? 'Nueva Matrícula' : 'New Enrollment',
+          icon: FilePlus,
+          badge: null
+        },
+        {
+          id: 'student-profile',
+          label: language === 'es' ? 'Expediente de mi Acudido' : 'My Child Profile',
+          icon: GraduationCap,
+          badge: null
+        },
+        {
+          id: 'institucion',
+          label: language === 'es' ? 'I.E. Félix Henao' : 'School Info',
+          icon: Globe,
+          badge: null
+        },
+        {
+          id: 'beneficios',
+          label: language === 'es' ? 'Beneficios Escolares' : 'Student Benefits',
+          icon: Award,
+          badge: null
+        },
+        {
+          id: 'soporte',
+          label: language === 'es' ? 'Soporte y Ayuda' : 'Support & Help',
+          icon: LifeBuoy,
+          badge: null
+        }
+      ];
     }
-  ];
+
+    if (role === 'student') {
+      return [
+        {
+          id: 'student-profile',
+          label: language === 'es' ? 'Mi Expediente y Notas' : 'My Grades & Profile',
+          icon: GraduationCap,
+          badge: null
+        },
+        {
+          id: 'status',
+          label: language === 'es' ? 'Estado de mi Matrícula' : 'My Enrollment Status',
+          icon: Search,
+          badge: null
+        },
+        {
+          id: 'institucion',
+          label: language === 'es' ? 'Mi Colegio I.E. Félix Henao' : 'My School Info',
+          icon: Globe,
+          badge: null
+        },
+        {
+          id: 'beneficios',
+          label: language === 'es' ? 'Beneficios Estudiantiles' : 'Student Benefits',
+          icon: Award,
+          badge: null
+        },
+        {
+          id: 'soporte',
+          label: language === 'es' ? 'Orientación y Soporte' : 'Guidance & Support',
+          icon: LifeBuoy,
+          badge: null
+        }
+      ];
+    }
+
+    // Default: Admin / Teacher portal
+    return [
+      {
+        id: 'dashboard',
+        label: t.nav.dashboard,
+        icon: LayoutDashboard,
+        badge: null
+      },
+      {
+        id: 'enrollments',
+        label: t.nav.enrollment,
+        icon: FileText,
+        badge: null
+      },
+      {
+        id: 'students',
+        label: t.nav.students,
+        icon: Users,
+        badge: null
+      },
+      {
+        id: 'parents',
+        label: t.nav.parents,
+        icon: UserCheck,
+        badge: null
+      },
+      {
+        id: 'documents',
+        label: t.nav.documents,
+        icon: FolderKanban,
+        badge: pendingDocsCount > 0 ? `${pendingDocsCount}` : null
+      },
+      {
+        id: 'wizard',
+        label: language === 'es' ? 'Nueva Matrícula' : 'New Enrollment',
+        icon: FilePlus,
+        badge: null
+      },
+      {
+        id: 'status',
+        label: t.nav.status,
+        icon: Search,
+        badge: null
+      },
+      {
+        id: 'institucion',
+        label: language === 'es' ? 'I.E. Félix Henao' : 'School Info',
+        icon: Globe,
+        badge: null
+      },
+      {
+        id: 'beneficios',
+        label: language === 'es' ? 'Beneficios' : 'Benefits',
+        icon: Award,
+        badge: null
+      },
+      {
+        id: 'soporte',
+        label: language === 'es' ? 'Soporte' : 'Support',
+        icon: LifeBuoy,
+        badge: null
+      },
+      {
+        id: 'settings',
+        label: t.nav.settings,
+        icon: Settings,
+        badge: null
+      }
+    ];
+  };
+
+  const menuItems = getMenuItems();
+
+  const getPortalHeader = () => {
+    if (role === 'guardian') {
+      return {
+        title: 'EduMed',
+        accent: 'Familias',
+        subtitle: language === 'es' ? 'Portal del Acudiente' : 'Guardian Portal'
+      };
+    }
+    if (role === 'student') {
+      return {
+        title: 'EduMed',
+        accent: 'Alumnos',
+        subtitle: language === 'es' ? 'Portal del Estudiante' : 'Student Portal'
+      };
+    }
+    return {
+      title: 'EduMed',
+      accent: 'Admin',
+      subtitle: language === 'es' ? 'Docentes y Rectoría' : 'Teachers & Admin'
+    };
+  };
+
+  const headerInfo = getPortalHeader();
 
   return (
     <aside className="w-64 bg-[#0a192f] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 select-none min-h-[calc(100vh-4rem)]">
@@ -107,10 +221,10 @@ export const AdminSidebar: React.FC = () => {
           </div>
           <div>
             <div className="font-bold text-white text-sm tracking-wide">
-              EduMed <span className="text-teal-400">Admin</span>
+              {headerInfo.title} <span className="text-teal-400">{headerInfo.accent}</span>
             </div>
-            <div className="text-[11px] text-slate-400 truncate max-w-[150px]">
-              I.E. Félix Henao Botero
+            <div className="text-[11px] text-teal-300 font-medium truncate max-w-[150px]">
+              {headerInfo.subtitle}
             </div>
           </div>
         </div>
