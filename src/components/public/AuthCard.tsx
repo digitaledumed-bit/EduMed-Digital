@@ -40,6 +40,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     language, 
     login, 
     register, 
+    isEmailRegistered,
     logout, 
     currentUser, 
     activeRole,
@@ -86,35 +87,14 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [notFoundState, setNotFoundState] = useState<{ identifier: string; suggestedRole?: 'guardian' | 'student' | 'admin' } | null>(null);
 
-  // Switch to register tab and prefill identifier
-  const handleInviteToRegister = (identifier: string, suggestedRole?: 'guardian' | 'student' | 'admin') => {
-    setNotFoundState(null);
-    setErrorMsg(null);
-    setMode('register');
-
-    const clean = identifier.trim();
-    if (clean.includes('@')) {
-      setRegEmail(clean);
-    } else if (/^\d+$/.test(clean.replace(/\D/g, '')) && clean.replace(/\D/g, '').length >= 5) {
-      setRegDocNumber(clean.replace(/\D/g, ''));
-    } else {
-      setRegName(clean);
-    }
-
-    if (suggestedRole === 'student') {
-      setRegRole('student');
-    } else {
-      setRegRole('guardian');
-    }
-  };
+  // Check in real-time if the email being registered already exists in the platform
+  const isRegEmailTaken = regEmail.trim().length > 3 && regEmail.includes('@') && isEmailRegistered(regEmail.trim());
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
     setSuccessMsg(null);
-    setNotFoundState(null);
     setIsLoading(true);
 
     setTimeout(() => {
@@ -122,17 +102,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       setIsLoading(false);
       if (!res.success) {
         if (res.notFound) {
-          setNotFoundState({
-            identifier: loginIdentifier,
-            suggestedRole: res.suggestedRole || loginRole
-          });
-          setErrorMsg(null);
+          setErrorMsg(language === 'es' ? 'La cuenta no está registrada' : 'The account is not registered');
         } else {
-          setNotFoundState(null);
           setErrorMsg(res.message || (language === 'es' ? 'Error al iniciar sesión.' : 'Login failed.'));
         }
       } else {
-        setNotFoundState(null);
         setSuccessMsg(res.message || (language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome back!'));
         if (onSuccess) onSuccess();
       }
@@ -148,6 +122,14 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       setErrorMsg(language === 'es' 
         ? 'Por favor ingrese su número de celular. Es requerido para recuperar la cuenta por SMS.' 
         : 'Please enter your mobile phone number. It is required for SMS account recovery.');
+      return;
+    }
+
+    const cleanRegEmail = regEmail.trim().toLowerCase();
+    if (isEmailRegistered(cleanRegEmail)) {
+      setErrorMsg(language === 'es' 
+        ? `El correo "${cleanRegEmail}" ya se encuentra registrado en la plataforma. No es posible crear una cuenta duplicada. Por favor inicie sesión o recupere su contraseña.` 
+        : `The email "${cleanRegEmail}" is already registered. Duplicate account creation is not allowed.`);
       return;
     }
 
@@ -409,27 +391,26 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     >
       {/* Centered Logo and Institution Name Header */}
       <div className="flex flex-col items-center justify-center pb-5 pt-2 border-b border-slate-100 dark:border-slate-800">
-        {/* Official Institutional Logo (Fixed, only editable by administrator in settings) */}
-        <div className="relative mb-3.5">
+        {/* Official Institutional Logo */}
+        <div className="relative mb-2">
           <img 
             src={customLogoUrl} 
             alt="EduMed Digital - Institución Educativa Félix Henao Botero" 
-            className="w-20 h-20 sm:w-22 sm:h-22 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-4 ring-amber-400/20 shadow-xl bg-white mx-auto transition-transform"
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-4 ring-amber-400/20 shadow-xl bg-white mx-auto transition-transform"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
             }}
           />
         </div>
 
-        {/* Institution and Platform Name */}
-        <span className="text-[11px] sm:text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider block">
+        {/* EduMed Digital directly below the logo with smaller font */}
+        <span className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 tracking-wide uppercase mt-1">
+          EduMed Digital
+        </span>
+        <span className="text-[11px] sm:text-xs font-medium text-teal-700 dark:text-teal-400 mt-0.5">
           I.E. Félix Henao Botero
         </span>
-        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-tight mt-1 flex items-center justify-center gap-2">
-          <span>EduMed Digital</span>
-          <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500" title="Plataforma en línea" />
-        </h2>
-        <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">
+        <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
           Medellín • Secretaría de Educación • DANE 105001002345
         </span>
       </div>
@@ -439,7 +420,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         <button
           id="tab-btn-login"
           type="button"
-          onClick={() => { setMode('login'); setErrorMsg(null); setSuccessMsg(null); setNotFoundState(null); }}
+          onClick={() => { setMode('login'); setErrorMsg(null); setSuccessMsg(null); }}
           className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             mode === 'login'
               ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-slate-200/60 dark:border-slate-700'
@@ -453,7 +434,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         <button
           id="tab-btn-register"
           type="button"
-          onClick={() => { setMode('register'); setErrorMsg(null); setSuccessMsg(null); setNotFoundState(null); }}
+          onClick={() => { setMode('register'); setErrorMsg(null); setSuccessMsg(null); }}
           className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             mode === 'register'
               ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-slate-200/60 dark:border-slate-700'
@@ -467,99 +448,22 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
 
       {/* Notification / Feedback alerts */}
       {errorMsg && (
-        <div className="mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/70 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2">
+        <div className="mt-4 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/70 text-rose-700 dark:text-rose-300 text-xs flex items-center justify-center gap-2 font-medium">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
 
       {successMsg && (
-        <div className="mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2">
+        <div className="mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 text-emerald-700 dark:text-emerald-300 text-xs flex items-center justify-center gap-2">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           <span>{successMsg}</span>
-        </div>
-      )}
-
-      {/* SPECIAL PROMPT: User does NOT have an account yet -> Warm invitation to create one */}
-      {notFoundState && (
-        <div className="mt-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-300 dark:border-amber-600/70 shadow-lg animate-in fade-in zoom-in-95 duration-200">
-          <div className="flex items-start gap-3">
-            <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-900/70 text-amber-800 dark:text-amber-300 shrink-0 shadow-xs">
-              <UserPlus className="w-5 h-5" />
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between gap-2">
-                <h4 className="text-sm font-bold text-amber-950 dark:text-amber-100">
-                  {language === 'es' ? '¿Aún no tienes una cuenta?' : "Don't have an account yet?"}
-                </h4>
-                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-200 tracking-wide uppercase">
-                  {language === 'es' ? 'Invitación' : 'Invite'}
-                </span>
-              </div>
-              <p className="text-xs text-amber-900/90 dark:text-amber-200/90 mt-1 leading-relaxed">
-                {language === 'es' ? (
-                  <>
-                    No existe una cuenta activa con <span className="font-bold underline">{notFoundState.identifier}</span>. ¡Te invitamos cordialmente a registrarte ahora! Podrás gestionar matrículas, consultar notas y documentos escolares.
-                  </>
-                ) : (
-                  <>
-                    No account found for <span className="font-bold">{notFoundState.identifier}</span>. You are warmly invited to create your account now!
-                  </>
-                )}
-              </p>
-              
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleInviteToRegister(notFoundState.identifier, notFoundState.suggestedRole)}
-                  className="px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs shadow-md shadow-teal-700/20 hover:shadow-teal-700/30 flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-                  <span>{language === 'es' ? '¡Sí, crear mi cuenta ahora!' : 'Create my account now!'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-                
-                <button
-                  type="button"
-                  onClick={() => setNotFoundState(null)}
-                  className="px-2.5 py-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  {language === 'es' ? 'Intentar otro usuario' : 'Try another'}
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 
       {/* TAB 1: INICIAR SESIÓN */}
       {mode === 'login' ? (
         <form onSubmit={handleLogin} className="mt-5 space-y-4">
-          
-          {/* Friendly New User Invitation Banner */}
-          <div className="p-3 rounded-2xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60 flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-teal-600 text-white shrink-0 shadow-xs">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div className="flex-1 text-xs">
-              <p className="font-bold text-teal-950 dark:text-teal-200">
-                {language === 'es' ? '¿Ya tienes una cuenta?' : 'Already have an account?'}
-              </p>
-              <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-tight mt-0.5">
-                {language === 'es' 
-                  ? 'Ingresa tus datos para acceder. Si no la tienes, ' 
-                  : 'Enter your credentials. If you do not have one, '}
-                <button
-                  type="button"
-                  onClick={() => { setMode('register'); setErrorMsg(null); setNotFoundState(null); }}
-                  className="font-bold text-teal-700 dark:text-teal-300 underline hover:text-teal-900 dark:hover:text-white cursor-pointer"
-                >
-                  {language === 'es' ? 'créate una cuenta aquí' : 'create one here'}
-                </button>
-                {language === 'es' ? ' en 1 minuto.' : ' in 1 minute.'}
-              </p>
-            </div>
-          </div>
           
           {/* Caja desplegable: Tipo de Portal / Rol de acceso */}
           <div className="text-left space-y-1">
@@ -572,9 +476,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               onChange={(e) => {
                 const role = e.target.value as 'guardian' | 'student' | 'admin';
                 setLoginRole(role);
-                if (role === 'admin' && !loginIdentifier) setLoginIdentifier('profesor@edumed.edu.co');
-                if (role === 'student' && !loginIdentifier) setLoginIdentifier('mateo.restrepo@edumed.edu.co');
-                if (role === 'guardian' && !loginIdentifier) setLoginIdentifier('maria.gonzalez@gmail.com');
               }}
               className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all cursor-pointer"
             >
@@ -601,15 +502,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 type="email"
                 required
                 value={loginIdentifier}
-                onChange={(e) => setLoginIdentifier(e.target.value)}
-                placeholder={
-                  loginRole === 'student'
-                    ? 'mateo.restrepo@edumed.edu.co'
-                    : loginRole === 'admin'
-                    ? 'profesor@edumed.edu.co'
-                    : 'maria.gonzalez@gmail.com'
-                }
-                className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
+                onChange={(e) => {
+                  setLoginIdentifier(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
+                className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
               />
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 pl-0.5">
@@ -653,9 +550,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 type={showLoginPassword ? 'text' : 'password'}
                 required
                 value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
+                onChange={(e) => {
+                  setLoginPassword(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
+                className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
               />
               <button
                 type="button"
@@ -769,8 +668,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     required
                     value={recoveryEmail}
                     onChange={(e) => setRecoveryEmail(e.target.value)}
-                    placeholder="usuario@edumed.edu.co o tu-correo@gmail.com"
-                    className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               </div>
@@ -844,8 +742,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                   required
                   value={recoveryCodeInput}
                   onChange={(e) => setRecoveryCodeInput(e.target.value.replace(/\D/g, ''))}
-                  placeholder="123456"
-                  className="w-full px-4 py-3 text-center text-xl font-mono font-black tracking-widest bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="w-full px-4 py-3 text-center text-xl font-mono font-black tracking-widest bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
               </div>
 
@@ -911,8 +808,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     required
                     value={recoveryNewPassword}
                     onChange={(e) => setRecoveryNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   <button
                     type="button"
@@ -939,8 +835,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     required
                     value={recoveryConfirmPassword}
                     onChange={(e) => setRecoveryConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                 </div>
               </div>
@@ -997,8 +892,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               required
               value={regName}
               onChange={(e) => setRegName(e.target.value)}
-              placeholder="Ej. Sara Molina Rodríguez"
-              className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+              className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
             />
           </div>
 
@@ -1037,8 +931,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 required
                 value={regDocNumber}
                 onChange={(e) => setRegDocNumber(e.target.value)}
-                placeholder="Ej. 1020304050"
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
           </div>
@@ -1057,10 +950,56 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 type="email"
                 required
                 value={regEmail}
-                onChange={(e) => setRegEmail(e.target.value)}
-                placeholder="ejemplo@correo.com"
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                onChange={(e) => {
+                  setRegEmail(e.target.value);
+                  if (errorMsg) setErrorMsg(null);
+                }}
+                className={`w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                  isRegEmailTaken
+                    ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/50 dark:bg-rose-950/20'
+                    : 'border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                }`}
               />
+              {isRegEmailTaken && (
+                <div className="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-200 text-left animate-in fade-in duration-150 shadow-xs">
+                  <div className="flex items-center gap-1.5 font-bold text-[11px] text-rose-700 dark:text-rose-300">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                    <span>{language === 'es' ? 'Este correo ya está registrado en la plataforma' : 'This email is already registered'}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 leading-tight">
+                    {language === 'es' 
+                      ? 'No es posible registrar de nuevo una cuenta con este correo.' 
+                      : 'You cannot register another account with this email address.'}
+                  </p>
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginIdentifier(regEmail.trim().toLowerCase());
+                        setMode('login');
+                        setErrorMsg(null);
+                        setSuccessMsg(null);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] shadow-xs cursor-pointer transition-colors"
+                    >
+                      {language === 'es' ? 'Iniciar Sesión' : 'Log In'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setRecoveryEmail(regEmail.trim().toLowerCase());
+                        setMode('forgot-password');
+                        setRecoveryStep('request');
+                        setErrorMsg(null);
+                        setSuccessMsg(null);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/60 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 font-bold text-[10px] cursor-pointer transition-colors"
+                    >
+                      {language === 'es' ? 'Recuperar Clave' : 'Reset Password'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -1076,8 +1015,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 required
                 value={regPhone}
                 onChange={(e) => setRegPhone(e.target.value)}
-                placeholder="300 123 4567"
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
           </div>
@@ -1097,8 +1035,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 required
                 value={regPassword}
                 onChange={(e) => setRegPassword(e.target.value)}
-                placeholder="Mín. 5 caracteres"
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
 
@@ -1115,8 +1052,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 required
                 value={regConfirmPassword}
                 onChange={(e) => setRegConfirmPassword(e.target.value)}
-                placeholder="Repetir clave"
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
             </div>
           </div>
@@ -1151,11 +1087,16 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
           <button
             id="btn-submit-register"
             type="submit"
-            disabled={isLoading}
-            className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-700/20 hover:shadow-teal-700/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-60"
+            disabled={isLoading || isRegEmailTaken}
+            className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-700/20 hover:shadow-teal-700/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? (
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            ) : isRegEmailTaken ? (
+              <>
+                <AlertCircle className="w-4 h-4 text-rose-300" />
+                <span>{language === 'es' ? 'Correo ya Registrado en la Plataforma' : 'Email Already Registered'}</span>
+              </>
             ) : (
               <>
                 <UserPlus className="w-4 h-4" />

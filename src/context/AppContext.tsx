@@ -23,6 +23,7 @@ interface AppContextType {
   currentUser: AuthUser | null;
   login: (identifier: string, pass: string, preferredRole?: UserRole) => { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
   register: (userData: { name: string; email: string; password: string; role: UserRole; documentNumber?: string; phone?: string }) => { success: boolean; message?: string };
+  isEmailRegistered: (email: string) => boolean;
   logout: () => void;
   requestPasswordResetCode: (email: string) => { success: boolean; message?: string; phone?: string; maskedPhone?: string; code?: string; name?: string };
   verifyPasswordResetCode: (email: string, code: string) => { success: boolean; message?: string };
@@ -485,14 +486,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const accountExists = Boolean(foundRegistered || isAdminMatch || isStudentMatch || isGuardianMatch || foundGuardian || foundStudent);
 
     if (!accountExists) {
-      // User doesn't have an account: invite them to register!
       return {
         success: false,
         notFound: true,
         message: language === 'es'
-          ? `No encontramos ninguna cuenta registrada con "${identifier}". ¡Te invitamos a crear una cuenta gratuita en EduMed Digital!`
-          : `No registered account found with "${identifier}". We invite you to create a free account in EduMed Digital!`,
-        suggestedRole: preferredRole || (cleanId.includes('estudiante') || cleanId.includes('student') ? 'student' : 'guardian')
+          ? 'La cuenta no está registrada'
+          : 'Account not registered'
       };
     }
 
@@ -616,6 +615,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome to the platform!' };
   };
 
+  const isEmailRegistered = (email: string): boolean => {
+    const clean = email.trim().toLowerCase();
+    if (!clean || !clean.includes('@')) return false;
+
+    // 1. Check in registered users stored in localStorage
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    if (registered.some((u: any) => u.email?.toLowerCase() === clean)) {
+      return true;
+    }
+
+    // 2. Check in pre-configured institutional and system accounts
+    const systemEmails = [
+      'admin@edumed.edu.co',
+      'profesor@edumed.edu.co',
+      'mateo.restrepo@edumed.edu.co',
+      'maria.gonzalez@gmail.com'
+    ];
+    if (systemEmails.includes(clean)) {
+      return true;
+    }
+
+    // 3. Check in guardians list
+    const savedGuardians: Guardian[] = JSON.parse(localStorage.getItem('edumed_guardians') || '[]');
+    const allGuardians = [...guardians, ...savedGuardians];
+    if (allGuardians.some(g => g.email?.toLowerCase() === clean)) {
+      return true;
+    }
+
+    // 4. Check in students list
+    const savedStudents: Student[] = JSON.parse(localStorage.getItem('edumed_students') || '[]');
+    const allStudents = [...students, ...savedStudents];
+    if (allStudents.some(s => s.email?.toLowerCase() === clean)) {
+      return true;
+    }
+
+    return false;
+  };
+
   const register = (userData: { name: string; email: string; password: string; role: UserRole; documentNumber?: string; phone?: string }): { success: boolean; message?: string } => {
     if (!userData.name.trim()) {
       return { success: false, message: language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.' };
@@ -636,16 +673,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const cleanEmail = userData.email.trim().toLowerCase();
-    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    const existing = registered.find((u: any) => u.email?.toLowerCase() === cleanEmail);
-    if (existing) {
+    
+    // Check if the email already exists anywhere in the platform
+    if (isEmailRegistered(cleanEmail)) {
       return {
         success: false,
         message: language === 'es'
-          ? 'Ya existe una cuenta con este correo electrónico. Por favor ingresa en la pestaña Iniciar Sesión.'
-          : 'An account with this email already exists. Please log in using the Log In tab.'
+          ? 'Este correo electrónico ya se encuentra registrado en la plataforma. No es posible crear una cuenta duplicada con el mismo correo. Por favor inicia sesión con tu cuenta o usa "¿Olvidó su contraseña?".'
+          : 'This email is already registered in the platform. A duplicate account cannot be created. Please log in or use "Forgot password?".'
       };
     }
+
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
 
     const newUser: AuthUser & { password?: string } = {
       id: 'usr-' + Date.now(),
@@ -912,6 +951,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         currentUser,
         login,
         register,
+        isEmailRegistered,
         logout,
         requestPasswordResetCode,
         verifyPasswordResetCode,

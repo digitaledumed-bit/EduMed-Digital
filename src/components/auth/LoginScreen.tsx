@@ -41,16 +41,10 @@ export const LoginScreen: React.FC = () => {
               }}
             />
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  EduMed <span className="text-teal-600 dark:text-teal-400">Digital</span>
-                </span>
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                  <Lock className="w-3 h-3" />
-                  <span>{language === 'es' ? 'Acceso Protegido' : 'Protected Access'}</span>
-                </span>
-              </div>
-              <p className="text-[11px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 truncate max-w-[200px] sm:max-w-md">
+              <span className="text-sm sm:text-base font-bold tracking-tight text-slate-900 dark:text-white block">
+                EduMed <span className="text-teal-600 dark:text-teal-400">Digital</span>
+              </span>
+              <p className="text-[10px] sm:text-xs font-medium text-slate-500 dark:text-slate-400 truncate max-w-[200px] sm:max-w-md">
                 I.E. Félix Henao Botero • {language === 'es' ? 'Medellín, Antioquia' : 'Medellín, Colombia'}
               </p>
             </div>
