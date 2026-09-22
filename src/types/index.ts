@@ -107,4 +107,19 @@ export interface AuthUser {
   avatarUrl?: string;
   documentNumber?: string;
   phone?: string;
+  position?: string;
+  department?: string;
+  institutionCode?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+  targetRoles: ('admin' | 'guardian' | 'student' | 'public')[];
+  targetDocNumber?: string;
+  targetEmail?: string;
+  category?: 'academic' | 'administrative' | 'enrollment' | 'document' | 'general';
 }

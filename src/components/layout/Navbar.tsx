@@ -269,36 +269,77 @@ export const Navbar: React.FC = () => {
 
               {showNotifications && (
                 <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-800 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 py-2 z-50">
-                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between">
-                    <span className="text-sm font-bold text-slate-900 dark:text-white">
-                      {language === 'es' ? 'Notificaciones Institucionales' : 'Institutional Notifications'}
-                    </span>
-                    <button 
-                      onClick={() => setShowNotifications(false)}
-                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                  <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <Bell className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                        <span className="text-sm font-bold text-slate-900 dark:text-white">
+                          {language === 'es' ? 'Mis Notificaciones' : 'My Notifications'}
+                        </span>
+                      </div>
+                      <button 
+                        onClick={() => setShowNotifications(false)}
+                        className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    {currentUser && (
+                      <div className="mt-1 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                        <span className="truncate">
+                          {language === 'es' ? 'Perfil: ' : 'Profile: '}
+                          <strong className="text-slate-700 dark:text-slate-200">
+                            {currentUser.role === 'admin'
+                              ? (currentUser.position || 'Docente / Directivo')
+                              : currentUser.role === 'student'
+                              ? 'Estudiante'
+                              : 'Acudiente'}
+                          </strong>
+                        </span>
+                        <span className="text-teal-600 dark:text-teal-400 font-semibold shrink-0">
+                          {unreadCount > 0 ? `${unreadCount} ${language === 'es' ? 'nuevas' : 'new'}` : (language === 'es' ? 'Al día' : 'Up to date')}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-700/60">
-                    {notifications.map((notif) => (
-                      <div key={notif.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors">
-                        <div className="flex items-start gap-2.5">
-                          <div className="w-2 h-2 rounded-full bg-teal-500 mt-1.5 shrink-0" />
-                          <div>
-                            <p className="text-xs font-semibold text-slate-900 dark:text-slate-100">
-                              {notif.title}
-                            </p>
-                            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                              {notif.message}
-                            </p>
-                            <span className="text-[10px] text-slate-400 mt-1 block">
-                              {notif.date}
-                            </span>
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-xs text-slate-500 dark:text-slate-400">
+                        <CheckCircle2 className="w-6 h-6 text-teal-500 mx-auto mb-1.5 opacity-80" />
+                        <p className="font-semibold text-slate-700 dark:text-slate-300">
+                          {language === 'es' ? 'No tienes notificaciones pendientes' : 'No pending notifications'}
+                        </p>
+                        <p className="mt-0.5 text-[11px]">
+                          {language === 'es' ? 'Solo recibes alertas asociadas a tu rol y perfil.' : 'You only receive alerts related to your role and profile.'}
+                        </p>
+                      </div>
+                    ) : (
+                      notifications.map((notif) => (
+                        <div key={notif.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors">
+                          <div className="flex items-start gap-2.5">
+                            <div className="w-2 h-2 rounded-full bg-teal-500 mt-1.5 shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1">
+                                <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                                  {notif.title}
+                                </p>
+                                {notif.category && (
+                                  <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold shrink-0">
+                                    {notif.category}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                {notif.message}
+                              </p>
+                              <span className="text-[10px] text-slate-400 mt-1 block">
+                                {notif.date}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -309,9 +350,10 @@ export const Navbar: React.FC = () => {
               <div className="flex items-center gap-2 pl-2">
                 <div 
                   onClick={() => {
+                    setActiveRole(currentUser.role);
                     if (currentUser.role === 'admin') setActiveTab('dashboard');
                     else if (currentUser.role === 'student') setActiveTab('student-profile');
-                    else setActiveTab('status');
+                    else setActiveTab('student-profile');
                   }}
                   className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors"
                 >

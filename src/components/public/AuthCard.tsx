@@ -28,7 +28,10 @@ import {
   ArrowLeft,
   Copy,
   RotateCcw,
-  MessageSquare
+  MessageSquare,
+  Briefcase,
+  Building2,
+  BadgeCheck
 } from 'lucide-react';
 
 interface AuthCardProps {
@@ -61,7 +64,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [rememberMe, setRememberMe] = useState(true);
   const [loginRole, setLoginRole] = useState<'guardian' | 'student' | 'admin'>('guardian');
   
-  // Register form state
+  // Register form type selector: standard (families/students) vs staff (teachers/administrators)
+  const [regFormType, setRegFormType] = useState<'standard' | 'staff'>('standard');
+
+  // Register form state (Standard: Acudiente / Estudiante)
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regDocType, setRegDocType] = useState('CC');
@@ -72,6 +78,22 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
   const [acceptTerms, setAcceptTerms] = useState(true);
+
+  // Dedicated Staff Register form state (Docente / Personal Administrativo)
+  const [staffName, setStaffName] = useState('');
+  const [staffRoleType, setStaffRoleType] = useState<'docente' | 'administrativo'>('docente');
+  const [staffDocType, setStaffDocType] = useState('CC');
+  const [staffDocNumber, setStaffDocNumber] = useState('');
+  const [staffEmail, setStaffEmail] = useState('');
+  const [staffPhone, setStaffPhone] = useState('');
+  const [staffSubject, setStaffSubject] = useState('Matemáticas');
+  const [staffPosition, setStaffPosition] = useState('Coordinador');
+  const [staffDepartment, setStaffDepartment] = useState('Básica Secundaria y Media');
+  const [staffInstitutionCode, setStaffInstitutionCode] = useState('');
+  const [staffPassword, setStaffPassword] = useState('');
+  const [staffConfirmPassword, setStaffConfirmPassword] = useState('');
+  const [showStaffPassword, setShowStaffPassword] = useState(false);
+  const [staffAcceptTerms, setStaffAcceptTerms] = useState(true);
 
   // Recovery form state
   const [recoveryStep, setRecoveryStep] = useState<'request' | 'verify' | 'new-password'>('request');
@@ -89,7 +111,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Check in real-time if the email being registered already exists in the platform
-  const isRegEmailTaken = regEmail.trim().length > 3 && regEmail.includes('@') && isEmailRegistered(regEmail.trim());
+  const isRegEmailTaken = regEmail.trim().length > 3 && regEmail.includes('@') && isEmailRegistered(regEmail.trim().toLowerCase());
+  const isStaffEmailTaken = staffEmail.trim().length > 3 && staffEmail.includes('@') && isEmailRegistered(staffEmail.trim().toLowerCase());
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,8 +151,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     const cleanRegEmail = regEmail.trim().toLowerCase();
     if (isEmailRegistered(cleanRegEmail)) {
       setErrorMsg(language === 'es' 
-        ? `El correo "${cleanRegEmail}" ya se encuentra registrado en la plataforma. No es posible crear una cuenta duplicada. Por favor inicie sesión o recupere su contraseña.` 
-        : `The email "${cleanRegEmail}" is already registered. Duplicate account creation is not allowed.`);
+        ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado.' 
+        : 'This email is already registered in the system. Registration with a previously used email is not permitted.');
       return;
     }
 
@@ -147,7 +170,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     setTimeout(() => {
       const res = register({
         name: regName,
-        email: regEmail,
+        email: cleanRegEmail,
         password: regPassword,
         role: regRole,
         documentNumber: `${regDocType} ${regDocNumber}`,
@@ -159,6 +182,94 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         setErrorMsg(res.message || (language === 'es' ? 'Error al registrar usuario.' : 'Registration failed.'));
       } else {
         setSuccessMsg(language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!');
+        if (onSuccess) onSuccess();
+      }
+    }, 450);
+  };
+
+  const handleStaffRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setSuccessMsg(null);
+
+    if (!staffName.trim()) {
+      setErrorMsg(language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.');
+      return;
+    }
+
+    const cleanStaffEmail = staffEmail.trim().toLowerCase();
+    if (!cleanStaffEmail || !cleanStaffEmail.includes('@')) {
+      setErrorMsg(language === 'es' ? 'Ingrese una dirección de correo institucional válida.' : 'Please enter a valid institutional email address.');
+      return;
+    }
+
+    if (isEmailRegistered(cleanStaffEmail)) {
+      setErrorMsg(language === 'es' 
+        ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado.' 
+        : 'This email is already registered in the system. Registration with a previously used email is not permitted.');
+      return;
+    }
+
+    if (!staffDocNumber.trim()) {
+      setErrorMsg(language === 'es' ? 'Ingrese su número de documento de identidad.' : 'Please enter your document number.');
+      return;
+    }
+
+    if (!staffPhone.trim()) {
+      setErrorMsg(language === 'es' ? 'Ingrese su número de celular para notificaciones y seguridad.' : 'Please enter your mobile phone number.');
+      return;
+    }
+
+    // Valid institutional authorization codes
+    const validCodes = ['DOC-2025', 'ADMIN-HENAO', 'HENAO2025', 'DOCENTE2025', 'ADMIN2025', 'IEFH-2025'];
+    const cleanCode = staffInstitutionCode.trim().toUpperCase();
+    if (!cleanCode || !validCodes.includes(cleanCode)) {
+      setErrorMsg(
+        language === 'es'
+          ? 'Código de Habilitación Institucional no válido. Ingrese el código suministrado por Rectoría o Secretaría.'
+          : 'Invalid institutional authorization code. Please enter the code provided by Rectorate or School Administration.'
+      );
+      return;
+    }
+
+    if (!staffPassword || staffPassword.length < 5) {
+      setErrorMsg(language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.');
+      return;
+    }
+
+    if (staffPassword !== staffConfirmPassword) {
+      setErrorMsg(language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.');
+      return;
+    }
+
+    if (!staffAcceptTerms) {
+      setErrorMsg(language === 'es' ? 'Debe aceptar los términos de custodia de información y normatividad docente.' : 'You must accept the terms.');
+      return;
+    }
+
+    setIsLoading(true);
+    setTimeout(() => {
+      const fullPosition = staffRoleType === 'docente' 
+        ? `Docente de ${staffSubject}` 
+        : staffPosition;
+
+      const res = register({
+        name: staffName,
+        email: cleanStaffEmail,
+        password: staffPassword,
+        role: 'admin',
+        documentNumber: `${staffDocType} ${staffDocNumber}`,
+        phone: staffPhone,
+        position: fullPosition,
+        department: staffDepartment,
+        institutionCode: cleanCode
+      });
+      setIsLoading(false);
+
+      if (!res.success) {
+        setErrorMsg(res.message || (language === 'es' ? 'Error al registrar funcionario institucional.' : 'Registration failed.'));
+      } else {
+        setSuccessMsg(language === 'es' ? '¡Cuenta docente/administrativa vinculada con éxito! Bienvenido al portal directivo.' : 'Institutional account created successfully!');
         if (onSuccess) onSuccess();
       }
     }, 450);
@@ -344,26 +455,21 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               </button>
             </div>
 
-            {/* Portal Público button */}
-            <button
-              id="auth-card-btn-portal-publico"
-              onClick={() => {
-                setActiveRole('public');
-                setActiveTab('home');
-              }}
-              className="w-full mt-2 p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 text-xs font-semibold flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
-            >
-              <Globe className="w-4 h-4 text-teal-600" />
-              <span>{language === 'es' ? 'Ver Portal Público' : 'View Public Portal'}</span>
-            </button>
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
+              id="auth-card-btn-go-to-panel"
               onClick={() => {
-                if (currentUser.role === 'admin') setActiveTab('dashboard');
-                else if (currentUser.role === 'student') setActiveTab('student-profile');
-                else setActiveTab('status');
+                const targetRole = currentUser.role || 'guardian';
+                setActiveRole(targetRole);
+                if (targetRole === 'admin') {
+                  setActiveTab('dashboard');
+                } else if (targetRole === 'student') {
+                  setActiveTab('student-profile');
+                } else {
+                  setActiveTab('student-profile');
+                }
               }}
               className="px-4 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold flex items-center justify-center gap-1.5 shadow-md shadow-teal-700/20 transition-all cursor-pointer"
             >
@@ -860,254 +966,691 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         </div>
       ) : (
         /* TAB 2: CREAR UNA CUENTA */
-        <form onSubmit={handleRegister} className="mt-5 space-y-3.5">
+        <div className="mt-5 space-y-4">
           
-          {/* User Type Choice (Caja desplegable) */}
-          <div className="text-left space-y-1">
-            <label htmlFor="reg-role-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {language === 'es' ? 'Registrarme como (Caja desplegable)' : 'Register as (Dropdown)'}
-            </label>
-            <select
-              id="reg-role-select"
-              value={regRole}
-              onChange={(e) => setRegRole(e.target.value as 'guardian' | 'student')}
-              className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-            >
-              <option value="guardian">{language === 'es' ? '👨‍👩‍👦 Acudiente / Padre o Tutor de Familia' : 'Parent / Guardian'}</option>
-              <option value="student">{language === 'es' ? '🎓 Estudiante / Aspirante' : 'Student / Applicant'}</option>
-            </select>
-          </div>
-
-          {/* Full Name */}
-          <div>
-            <label 
-              htmlFor="reg-name-input"
-              className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-            >
-              {language === 'es' ? 'Nombres y Apellidos Completos' : 'Full Name'}
-            </label>
-            <input
-              id="reg-name-input"
-              type="text"
-              required
-              value={regName}
-              onChange={(e) => setRegName(e.target.value)}
-              className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
-            />
-          </div>
-
-          {/* Document Type & Number */}
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label 
-                htmlFor="reg-doctype-select"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-              >
-                Tipo
-              </label>
-              <select
-                id="reg-doctype-select"
-                value={regDocType}
-                onChange={(e) => setRegDocType(e.target.value)}
-                className="w-full px-2 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                <option value="CC">C.C.</option>
-                <option value="TI">T.I.</option>
-                <option value="CE">C.E.</option>
-                <option value="RC">Reg. Civil</option>
-              </select>
-            </div>
-
-            <div className="col-span-2">
-              <label 
-                htmlFor="reg-docnum-input"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-              >
-                Número de Documento
-              </label>
-              <input
-                id="reg-docnum-input"
-                type="text"
-                required
-                value={regDocNumber}
-                onChange={(e) => setRegDocNumber(e.target.value)}
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-          </div>
-
-          {/* Email & Phone */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div>
-              <label 
-                htmlFor="reg-email-input"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-              >
-                Correo Electrónico
-              </label>
-              <input
-                id="reg-email-input"
-                type="email"
-                required
-                value={regEmail}
-                onChange={(e) => {
-                  setRegEmail(e.target.value);
-                  if (errorMsg) setErrorMsg(null);
-                }}
-                className={`w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                  isRegEmailTaken
-                    ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/50 dark:bg-rose-950/20'
-                    : 'border-slate-200 dark:border-slate-700 focus:ring-teal-500'
-                }`}
-              />
-              {isRegEmailTaken && (
-                <div className="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-200 text-left animate-in fade-in duration-150 shadow-xs">
-                  <div className="flex items-center gap-1.5 font-bold text-[11px] text-rose-700 dark:text-rose-300">
-                    <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
-                    <span>{language === 'es' ? 'Este correo ya está registrado en la plataforma' : 'This email is already registered'}</span>
-                  </div>
-                  <p className="text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 leading-tight">
-                    {language === 'es' 
-                      ? 'No es posible registrar de nuevo una cuenta con este correo.' 
-                      : 'You cannot register another account with this email address.'}
-                  </p>
-                  <div className="mt-2 flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setLoginIdentifier(regEmail.trim().toLowerCase());
-                        setMode('login');
-                        setErrorMsg(null);
-                        setSuccessMsg(null);
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] shadow-xs cursor-pointer transition-colors"
-                    >
-                      {language === 'es' ? 'Iniciar Sesión' : 'Log In'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRecoveryEmail(regEmail.trim().toLowerCase());
-                        setMode('forgot-password');
-                        setRecoveryStep('request');
-                        setErrorMsg(null);
-                        setSuccessMsg(null);
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/60 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 font-bold text-[10px] cursor-pointer transition-colors"
-                    >
-                      {language === 'es' ? 'Recuperar Clave' : 'Reset Password'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div>
-              <label 
-                htmlFor="reg-phone-input"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-              >
-                Número de Celular (Para recuperación por SMS) *
-              </label>
-              <input
-                id="reg-phone-input"
-                type="tel"
-                required
-                value={regPhone}
-                onChange={(e) => setRegPhone(e.target.value)}
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-          </div>
-
-          {/* Passwords */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <div>
-              <label 
-                htmlFor="reg-password-input"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-              >
-                Crear Contraseña
-              </label>
-              <input
-                id="reg-password-input"
-                type={showRegPassword ? 'text' : 'password'}
-                required
-                value={regPassword}
-                onChange={(e) => setRegPassword(e.target.value)}
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-
-            <div>
-              <label 
-                htmlFor="reg-confirm-password-input"
-                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-              >
-                Confirmar Contraseña
-              </label>
-              <input
-                id="reg-confirm-password-input"
-                type={showRegPassword ? 'text' : 'password'}
-                required
-                value={regConfirmPassword}
-                onChange={(e) => setRegConfirmPassword(e.target.value)}
-                className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-          </div>
-
-          {/* Toggle show password */}
-          <div className="flex items-center justify-between">
+          {/* Form Type Selector: Standard (Familias/Estudiantes) vs Staff (Docentes/Administrativos) */}
+          <div className="p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl grid grid-cols-2 gap-1 border border-slate-200 dark:border-slate-750">
             <button
               type="button"
-              onClick={() => setShowRegPassword(!showRegPassword)}
-              className="text-[11px] text-teal-600 dark:text-teal-400 flex items-center gap-1 font-medium"
+              id="reg-form-type-standard"
+              onClick={() => {
+                setRegFormType('standard');
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className={`py-2 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                regFormType === 'standard'
+                  ? 'bg-white dark:bg-slate-700 text-teal-800 dark:text-teal-200 shadow-sm border border-slate-200 dark:border-slate-600'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
             >
-              {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span>{showRegPassword ? 'Ocultar contraseñas' : 'Ver contraseñas'}</span>
+              <Users className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+              <span className="truncate">{language === 'es' ? 'Familias y Estudiantes' : 'Families & Students'}</span>
+            </button>
+
+            <button
+              type="button"
+              id="reg-form-type-staff"
+              onClick={() => {
+                setRegFormType('staff');
+                setErrorMsg(null);
+                setSuccessMsg(null);
+              }}
+              className={`py-2 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                regFormType === 'staff'
+                  ? 'bg-white dark:bg-slate-700 text-amber-800 dark:text-amber-200 shadow-sm border border-amber-300 dark:border-amber-700'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Briefcase className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span className="truncate">{language === 'es' ? 'Docente / Directivo' : 'Teacher / Staff'}</span>
+              <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 uppercase font-black shrink-0">
+                {language === 'es' ? 'Oficial' : 'Official'}
+              </span>
             </button>
           </div>
 
-          {/* Terms checkbox */}
-          <div className="flex items-start pt-1">
-            <input
-              id="accept-terms-checkbox"
-              type="checkbox"
-              checked={acceptTerms}
-              onChange={(e) => setAcceptTerms(e.target.checked)}
-              className="w-4 h-4 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-slate-300 dark:border-slate-700"
-            />
-            <label htmlFor="accept-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
-              Acepto los términos de servicio y autorizo el tratamiento de datos personales conforme a la Ley 1581 para fines educativos.
-            </label>
-          </div>
+          {regFormType === 'standard' ? (
+            /* FORMULARIO 1: FAMILIAS Y ESTUDIANTES */
+            <form onSubmit={handleRegister} className="space-y-3.5 text-left">
+              
+              {/* User Type Choice (Caja desplegable) */}
+              <div className="space-y-1">
+                <label htmlFor="reg-role-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  {language === 'es' ? 'Registrarme como (Caja desplegable)' : 'Register as (Dropdown)'}
+                </label>
+                <select
+                  id="reg-role-select"
+                  value={regRole}
+                  onChange={(e) => setRegRole(e.target.value as 'guardian' | 'student')}
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                >
+                  <option value="guardian">{language === 'es' ? '👨‍👩‍👦 Acudiente / Padre o Tutor de Familia' : 'Parent / Guardian'}</option>
+                  <option value="student">{language === 'es' ? '🎓 Estudiante / Aspirante' : 'Student / Applicant'}</option>
+                </select>
+              </div>
 
-          {/* Submit register */}
-          <button
-            id="btn-submit-register"
-            type="submit"
-            disabled={isLoading || isRegEmailTaken}
-            className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-700/20 hover:shadow-teal-700/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : isRegEmailTaken ? (
-              <>
-                <AlertCircle className="w-4 h-4 text-rose-300" />
-                <span>{language === 'es' ? 'Correo ya Registrado en la Plataforma' : 'Email Already Registered'}</span>
-              </>
-            ) : (
-              <>
-                <UserPlus className="w-4 h-4" />
-                <span>{language === 'es' ? 'Crear mi Cuenta' : 'Create Account'}</span>
-                <ArrowRight className="w-4 h-4 ml-1" />
-              </>
-            )}
-          </button>
+              {/* Full Name */}
+              <div>
+                <label 
+                  htmlFor="reg-name-input"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  {language === 'es' ? 'Nombres y Apellidos Completos' : 'Full Name'}
+                </label>
+                <input
+                  id="reg-name-input"
+                  type="text"
+                  required
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                />
+              </div>
+
+              {/* Document Type & Number */}
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label 
+                    htmlFor="reg-doctype-select"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    Tipo
+                  </label>
+                  <select
+                    id="reg-doctype-select"
+                    value={regDocType}
+                    onChange={(e) => setRegDocType(e.target.value)}
+                    className="w-full px-2 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  >
+                    <option value="CC">C.C.</option>
+                    <option value="TI">T.I.</option>
+                    <option value="CE">C.E.</option>
+                    <option value="RC">Reg. Civil</option>
+                  </select>
+                </div>
+
+                <div className="col-span-2">
+                  <label 
+                    htmlFor="reg-docnum-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    Número de Documento
+                  </label>
+                  <input
+                    id="reg-docnum-input"
+                    type="text"
+                    required
+                    value={regDocNumber}
+                    onChange={(e) => setRegDocNumber(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+
+              {/* Email & Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label 
+                    htmlFor="reg-email-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    Correo Electrónico
+                  </label>
+                  <input
+                    id="reg-email-input"
+                    type="email"
+                    required
+                    value={regEmail}
+                    onChange={(e) => {
+                      setRegEmail(e.target.value);
+                      if (errorMsg) setErrorMsg(null);
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      isRegEmailTaken
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/50 dark:bg-rose-950/20'
+                        : 'border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
+                  />
+                  {isRegEmailTaken && (
+                    <div className="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-200 text-left animate-in fade-in duration-150 shadow-xs">
+                      <div className="flex items-center gap-1.5 font-bold text-[11px] text-rose-700 dark:text-rose-300">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                        <span>{language === 'es' ? 'Este correo ya está registrado en la plataforma' : 'This email is already registered'}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 leading-tight">
+                        {language === 'es' 
+                          ? 'No es posible registrar de nuevo una cuenta con este correo.' 
+                          : 'You cannot register another account with this email address.'}
+                      </p>
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLoginIdentifier(regEmail.trim().toLowerCase());
+                            setMode('login');
+                            setErrorMsg(null);
+                            setSuccessMsg(null);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] shadow-xs cursor-pointer transition-colors"
+                        >
+                          {language === 'es' ? 'Iniciar Sesión' : 'Log In'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRecoveryEmail(regEmail.trim().toLowerCase());
+                            setMode('forgot-password');
+                            setRecoveryStep('request');
+                            setErrorMsg(null);
+                            setSuccessMsg(null);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/60 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 font-bold text-[10px] cursor-pointer transition-colors"
+                        >
+                          {language === 'es' ? 'Recuperar Clave' : 'Reset Password'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="reg-phone-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    Número de Celular *
+                  </label>
+                  <input
+                    id="reg-phone-input"
+                    type="tel"
+                    required
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+
+              {/* Passwords */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label 
+                    htmlFor="reg-password-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    Crear Contraseña
+                  </label>
+                  <input
+                    id="reg-password-input"
+                    type={showRegPassword ? 'text' : 'password'}
+                    required
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="reg-confirm-password-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    Confirmar Contraseña
+                  </label>
+                  <input
+                    id="reg-confirm-password-input"
+                    type={showRegPassword ? 'text' : 'password'}
+                    required
+                    value={regConfirmPassword}
+                    onChange={(e) => setRegConfirmPassword(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                </div>
+              </div>
+
+              {/* Toggle show password */}
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowRegPassword(!showRegPassword)}
+                  className="text-[11px] text-teal-600 dark:text-teal-400 flex items-center gap-1 font-medium cursor-pointer"
+                >
+                  {showRegPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <span>{showRegPassword ? 'Ocultar contraseñas' : 'Ver contraseñas'}</span>
+                </button>
+              </div>
+
+              {/* Terms checkbox */}
+              <div className="flex items-start pt-1">
+                <input
+                  id="accept-terms-checkbox"
+                  type="checkbox"
+                  checked={acceptTerms}
+                  onChange={(e) => setAcceptTerms(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-slate-300 dark:border-slate-700 cursor-pointer"
+                />
+                <label htmlFor="accept-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
+                  Acepto los términos de servicio y autorizo el tratamiento de datos personales conforme a la Ley 1581 para fines educativos.
+                </label>
+              </div>
+
+              {/* Submit register */}
+              <button
+                id="btn-submit-register"
+                type="submit"
+                disabled={isLoading || isRegEmailTaken}
+                className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-700/20 hover:shadow-teal-700/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : isRegEmailTaken ? (
+                  <>
+                    <AlertCircle className="w-4 h-4 text-rose-300" />
+                    <span>{language === 'es' ? 'Correo ya Utilizado - Registro no Permitido' : 'Email Already Used - Registration Not Allowed'}</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4" />
+                    <span>{language === 'es' ? 'Crear mi Cuenta' : 'Create Account'}</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            /* FORMULARIO 2: FORMULARIO DIFERENCIADO PARA DOCENTES Y PERSONAL ADMINISTRATIVO */
+            <form onSubmit={handleStaffRegister} className="space-y-3.5 text-left animate-in fade-in duration-200">
+              
+              {/* Institutional Notice Card */}
+              <div className="p-3 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 text-amber-900 dark:text-amber-200">
+                <div className="flex items-center gap-2">
+                  <Building2 className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" />
+                  <span className="text-xs font-extrabold uppercase tracking-wide">
+                    {language === 'es' ? 'Registro Oficial de Funcionarios' : 'Official Staff Registration'}
+                  </span>
+                </div>
+                <p className="text-[11px] text-amber-800/90 dark:text-amber-300/80 mt-1 leading-relaxed">
+                  {language === 'es'
+                    ? 'Formulario exclusivo para docentes de cátedra, coordinadores y personal administrativo de la I.E. Félix Henao Botero.'
+                    : 'Exclusive portal for educators, coordinators, and administrative officers.'}
+                </p>
+              </div>
+
+              {/* Staff Role Type Choice (Docente vs Administrativo) */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  id="staff-type-docente-btn"
+                  onClick={() => setStaffRoleType('docente')}
+                  className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                    staffRoleType === 'docente'
+                      ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-500 text-teal-800 dark:text-teal-200 shadow-xs'
+                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <GraduationCap className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span>{language === 'es' ? '👨‍🏫 Docente de Aula' : 'Classroom Teacher'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  id="staff-type-admin-btn"
+                  onClick={() => setStaffRoleType('administrativo')}
+                  className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
+                    staffRoleType === 'administrativo'
+                      ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-500 text-amber-800 dark:text-amber-200 shadow-xs'
+                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                  <span>{language === 'es' ? '🏛️ Administrativo / Directivo' : 'Administrative / Leader'}</span>
+                </button>
+              </div>
+
+              {/* Full Name */}
+              <div>
+                <label 
+                  htmlFor="staff-name-input"
+                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                >
+                  {language === 'es' ? 'Nombres y Apellidos Completos del Funcionario' : 'Full Name'} *
+                </label>
+                <input
+                  id="staff-name-input"
+                  type="text"
+                  required
+                  placeholder={language === 'es' ? 'Nombres y apellidos completos' : 'Full name'}
+                  value={staffName}
+                  onChange={(e) => setStaffName(e.target.value)}
+                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                />
+              </div>
+
+              {/* Document Type & Number */}
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label 
+                    htmlFor="staff-doctype-select"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    Tipo
+                  </label>
+                  <select
+                    id="staff-doctype-select"
+                    value={staffDocType}
+                    onChange={(e) => setStaffDocType(e.target.value)}
+                    className="w-full px-2 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                  >
+                    <option value="CC">C.C.</option>
+                    <option value="CE">C.E.</option>
+                  </select>
+                </div>
+
+                <div className="col-span-2">
+                  <label 
+                    htmlFor="staff-docnum-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    Cédula / Documento Oficial *
+                  </label>
+                  <input
+                    id="staff-docnum-input"
+                    type="text"
+                    required
+                    placeholder={language === 'es' ? 'Número de documento de identidad' : 'Document number'}
+                    value={staffDocNumber}
+                    onChange={(e) => setStaffDocNumber(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Conditional Role-Specific Fields */}
+              {staffRoleType === 'docente' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label 
+                      htmlFor="staff-subject-select"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Área / Asignatura Principal' : 'Primary Subject'} *
+                    </label>
+                    <select
+                      id="staff-subject-select"
+                      value={staffSubject}
+                      onChange={(e) => setStaffSubject(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                    >
+                      <option value="Matemáticas">Matemáticas y Geometría</option>
+                      <option value="Ciencias Naturales y Química">Ciencias Naturales / Biología / Química</option>
+                      <option value="Lengua Castellana">Lengua Castellana y Humanidades</option>
+                      <option value="Ciencias Sociales e Historia">Ciencias Sociales e Historia</option>
+                      <option value="Inglés">Inglés / Idioma Extranjero</option>
+                      <option value="Tecnología e Informática">Tecnología e Informática</option>
+                      <option value="Educación Física">Educación Física y Deportes</option>
+                      <option value="Educación Artística">Educación Artística</option>
+                      <option value="Filosofía y Ética">Filosofía, Ética y Valores</option>
+                      <option value="Básica Primaria Integral">Básica Primaria Integral</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="staff-department-select"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Nivel Académico' : 'Academic Level'} *
+                    </label>
+                    <select
+                      id="staff-department-select"
+                      value={staffDepartment}
+                      onChange={(e) => setStaffDepartment(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                    >
+                      <option value="Básica Secundaria y Media">Básica Secundaria y Media (Grados 6° a 11°)</option>
+                      <option value="Básica Primaria">Básica Primaria (Grados 1° a 5°)</option>
+                      <option value="Transición y Preescolar">Transición y Preescolar</option>
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div>
+                    <label 
+                      htmlFor="staff-position-select"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Cargo Institucional' : 'Institutional Position'} *
+                    </label>
+                    <select
+                      id="staff-position-select"
+                      value={staffPosition}
+                      onChange={(e) => setStaffPosition(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                    >
+                      <option value="Coordinador">{language === 'es' ? 'Coordinador' : 'Coordinator'}</option>
+                      <option value="Rector">{language === 'es' ? 'Rector' : 'Rector'}</option>
+                      <option value="Secretaria">{language === 'es' ? 'Secretaria' : 'Secretary'}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="staff-admin-dept-select"
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Dependencia / Área' : 'Department'} *
+                    </label>
+                    <select
+                      id="staff-admin-dept-select"
+                      value={staffDepartment}
+                      onChange={(e) => setStaffDepartment(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
+                    >
+                      <option value="Gestión Directiva">Gestión Directiva</option>
+                      <option value="Secretaría y Admisiones">Secretaría y Registro</option>
+                      <option value="Convivencia y Bienestar">Convivencia y Bienestar</option>
+                      <option value="Sistemas y Tecnología">Sistemas y Tecnología</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+
+              {/* Institutional Email & Phone */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label 
+                    htmlFor="staff-email-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    {language === 'es' ? 'Correo Institucional / Laboral *' : 'Institutional / Work Email *'}
+                  </label>
+                  <input
+                    id="staff-email-input"
+                    type="email"
+                    required
+                    placeholder={language === 'es' ? 'Correo institucional o laboral' : 'Institutional email'}
+                    value={staffEmail}
+                    onChange={(e) => {
+                      setStaffEmail(e.target.value);
+                      if (errorMsg) setErrorMsg(null);
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      isStaffEmailTaken
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/50 dark:bg-rose-950/20'
+                        : 'border-slate-200 dark:border-slate-700 focus:ring-amber-500'
+                    }`}
+                  />
+                  {isStaffEmailTaken && (
+                    <div className="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-200 text-left animate-in fade-in duration-150 shadow-xs">
+                      <div className="flex items-center gap-1.5 font-bold text-[11px] text-rose-700 dark:text-rose-300">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
+                        <span>{language === 'es' ? 'Este correo ya se encuentra registrado' : 'Email already registered'}</span>
+                      </div>
+                      <p className="text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 leading-tight">
+                        {language === 'es' 
+                          ? 'No está permitido registrarse con un correo que ya se haya utilizado.' 
+                          : 'Registration with an existing email is not permitted.'}
+                      </p>
+                      <div className="mt-2 flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLoginIdentifier(staffEmail.trim().toLowerCase());
+                            setMode('login');
+                            setErrorMsg(null);
+                            setSuccessMsg(null);
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] shadow-xs cursor-pointer transition-colors"
+                        >
+                          {language === 'es' ? 'Iniciar Sesión' : 'Log In'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="staff-phone-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    {language === 'es' ? 'Celular de Contacto *' : 'Cell Phone *'}
+                  </label>
+                  <input
+                    id="staff-phone-input"
+                    type="tel"
+                    required
+                    placeholder={language === 'es' ? 'Número de celular de contacto' : 'Cell phone number'}
+                    value={staffPhone}
+                    onChange={(e) => setStaffPhone(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Institutional Authorization Secret Code */}
+              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between mb-1">
+                  <label 
+                    htmlFor="staff-code-input"
+                    className="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
+                  >
+                    <KeyRound className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>{language === 'es' ? 'Código de Habilitación Institucional *' : 'Institutional Auth Code *'}</span>
+                  </label>
+                </div>
+                <input
+                  id="staff-code-input"
+                  type="text"
+                  required
+                  placeholder={language === 'es' ? 'Código de habilitación institucional' : 'Institutional authorization code'}
+                  value={staffInstitutionCode}
+                  onChange={(e) => setStaffInstitutionCode(e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 text-xs sm:text-sm font-mono tracking-wider bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 uppercase"
+                />
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                  {language === 'es' 
+                    ? 'Código de verificación interna provisto por Rectoría o Secretaría para dar de alta funcionarios.' 
+                    : 'Institutional authorization token required to activate staff access.'}
+                </p>
+              </div>
+
+              {/* Passwords */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div>
+                  <label 
+                    htmlFor="staff-password-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    {language === 'es' ? 'Crear Contraseña Institucional *' : 'Create Password *'}
+                  </label>
+                  <input
+                    id="staff-password-input"
+                    type={showStaffPassword ? 'text' : 'password'}
+                    required
+                    placeholder={language === 'es' ? 'Contraseña institucional' : 'Password'}
+                    value={staffPassword}
+                    onChange={(e) => setStaffPassword(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="staff-confirm-password-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    {language === 'es' ? 'Confirmar Contraseña *' : 'Confirm Password *'}
+                  </label>
+                  <input
+                    id="staff-confirm-password-input"
+                    type={showStaffPassword ? 'text' : 'password'}
+                    required
+                    placeholder={language === 'es' ? 'Confirmar contraseña institucional' : 'Confirm password'}
+                    value={staffConfirmPassword}
+                    onChange={(e) => setStaffConfirmPassword(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+              </div>
+
+              {/* Toggle show password */}
+              <div className="flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setShowStaffPassword(!showStaffPassword)}
+                  className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-1 font-medium cursor-pointer"
+                >
+                  {showStaffPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  <span>{showStaffPassword ? 'Ocultar contraseñas' : 'Ver contraseñas'}</span>
+                </button>
+              </div>
+
+              {/* Official Custody Terms Checkbox */}
+              <div className="flex items-start pt-1">
+                <input
+                  id="staff-accept-terms-checkbox"
+                  type="checkbox"
+                  checked={staffAcceptTerms}
+                  onChange={(e) => setStaffAcceptTerms(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-700 cursor-pointer"
+                />
+                <label htmlFor="staff-accept-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
+                  {language === 'es'
+                    ? 'Declaro mi vinculación institucional con la I.E. Félix Henao Botero y acepto el deber de confidencialidad y custodia de calificaciones e información académica (Decreto 1290 / Ley 1581).'
+                    : 'I declare official affiliation with the institution and accept confidentiality requirements.'}
+                </label>
+              </div>
+
+              {/* Submit Staff register button */}
+              <button
+                id="btn-submit-staff-register"
+                type="submit"
+                disabled={isLoading || isStaffEmailTaken}
+                className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-amber-600/20 hover:shadow-amber-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : isStaffEmailTaken ? (
+                  <>
+                    <AlertCircle className="w-4 h-4 text-rose-200" />
+                    <span>{language === 'es' ? 'Correo ya Utilizado - Registro no Permitido' : 'Email Already Used - Registration Not Allowed'}</span>
+                  </>
+                ) : (
+                  <>
+                    <BadgeCheck className="w-4 h-4" />
+                    <span>{language === 'es' ? 'Vincular y Crear Cuenta Institucional' : 'Link & Create Staff Account'}</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </button>
+            </form>
+          )}
 
           {/* Switch to Login link */}
-          <div className="text-center pt-1">
+          <div className="text-center pt-2">
             <p className="text-xs text-slate-600 dark:text-slate-400">
               {language === 'es' ? '¿Ya tiene una cuenta creada?' : 'Already have an account?'}{' '}
               <button
@@ -1120,7 +1663,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
             </p>
           </div>
 
-        </form>
+        </div>
       )}
 
     </div>

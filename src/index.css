@@ -3,62 +3,18 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /* ==========================================================================
-   AMPLIACIÓN GLOBAL DE TIPOGRAFÍA - EDU MED DIGITAL (I.E. FÉLIX HENAO BOTERO)
+   TIPOGRAFÍA Y ESTILOS BASE - EDU MED DIGITAL (I.E. FÉLIX HENAO BOTERO)
    ========================================================================== */
 
-/* Base font-size aumentada por defecto en toda la plataforma (18.5px en lugar de 16px) */
 :root, html {
-  font-size: 18.5px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.5;
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
-}
-
-/* Modo Normal (16px base) */
-html[data-font-size="normal"] {
-  font-size: 16px;
-}
-
-/* Modo Amplio (Por defecto: 18.5px base) */
-html[data-font-size="large"] {
-  font-size: 18.5px;
-}
-
-/* Modo Extra Amplio (21px base para máxima accesibilidad) */
-html[data-font-size="xlarge"] {
-  font-size: 21px;
-}
-
-/* Pantallas de escritorio medianas y grandes */
-@media (min-width: 1024px) {
-  :root, html {
-    font-size: 19px;
-  }
-  html[data-font-size="normal"] {
-    font-size: 16.5px;
-  }
-  html[data-font-size="large"] {
-    font-size: 19px;
-  }
-  html[data-font-size="xlarge"] {
-    font-size: 22px;
-  }
-}
-
-/* Reglas de accesibilidad para evitar micro-textos en la interfaz */
-.text-\[8px\], .text-\[9px\] {
-  font-size: 0.75rem !important;
-}
-
-.text-\[10px\] {
-  font-size: 0.8125rem !important;
-}
-
-.text-\[11px\] {
-  font-size: 0.875rem !important;
 }
 
 /* Mejora de legibilidad en inputs y botones */
 input, select, textarea, button {
   font-family: inherit;
 }
+

@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Language, Theme, FontSize, UserRole, Student, Guardian, EnrollmentRecord, StudentDocument, ActivityItem, EnrollmentStatus, DocumentStatus, AuthUser } from '../types';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { Language, Theme, FontSize, UserRole, Student, Guardian, EnrollmentRecord, StudentDocument, ActivityItem, EnrollmentStatus, DocumentStatus, AuthUser, AppNotification } from '../types';
 import { translations } from '../i18n/translations';
 import { initialStudents, initialGuardians, initialEnrollments, initialDocuments, initialActivities } from '../data/mockData';
 
@@ -22,7 +22,17 @@ interface AppContextType {
 
   currentUser: AuthUser | null;
   login: (identifier: string, pass: string, preferredRole?: UserRole) => { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
-  register: (userData: { name: string; email: string; password: string; role: UserRole; documentNumber?: string; phone?: string }) => { success: boolean; message?: string };
+  register: (userData: { 
+    name: string; 
+    email: string; 
+    password: string; 
+    role: UserRole; 
+    documentNumber?: string; 
+    phone?: string;
+    position?: string;
+    department?: string;
+    institutionCode?: string;
+  }) => { success: boolean; message?: string };
   isEmailRegistered: (email: string) => boolean;
   logout: () => void;
   requestPasswordResetCode: (email: string) => { success: boolean; message?: string; phone?: string; maskedPhone?: string; code?: string; name?: string };
@@ -44,7 +54,7 @@ interface AppContextType {
   linkGuardianToStudent: (studentId: string, guardianData: { name: string; relationship: string; phone: string; email: string; isPrimary: boolean; livesWithStudent: boolean }) => void;
   submitNewEnrollment: (data: { student: Partial<Student>; guardian: Partial<Guardian>; documents: { name: string; file: File | null }[] }) => string;
   lookupEnrollmentStatus: (query: string) => EnrollmentRecord | null;
-  notifications: { id: string; title: string; message: string; date: string; read: boolean }[];
+  notifications: AppNotification[];
   markNotificationsAsRead: () => void;
   unreadCount: number;
 }
@@ -122,29 +132,141 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : initialActivities;
   });
 
-  const [notifications, setNotifications] = useState([
+  const initialNotifications: AppNotification[] = [
+    // 1. Docentes y Directivos / Administrativos
     {
-      id: 'notif-1',
-      title: 'Certificado Médico Rechazado',
-      message: 'Se requiere subir nuevamente el certificado médico en formato PDF legible para Mariana Ríos.',
-      date: 'Hace 10 minutos',
-      read: false
+      id: 'notif-adm-1',
+      title: 'Nuevas Solicitudes de Matrícula',
+      message: 'Hay 5 solicitudes de matrícula pendientes por validación documental y asignación en SIMAT.',
+      date: 'Hace 15 min',
+      read: false,
+      targetRoles: ['admin'],
+      category: 'administrative'
     },
     {
-      id: 'notif-2',
-      title: 'Matrícula Aprobada',
-      message: 'La matrícula de Santiago Jaramillo ha sido aprobada para el grado Noveno (9-A).',
-      date: 'Hace 2 horas',
-      read: false
+      id: 'notif-adm-2',
+      title: 'Documentos Pendientes de Aprobación',
+      message: 'Se cargaron certificados del SISBEN y certificados médicos para revisión por secretaría académica.',
+      date: 'Hace 1 hora',
+      read: false,
+      targetRoles: ['admin'],
+      category: 'document'
     },
     {
-      id: 'notif-3',
-      title: 'Recordatorio Institucional',
-      message: 'El plazo de entrega de documentos del periodo 2024-2025 finaliza el 30 de Noviembre.',
+      id: 'notif-adm-3',
+      title: 'Comité de Convivencia y Promoción',
+      message: 'Convocatoria a reunión de docentes y directores de grupo el próximo viernes en la sala de profesores.',
+      date: 'Hace 3 horas',
+      read: false,
+      targetRoles: ['admin'],
+      category: 'academic'
+    },
+    {
+      id: 'notif-adm-4',
+      title: 'Cierre de Auditoría SIMAT 2025',
+      message: 'Recordatorio oficial: Plazo de consolidación de cupos escolares ante Secretaría de Educación de Medellín.',
       date: 'Ayer',
-      read: true
+      read: true,
+      targetRoles: ['admin'],
+      category: 'administrative'
+    },
+
+    // 2. Acudientes / Familias
+    {
+      id: 'notif-grd-1',
+      title: 'Estado de Matrícula en Revisión',
+      message: 'La documentación de matrícula de su acudido(a) está siendo verificada satisfactoriamente por Secretaría.',
+      date: 'Hace 20 min',
+      read: false,
+      targetRoles: ['guardian'],
+      category: 'enrollment'
+    },
+    {
+      id: 'notif-grd-2',
+      title: 'Asamblea General de Padres de Familia',
+      message: 'Convocatoria a la primera asamblea de acudientes del año lectivo en la sede principal a las 7:00 AM.',
+      date: 'Hace 2 horas',
+      read: false,
+      targetRoles: ['guardian'],
+      category: 'general'
+    },
+    {
+      id: 'notif-grd-3',
+      title: 'Programa de Alimentación Escolar (PAE)',
+      message: 'Habilitada la actualización de datos para el complemento nutricional escolar de su acudido.',
+      date: 'Ayer',
+      read: false,
+      targetRoles: ['guardian'],
+      category: 'general'
+    },
+    {
+      id: 'notif-grd-4',
+      title: 'Póliza de Accidentes Escolares',
+      message: 'Se ha confirmado la cobertura médica escolar institucional para el presente periodo académico.',
+      date: 'Hace 2 días',
+      read: true,
+      targetRoles: ['guardian'],
+      category: 'document'
+    },
+
+    // 3. Estudiantes
+    {
+      id: 'notif-std-1',
+      title: 'Carnet Digital Estudiantil Habilitado',
+      message: 'Tu carnet escolar con código QR ya está generado. Puedes presentarlo desde tu perfil institucional.',
+      date: 'Hace 30 min',
+      read: false,
+      targetRoles: ['student'],
+      category: 'academic'
+    },
+    {
+      id: 'notif-std-2',
+      title: 'Horario y Asignación de Grupo',
+      message: 'Tu salón y directores de área para el periodo 2025 ya están disponibles en tu expediente escolar.',
+      date: 'Hace 2 horas',
+      read: false,
+      targetRoles: ['student'],
+      category: 'academic'
+    },
+    {
+      id: 'notif-std-3',
+      title: 'Inscripción Personería y Contraloría',
+      message: 'Abierta la convocatoria democrática para representantes al gobierno estudiantil de la institución.',
+      date: 'Ayer',
+      read: false,
+      targetRoles: ['student'],
+      category: 'general'
+    },
+    {
+      id: 'notif-std-4',
+      title: 'Matrícula Académica Legalizada',
+      message: 'Tu matrícula para el ciclo escolar ha sido registrada a satisfacción en los libros del colegio.',
+      date: 'Hace 3 días',
+      read: true,
+      targetRoles: ['student'],
+      category: 'enrollment'
+    },
+
+    // 4. Circular Institucional General
+    {
+      id: 'notif-gen-1',
+      title: 'Calendario Escolar y Recesos 2025',
+      message: 'Publicado el cronograma oficial de semanas pedagógicas, evaluaciones institucionales y actos cívicos.',
+      date: 'Esta semana',
+      read: false,
+      targetRoles: ['admin', 'guardian', 'student', 'public'],
+      category: 'general'
     }
-  ]);
+  ];
+
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const saved = localStorage.getItem('edumed_notifications');
+    return saved ? JSON.parse(saved) : initialNotifications;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('edumed_notifications', JSON.stringify(notifications));
+  }, [notifications]);
 
   useEffect(() => {
     localStorage.setItem('edumed_lang', language);
@@ -160,9 +282,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [theme]);
 
   useEffect(() => {
-    localStorage.setItem('edumed_font_size', fontSize);
-    document.documentElement.setAttribute('data-font-size', fontSize);
-  }, [fontSize]);
+    // Clean any legacy data-font-size attribute
+    document.documentElement.removeAttribute('data-font-size');
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('edumed_students', JSON.stringify(students));
@@ -426,10 +548,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return found;
   };
 
-  const markNotificationsAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
-
   const login = (identifier: string, pass: string, preferredRole?: UserRole): { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole } => {
     const cleanId = identifier.trim().toLowerCase();
     const rawIdDigits = cleanId.replace(/\D/g, '');
@@ -512,7 +630,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           email: foundRegistered.email,
           role: foundRegistered.role || 'guardian',
           documentNumber: foundRegistered.documentNumber,
-          phone: foundRegistered.phone
+          phone: foundRegistered.phone,
+          position: foundRegistered.position,
+          department: foundRegistered.department,
+          institutionCode: foundRegistered.institutionCode
         };
       }
     } else if (isAdminMatch) {
@@ -641,14 +762,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // 1. Check in registered users stored in localStorage
     const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    if (registered.some((u: any) => u.email?.toLowerCase() === clean)) {
+    if (registered.some((u: any) => u.email?.toLowerCase().trim() === clean)) {
       return true;
     }
 
-    // 2. Check in pre-configured institutional and system accounts
+    // 2. Check current active user in localStorage or state
+    if (currentUser?.email?.toLowerCase().trim() === clean) {
+      return true;
+    }
+
+    // 3. Check in pre-configured institutional and system accounts
     const systemEmails = [
       'admin@edumed.edu.co',
       'profesor@edumed.edu.co',
+      'docente@edumed.edu.co',
+      'rector@edumed.edu.co',
+      'coordinador@edumed.edu.co',
+      'secretaria@edumed.edu.co',
       'mateo.restrepo@edumed.edu.co',
       'maria.gonzalez@gmail.com'
     ];
@@ -656,30 +786,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     }
 
-    // 3. Check in guardians list
+    // 4. Check in guardians list
     const savedGuardians: Guardian[] = JSON.parse(localStorage.getItem('edumed_guardians') || '[]');
     const allGuardians = [...guardians, ...savedGuardians];
-    if (allGuardians.some(g => g.email?.toLowerCase() === clean)) {
+    if (allGuardians.some(g => g.email?.toLowerCase().trim() === clean)) {
       return true;
     }
 
-    // 4. Check in students list
+    // 5. Check in students list & nested guardians
     const savedStudents: Student[] = JSON.parse(localStorage.getItem('edumed_students') || '[]');
     const allStudents = [...students, ...savedStudents];
-    if (allStudents.some(s => s.email?.toLowerCase() === clean)) {
+    if (allStudents.some(s => s.email?.toLowerCase().trim() === clean)) {
+      return true;
+    }
+    if (allStudents.some(s => s.guardians?.some(g => g.email?.toLowerCase().trim() === clean))) {
       return true;
     }
 
     return false;
   };
 
-  const register = (userData: { name: string; email: string; password: string; role: UserRole; documentNumber?: string; phone?: string }): { success: boolean; message?: string } => {
+  const register = (userData: { 
+    name: string; 
+    email: string; 
+    password: string; 
+    role: UserRole; 
+    documentNumber?: string; 
+    phone?: string;
+    position?: string;
+    department?: string;
+    institutionCode?: string;
+  }): { success: boolean; message?: string } => {
     if (!userData.name.trim()) {
       return { success: false, message: language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.' };
     }
     if (!userData.email.trim() || !userData.email.includes('@')) {
       return { success: false, message: language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.' };
     }
+
+    const cleanEmail = userData.email.trim().toLowerCase();
+    
+    // Strict block: Do not permit registration with any previously used or registered email
+    if (isEmailRegistered(cleanEmail)) {
+      return {
+        success: false,
+        message: language === 'es'
+          ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado. Por favor inicie sesión o recupere su contraseña.'
+          : 'This email is already registered in the system. Registration with a previously used email is not permitted.'
+      };
+    }
+
     if (!userData.phone?.trim()) {
       return { 
         success: false, 
@@ -692,18 +848,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
     }
 
-    const cleanEmail = userData.email.trim().toLowerCase();
-    
-    // Check if the email already exists anywhere in the platform
-    if (isEmailRegistered(cleanEmail)) {
-      return {
-        success: false,
-        message: language === 'es'
-          ? 'Este correo electrónico ya se encuentra registrado en la plataforma. No es posible crear una cuenta duplicada con el mismo correo. Por favor inicia sesión con tu cuenta o usa "¿Olvidó su contraseña?".'
-          : 'This email is already registered in the platform. A duplicate account cannot be created. Please log in or use "Forgot password?".'
-      };
-    }
-
     const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
 
     const newUser: AuthUser & { password?: string } = {
@@ -712,7 +856,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       email: cleanEmail,
       role: userData.role || 'guardian',
       documentNumber: userData.documentNumber?.trim(),
-      phone: userData.phone?.trim()
+      phone: userData.phone?.trim(),
+      position: userData.position?.trim(),
+      department: userData.department?.trim(),
+      institutionCode: userData.institutionCode?.trim()
     };
 
     registered.push({ ...newUser, password: userData.password });
@@ -730,12 +877,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setActiveTab('status');
     }
 
+    const roleName = newUser.role === 'admin' 
+      ? 'Docente / Administrativo' 
+      : newUser.role === 'student' 
+        ? 'Estudiante' 
+        : 'Acudiente';
+
     setActivities((prev) => [
       {
         id: 'act-' + Date.now(),
         timeAgo: 'Justo ahora',
         timeAgoEn: 'Just now',
-        description: `Nueva cuenta creada para ${newUser.name} (${newUser.role === 'guardian' ? 'Acudiente' : 'Estudiante'})`,
+        description: `Nueva cuenta creada para ${newUser.name} (${roleName})`,
         descriptionEn: `New account created for ${newUser.name} (${newUser.role})`,
         type: 'completed',
         userName: newUser.name
@@ -947,7 +1100,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('home');
   };
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Filter notifications strictly according to current user's role and profile
+  const userNotifications = useMemo(() => {
+    if (!currentUser) {
+      return notifications.filter((n) => n.targetRoles.includes('public'));
+    }
+    return notifications.filter((n) => {
+      // 1. Target role must include current user's active role
+      const roleMatch = n.targetRoles.includes(currentUser.role) || n.targetRoles.includes('public');
+      if (!roleMatch) return false;
+
+      // 2. Specific email match if notification was directed to a specific account
+      if (n.targetEmail && n.targetEmail.toLowerCase() !== currentUser.email.toLowerCase()) {
+        return false;
+      }
+      // 3. Specific document match if notification was directed to a specific person
+      if (n.targetDocNumber && currentUser.documentNumber && n.targetDocNumber !== currentUser.documentNumber) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [notifications, currentUser]);
+
+  const unreadCount = userNotifications.filter((n) => !n.read).length;
+
+  const markNotificationsAsRead = () => {
+    const userNotifIds = new Set(userNotifications.map((n) => n.id));
+    setNotifications((prev) =>
+      prev.map((n) => (userNotifIds.has(n.id) ? { ...n, read: true } : n))
+    );
+  };
+
   const t = translations[language];
 
   return (
@@ -990,7 +1174,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         linkGuardianToStudent,
         submitNewEnrollment,
         lookupEnrollmentStatus,
-        notifications,
+        notifications: userNotifications,
         markNotificationsAsRead,
         unreadCount
       }}

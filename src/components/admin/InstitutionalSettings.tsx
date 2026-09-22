@@ -12,12 +12,11 @@ import {
   Mail,
   Phone,
   Clock,
-  Upload,
-  Type
+  Upload
 } from 'lucide-react';
 
 export const InstitutionalSettings: React.FC = () => {
-  const { t, language, customLogoUrl, setCustomLogoUrl, fontSize, setFontSize } = useApp();
+  const { t, language, customLogoUrl, setCustomLogoUrl } = useApp();
   const [saved, setSaved] = useState(false);
   const [logoSuccess, setLogoSuccess] = useState(false);
 
@@ -275,93 +274,6 @@ export const InstitutionalSettings: React.FC = () => {
                 {t.admin.settings.autoEmailOnReject}
               </span>
             </label>
-          </div>
-        </div>
-
-        {/* Section 4: Typography and Visual Accessibility */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-3">
-            <Type className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-            <span>{language === 'es' ? 'Accesibilidad y Escala de Tipografía' : 'Accessibility & Typography Scale'}</span>
-          </h2>
-
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300">
-            {language === 'es'
-              ? 'Control del tamaño de toda la letra en la plataforma. Por defecto se encuentra ampliada para garantizar lectura óptima a directivos, profesores, estudiantes y acudientes.'
-              : 'Control font size across the platform. Default is enlarged for optimal readability for all users.'}
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button
-              type="button"
-              onClick={() => setFontSize('large')}
-              className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
-                fontSize === 'large'
-                  ? 'border-teal-600 bg-teal-50/60 dark:bg-teal-950/40 text-teal-900 dark:text-teal-200 ring-2 ring-teal-600/30'
-                  : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-extrabold text-lg text-teal-600 dark:text-teal-400">A+</span>
-                {fontSize === 'large' && <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
-              </div>
-              <div className="font-bold text-sm">{language === 'es' ? 'Letra Amplia' : 'Large Font'}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {language === 'es' ? 'Recomendada (Activa por defecto)' : 'Recommended (Default)'}
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFontSize('xlarge')}
-              className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
-                fontSize === 'xlarge'
-                  ? 'border-teal-600 bg-teal-50/60 dark:bg-teal-950/40 text-teal-900 dark:text-teal-200 ring-2 ring-teal-600/30'
-                  : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-black text-xl text-amber-600 dark:text-amber-400">A++</span>
-                {fontSize === 'xlarge' && <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
-              </div>
-              <div className="font-bold text-sm">{language === 'es' ? 'Extra Amplia' : 'Extra Large'}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {language === 'es' ? 'Máxima legibilidad visual' : 'Highest visibility scale'}
-              </div>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setFontSize('normal')}
-              className={`p-4 rounded-xl border text-left transition-all cursor-pointer ${
-                fontSize === 'normal'
-                  ? 'border-teal-600 bg-teal-50/60 dark:bg-teal-950/40 text-teal-900 dark:text-teal-200 ring-2 ring-teal-600/30'
-                  : 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/40 hover:border-slate-300'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="font-bold text-base text-slate-500">A</span>
-                {fontSize === 'normal' && <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />}
-              </div>
-              <div className="font-bold text-sm">{language === 'es' ? 'Letra Estándar' : 'Standard Font'}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                {language === 'es' ? 'Escala compacta' : 'Compact scale'}
-              </div>
-            </button>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 mt-2">
-            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1 uppercase tracking-wider">
-              {language === 'es' ? 'Vista previa en vivo del texto institucional:' : 'Live institutional text preview:'}
-            </span>
-            <p className="font-bold text-slate-900 dark:text-white leading-snug">
-              Institución Educativa Félix Henao Botero • Sistema Oficial de Matrícula y Gestión Escolar
-            </p>
-            <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">
-              {language === 'es'
-                ? 'Todos los módulos, tablas, fichas de estudiantes y formularios reflejan automáticamente esta configuración de tamaño.'
-                : 'All modules, tables, student files, and forms automatically adapt to this font size configuration.'}
-            </p>
           </div>
         </div>
 
