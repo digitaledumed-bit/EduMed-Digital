@@ -12,6 +12,7 @@ import {
   MapPin,
   AlertCircle
 } from 'lucide-react';
+import { UserAvatar } from '../common/UserAvatar';
 
 export const LinkGuardianView: React.FC = () => {
   const { 
@@ -24,7 +25,7 @@ export const LinkGuardianView: React.FC = () => {
     setActiveTab 
   } = useApp();
 
-  const student = students.find((s) => s.id === selectedStudentId) || students[0];
+  const student = selectedStudentId ? (students.find((s) => s.id === selectedStudentId) || students[0]) : (students.length > 0 ? students[0] : null);
 
   const [searchDoc, setSearchDoc] = useState('');
   const [searchedGuardian, setSearchedGuardian] = useState<typeof guardians[0] | null>(null);
@@ -112,10 +113,10 @@ export const LinkGuardianView: React.FC = () => {
       {/* Selected Student Banner */}
       <div className="p-4 rounded-2xl bg-teal-50 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img
-            src={student?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'}
-            alt="Student"
-            className="w-11 h-11 rounded-xl object-cover border border-teal-500"
+          <UserAvatar 
+            name={student?.fullName || 'Estudiante'} 
+            size="md" 
+            className="rounded-xl border border-teal-500" 
           />
           <div>
             <span className="text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider block">

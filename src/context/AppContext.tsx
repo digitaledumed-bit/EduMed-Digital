@@ -41,6 +41,10 @@ interface AppContextType {
   customLogoUrl: string;
   setCustomLogoUrl: (url: string) => void;
   
+  isProfileModalOpen: boolean;
+  setIsProfileModalOpen: (open: boolean) => void;
+  updateCurrentUserProfile: (data: Partial<AuthUser> & { password?: string }) => { success: boolean; message?: string };
+
   students: Student[];
   guardians: Guardian[];
   enrollments: EnrollmentRecord[];
@@ -91,11 +95,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [activeRole, setActiveRole] = useState<UserRole>('public');
   const [activeTab, setActiveTab] = useState<string>('home');
-  const [selectedStudentId, setSelectedStudentId] = useState<string | null>('std-6');
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     const saved = localStorage.getItem('edumed_current_user');
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    try {
+      const user = JSON.parse(saved);
+      // Clean up legacy mock names if present in active session
+      if (user.name === 'Lic. Claudia Restrepo') user.name = 'Administrador Institucional';
+      if (user.name === 'Mateo Restrepo' || user.name === 'Mateo Valencia Gómez') return null;
+      if (user.name === 'María González') return null;
+      return user;
+    } catch {
+      return null;
+    }
   });
 
   const [customLogoUrl, setCustomLogoUrlState] = useState<string>(() => {
@@ -109,17 +124,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [students, setStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem('edumed_students');
-    return saved ? JSON.parse(saved) : initialStudents;
+    if (saved) {
+      try {
+        const parsed: Student[] = JSON.parse(saved);
+        // Filter out legacy dummy seeds so only genuinely enrolled students appear
+        const realStudents = parsed.filter(s => 
+          !s.id?.startsWith('std-seed-') && 
+          !['std-1', 'std-2', 'std-3', 'std-4', 'std-5', 'std-6', 'std-7'].includes(s.id) &&
+          !['Mariana Gómez Ríos', 'Martínez Rojas, Alejandro', 'Gómez Pérez, Sofía Valentina', 'Mateo Valencia Restrepo', 'Valentina Restrepo Henao', 'Mateo Restrepo', 'Santiago Morales Zapata'].includes(s.fullName)
+        );
+        localStorage.setItem('edumed_students', JSON.stringify(realStudents));
+        return realStudents;
+      } catch {
+        return [];
+      }
+    }
+    return [];
   });
 
   const [guardians, setGuardians] = useState<Guardian[]>(() => {
     const saved = localStorage.getItem('edumed_guardians');
-    return saved ? JSON.parse(saved) : initialGuardians;
+    if (saved) {
+      try {
+        const parsed: Guardian[] = JSON.parse(saved);
+        const realGuardians = parsed.filter(g => 
+          !g.id?.startsWith('grd-seed-') && 
+          !['grd-1', 'grd-2', 'grd-3', 'grd-4', 'grd-5', 'grd-7', 'grd-8', 'grd-9', 'grd-10'].includes(g.id) &&
+          !['Carlos Eduardo Ramírez', 'Ana María González López', 'Roberto Carlos Domínguez', 'Juan Carlos Gómez', 'María González'].includes(g.fullName)
+        );
+        localStorage.setItem('edumed_guardians', JSON.stringify(realGuardians));
+        return realGuardians;
+      } catch {
+        return [];
+      }
+    }
+    return [];
   });
 
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>(() => {
     const saved = localStorage.getItem('edumed_enrollments');
-    return saved ? JSON.parse(saved) : initialEnrollments;
+    if (saved) {
+      try {
+        const parsed: EnrollmentRecord[] = JSON.parse(saved);
+        const realEnrollments = parsed.filter(e => 
+          !['#MAT-24-001', '#MAT-24-002', '#MAT-24-003', '#MAT-24-004', '#MAT-24-005', '#MAT-24-006', '#MAT-24-007'].includes(e.id) &&
+          !['Mateo Restrepo', 'Valentina Gómez', 'Santiago Jaramillo', 'Luciana Pérez', 'Mateo Valencia Gómez'].includes(e.studentName)
+        );
+        localStorage.setItem('edumed_enrollments', JSON.stringify(realEnrollments));
+        return realEnrollments;
+      } catch {
+        return [];
+      }
+    }
+    return [];
   });
 
   const [documents, setDocuments] = useState<StudentDocument[]>(() => {
@@ -533,15 +590,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!found.guardianName) {
       const studentObj = students.find((s) => s.id === found.studentId || s.documentNumber === found.studentDoc);
       const studentGuardian = studentObj?.guardians?.[0];
-      const guardianObj = guardians.find((g) => g.id === studentGuardian?.id || g.associatedStudents.some((as) => as.id === found.studentId));
+      const guardianObj = guardians.find((g) => g.id === studentGuardian?.id || g.associatedStudents?.some((as) => as.id === found.studentId));
 
       return {
         ...found,
-        guardianName: studentGuardian?.name || guardianObj?.fullName || 'Carlos Eduardo Ramírez',
-        guardianDoc: guardianObj?.documentNumber ? `${guardianObj.documentType || 'CC'} ${guardianObj.documentNumber}` : 'CC 1.034.567.890',
-        guardianPhone: studentGuardian?.phone || guardianObj?.phone || '+57 300 123 4567',
-        guardianEmail: studentGuardian?.email || guardianObj?.email || 'carlos.ramirez@email.com',
-        guardianRelationship: studentGuardian?.relationship || guardianObj?.relationship || 'Padre / Acudiente Principal'
+        guardianName: studentGuardian?.name || guardianObj?.fullName || 'Acudiente Titular',
+        guardianDoc: guardianObj?.documentNumber ? `${guardianObj.documentType || 'CC'} ${guardianObj.documentNumber}` : 'Documento Registrado',
+        guardianPhone: studentGuardian?.phone || guardianObj?.phone || '+57 300 000 0000',
+        guardianEmail: studentGuardian?.email || guardianObj?.email || 'acudiente@edumed.edu.co',
+        guardianRelationship: studentGuardian?.relationship || guardianObj?.relationship || 'Acudiente Principal'
       };
     }
 
@@ -576,7 +633,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
     });
 
-    // 2. Check predefined demo / seed users
+    // 2. Check predefined admin user or registered users
     const isAdminMatch = cleanId === 'admin@edumed.edu.co' || 
       cleanId === 'admin' || 
       cleanId === '43981245' || 
@@ -584,15 +641,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cleanId === 'docente@edumed.edu.co' || 
       cleanId === 'profesor' || 
       cleanId === 'docente';
-    const isStudentMatch = cleanId === 'mateo.restrepo@edumed.edu.co' || cleanId === 'mateo' || cleanId === '1035982147' || cleanId === 'ti 1035982147';
-    const isGuardianMatch = cleanId === 'maria.gonzalez@gmail.com' || cleanId === 'maria' || cleanId === '43892104' || cleanId === 'cc 43892104';
 
     // 3. Check existing guardians and students in database
-    const foundGuardian = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered
-      ? guardians.find(g => g.email?.toLowerCase() === cleanId || g.name?.toLowerCase() === cleanId || (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits))
+    const foundGuardian = !isAdminMatch && !foundRegistered
+      ? guardians.find(g => g.email?.toLowerCase() === cleanId || g.fullName?.toLowerCase() === cleanId || (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits) || (g.documentNumber && g.documentNumber.replace(/\D/g, '') === rawIdDigits))
       : null;
 
-    const foundStudent = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered && !foundGuardian
+    const foundStudent = !isAdminMatch && !foundRegistered && !foundGuardian
       ? students.find(s => 
           s.email?.toLowerCase() === cleanId || 
           s.fullName?.toLowerCase() === cleanId || 
@@ -601,7 +656,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       : null;
 
     // Determine if ANY account exists
-    const accountExists = Boolean(foundRegistered || isAdminMatch || isStudentMatch || isGuardianMatch || foundGuardian || foundStudent);
+    const accountExists = Boolean(foundRegistered || isAdminMatch || foundGuardian || foundStudent);
 
     if (!accountExists) {
       return {
@@ -631,6 +686,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           role: foundRegistered.role || 'guardian',
           documentNumber: foundRegistered.documentNumber,
           phone: foundRegistered.phone,
+          address: foundRegistered.address,
           position: foundRegistered.position,
           department: foundRegistered.department,
           institutionCode: foundRegistered.institutionCode
@@ -641,58 +697,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (passwordValid) {
         authUser = {
           id: 'usr-admin-1',
-          name: 'Lic. Claudia Restrepo',
+          name: 'Administrador Institucional',
           email: 'admin@edumed.edu.co',
           role: 'admin',
           documentNumber: '43981245',
-          phone: '300 456 7890'
-        };
-      }
-    } else if (isStudentMatch) {
-      passwordValid = cleanPass === 'mateo2025' || cleanPass === '12345' || cleanPass === 'mateo' || isCustomPasswordMatch;
-      if (passwordValid) {
-        authUser = {
-          id: 'std-6',
-          name: 'Mateo Restrepo',
-          email: 'mateo.restrepo@edumed.edu.co',
-          role: 'student',
-          documentNumber: '1035982147',
-          phone: '315 987 6543'
-        };
-      }
-    } else if (isGuardianMatch) {
-      passwordValid = cleanPass === 'maria2025' || cleanPass === '12345' || cleanPass === 'maria' || isCustomPasswordMatch;
-      if (passwordValid) {
-        authUser = {
-          id: 'grd-seed-1',
-          name: 'María González',
-          email: 'maria.gonzalez@gmail.com',
-          role: 'guardian',
-          documentNumber: '43892104',
-          phone: '312 345 6789'
+          phone: '300 456 7890',
+          position: 'Coordinación Institucional',
+          department: 'Administración y Secretaría Académica'
         };
       }
     } else if (foundGuardian) {
-      passwordValid = cleanPass === '12345' || cleanPass === 'maria2025' || cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
+      passwordValid = cleanPass === '12345' || cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: foundGuardian.id,
-          name: foundGuardian.name,
+          name: foundGuardian.fullName,
           email: foundGuardian.email || `${cleanId}@edumed.edu.co`,
           role: 'guardian',
-          phone: foundGuardian.phone
+          phone: foundGuardian.phone,
+          documentNumber: `${foundGuardian.documentType} ${foundGuardian.documentNumber}`,
+          address: foundGuardian.address
         };
       }
     } else if (foundStudent) {
-      passwordValid = cleanPass === '12345' || cleanPass === 'mateo2025' || cleanPass === (foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
+      passwordValid = cleanPass === '12345' || cleanPass === (foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: foundStudent.id,
           name: foundStudent.fullName,
           email: foundStudent.email || `${foundStudent.id}@edumed.edu.co`,
           role: 'student',
-          documentNumber: foundStudent.documentNumber,
-          phone: '318 765 4321'
+          documentNumber: `${foundStudent.documentType} ${foundStudent.documentNumber}`,
+          phone: foundStudent.phone,
+          address: foundStudent.address
         };
       }
     }
@@ -848,6 +885,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
     }
 
+    if (userData.role === 'admin') {
+      const docDigits = (userData.documentNumber || '').replace(/\D/g, '');
+      const expectedCode = docDigits.slice(0, 4);
+      const cleanCode = (userData.institutionCode || '').replace(/\D/g, '');
+      if (cleanCode.length !== 4 || cleanCode !== expectedCode) {
+        return {
+          success: false,
+          message: language === 'es'
+            ? 'El código de habilitación debe tener 4 dígitos y corresponder a los primeros 4 números de su documento.'
+            : 'The authorization code must be 4 digits matching the first 4 numbers of your document.'
+        };
+      }
+    }
+
     const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
 
     const newUser: AuthUser & { password?: string } = {
@@ -925,30 +976,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     } else if (cleanEmail === 'admin@edumed.edu.co' || cleanEmail === 'profesor@edumed.edu.co') {
       foundUser = {
-        name: 'Lic. Claudia Restrepo',
+        name: 'Administrador Institucional',
         email: 'admin@edumed.edu.co',
         phone: '300 456 7890',
         role: 'admin'
-      };
-    } else if (cleanEmail === 'mateo.restrepo@edumed.edu.co') {
-      foundUser = {
-        name: 'Mateo Restrepo',
-        email: 'mateo.restrepo@edumed.edu.co',
-        phone: '315 987 6543',
-        role: 'student'
-      };
-    } else if (cleanEmail === 'maria.gonzalez@gmail.com') {
-      foundUser = {
-        name: 'María González',
-        email: 'maria.gonzalez@gmail.com',
-        phone: '312 345 6789',
-        role: 'guardian'
       };
     } else {
       const g = guardians.find(x => x.email?.toLowerCase() === cleanEmail);
       if (g) {
         foundUser = {
-          name: g.name,
+          name: g.fullName,
           email: g.email || cleanEmail,
           phone: g.phone || '312 456 7890',
           role: 'guardian'
@@ -959,7 +996,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           foundUser = {
             name: s.fullName,
             email: s.email || cleanEmail,
-            phone: '318 765 4321',
+            phone: s.phone || '315 987 6543',
             role: 'student'
           };
         }
@@ -1100,6 +1137,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('home');
   };
 
+  const updateCurrentUserProfile = (data: Partial<AuthUser> & { password?: string }): { success: boolean; message?: string } => {
+    if (!currentUser) {
+      return { success: false, message: language === 'es' ? 'No hay sesión activa.' : 'No active session.' };
+    }
+
+    const updatedUser: AuthUser = {
+      ...currentUser,
+      name: data.name !== undefined ? data.name : currentUser.name,
+      email: data.email !== undefined ? data.email : currentUser.email,
+      phone: data.phone !== undefined ? data.phone : currentUser.phone,
+      address: data.address !== undefined ? data.address : currentUser.address,
+      documentType: data.documentType !== undefined ? data.documentType : currentUser.documentType,
+      documentNumber: data.documentNumber !== undefined ? data.documentNumber : currentUser.documentNumber,
+      position: data.position !== undefined ? data.position : currentUser.position,
+      department: data.department !== undefined ? data.department : currentUser.department
+    };
+
+    setCurrentUser(updatedUser);
+    localStorage.setItem('edumed_current_user', JSON.stringify(updatedUser));
+
+    // Also sync in edumed_registered_users if present
+    try {
+      const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+      const userIndex = registered.findIndex((u: any) => u.id === currentUser.id || u.email?.toLowerCase() === currentUser.email?.toLowerCase());
+      if (userIndex >= 0) {
+        registered[userIndex] = {
+          ...registered[userIndex],
+          name: updatedUser.name,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          address: updatedUser.address,
+          documentNumber: updatedUser.documentNumber,
+          position: updatedUser.position,
+          department: updatedUser.department,
+          ...(data.password ? { password: data.password } : {})
+        };
+        localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
+      }
+
+      // Update custom passwords if changed
+      if (data.password) {
+        const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
+        customPasswords[updatedUser.email.toLowerCase()] = data.password;
+        if (updatedUser.documentNumber) {
+          const docDigits = updatedUser.documentNumber.replace(/\D/g, '');
+          if (docDigits) customPasswords[docDigits] = data.password;
+        }
+        localStorage.setItem('edumed_custom_passwords', JSON.stringify(customPasswords));
+      }
+    } catch (e) {
+      console.error('Error updating user profile in storage:', e);
+    }
+
+    return {
+      success: true,
+      message: language === 'es' ? 'Perfil actualizado exitosamente.' : 'Profile updated successfully.'
+    };
+  };
+
   // Filter notifications strictly according to current user's role and profile
   const userNotifications = useMemo(() => {
     if (!currentUser) {
@@ -1157,6 +1253,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         register,
         isEmailRegistered,
         logout,
+        isProfileModalOpen,
+        setIsProfileModalOpen,
+        updateCurrentUserProfile,
         requestPasswordResetCode,
         verifyPasswordResetCode,
         resetPasswordWithCode,

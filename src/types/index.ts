@@ -105,8 +105,10 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   avatarUrl?: string;
+  documentType?: string;
   documentNumber?: string;
   phone?: string;
+  address?: string;
   position?: string;
   department?: string;
   institutionCode?: string;

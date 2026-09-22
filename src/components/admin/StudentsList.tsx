@@ -8,8 +8,10 @@ import {
   ChevronLeft, 
   ChevronRight, 
   UserCheck,
-  UserPlus
+  UserPlus,
+  Inbox
 } from 'lucide-react';
+import { UserAvatar } from '../common/UserAvatar';
 
 export const StudentsList: React.FC = () => {
   const { 
@@ -133,11 +135,7 @@ export const StudentsList: React.FC = () => {
                         }}
                         className="flex items-center gap-3 cursor-pointer group"
                       >
-                        <img
-                          src={std.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'}
-                          alt={std.fullName}
-                          className="w-9 h-9 rounded-full object-cover border border-slate-200 dark:border-slate-700 group-hover:border-teal-500 transition-colors"
-                        />
+                        <UserAvatar name={std.fullName} size="sm" />
                         <div>
                           <div className="font-bold text-slate-900 dark:text-white group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                             {std.fullName}
@@ -217,6 +215,21 @@ export const StudentsList: React.FC = () => {
                   </tr>
                 );
               })}
+              {filteredStudents.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
+                    <Inbox className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+                    <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                      {language === 'es' ? 'No se encontraron estudiantes matriculados' : 'No enrolled students found'}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {language === 'es' 
+                        ? 'Los estudiantes que matricules o registres aparecerán en este listado.'
+                        : 'Students you enroll or register will appear here.'}
+                    </p>
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -224,7 +237,7 @@ export const StudentsList: React.FC = () => {
         {/* Footer pagination info */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <span>
-            {t.admin.students.showing} 1-{filteredStudents.length} {t.admin.students.of} 1,245 {t.admin.students.studentsCount}
+            {t.admin.students.showing} {filteredStudents.length > 0 ? 1 : 0}-{filteredStudents.length} {t.admin.students.of} {students.length} {t.admin.students.studentsCount}
           </span>
           <div className="flex items-center gap-1">
             <button className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-600 disabled:opacity-50">

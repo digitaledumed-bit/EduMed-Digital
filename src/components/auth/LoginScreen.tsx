@@ -8,7 +8,11 @@ import {
   Globe
 } from 'lucide-react';
 
-export const LoginScreen: React.FC = () => {
+interface LoginScreenProps {
+  onReplaySplash?: () => void;
+}
+
+export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const { 
     language, 
     setLanguage, 
@@ -25,16 +29,20 @@ export const LoginScreen: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
           
           {/* Institution Brand: Logo with smaller EduMed Digital underneath */}
-          <div className="flex flex-col items-center justify-center text-center">
+          <div 
+            onClick={onReplaySplash}
+            title={onReplaySplash ? "Ver animación de bienvenida EduMed Digital" : undefined}
+            className={`flex flex-col items-center justify-center text-center select-none ${onReplaySplash ? 'cursor-pointer group' : ''}`}
+          >
             <img 
               src={customLogoUrl} 
               alt="Escudo Institución Educativa Félix Henao Botero" 
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-2 ring-amber-400/20 shadow-xs bg-white shrink-0"
+              className="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-2 ring-amber-400/20 shadow-xs bg-white shrink-0 group-hover:scale-105 transition-transform"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
               }}
             />
-            <span className="text-[10px] sm:text-xs font-semibold tracking-tight text-slate-600 dark:text-slate-300 mt-1 leading-none">
+            <span className="text-[10px] sm:text-xs font-semibold tracking-tight text-slate-600 dark:text-slate-300 mt-1 leading-none group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
               edumed <span className="text-teal-600 dark:text-teal-400 font-bold">digital</span>
             </span>
           </div>
@@ -114,12 +122,25 @@ export const LoginScreen: React.FC = () => {
             <span>{language === 'es' ? 'Sistema Oficial de Matrícula y Gestión Escolar' : 'Official Enrollment & School Management System'}</span>
           </div>
 
-          <div className="flex items-center gap-4 text-xs">
+          <div className="flex items-center gap-3 sm:gap-4 text-xs">
             <span>DANE: 105001002345</span>
             <span>•</span>
             <span>Medellín, Antioquia</span>
             <span>•</span>
             <span>© {new Date().getFullYear()}</span>
+            {onReplaySplash && (
+              <>
+                <span>•</span>
+                <button
+                  type="button"
+                  onClick={onReplaySplash}
+                  className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors cursor-pointer text-[11px]"
+                  title="Reproducir animación de bienvenida"
+                >
+                  Animación EduMed
+                </button>
+              </>
+            )}
           </div>
         </div>
       </footer>

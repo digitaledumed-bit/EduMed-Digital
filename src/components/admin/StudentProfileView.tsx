@@ -16,6 +16,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
+import { UserAvatar } from '../common/UserAvatar';
 
 export const StudentProfileView: React.FC = () => {
   const { 
@@ -31,54 +32,75 @@ export const StudentProfileView: React.FC = () => {
 
   const [feedbackToast, setFeedbackToast] = React.useState<string | null>(null);
 
-  // Role-based student resolution to ensure strict data isolation
+  // Strict student resolution based purely on user's authentic data
   const resolveStudent = () => {
     if (currentUser?.role === 'student') {
       return (
         students.find(
           (s) => s.id === currentUser.id ||
-                 (currentUser.documentNumber && s.documentNumber === currentUser.documentNumber) ||
+                 (currentUser.documentNumber && s.documentNumber && s.documentNumber.replace(/\D/g, '') === currentUser.documentNumber.replace(/\D/g, '')) ||
                  (currentUser.email && s.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
-                 s.fullName.toLowerCase().includes(currentUser.name.toLowerCase())
-        ) ||
-        students.find((s) => s.fullName.toLowerCase().includes('mateo')) ||
-        students[0]
+                 (s.fullName && currentUser.name && s.fullName.toLowerCase() === currentUser.name.toLowerCase())
+        ) || null
       );
     }
 
     if (currentUser?.role === 'guardian') {
       const myGuardian = guardians.find(
-        (g) => (currentUser.documentNumber && g.documentNumber === currentUser.documentNumber) ||
+        (g) => (currentUser.documentNumber && g.documentNumber && g.documentNumber.replace(/\D/g, '') === currentUser.documentNumber.replace(/\D/g, '')) ||
                (currentUser.email && g.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
-               g.fullName.toLowerCase().includes(currentUser.name.toLowerCase())
+               (g.fullName && currentUser.name && g.fullName.toLowerCase() === currentUser.name.toLowerCase())
       );
-      if (myGuardian && myGuardian.associatedStudents.length > 0) {
+      if (myGuardian && myGuardian.associatedStudents?.length > 0) {
         const foundChild = students.find((s) => s.id === myGuardian.associatedStudents[0].id);
         if (foundChild) return foundChild;
       }
       return (
-        students.find((s) => s.guardians?.some((g) => g.email?.toLowerCase() === currentUser.email?.toLowerCase() || g.name.toLowerCase().includes(currentUser.name.toLowerCase()))) ||
-        students.find((s) => s.fullName.includes('Valentina')) ||
-        students[2]
+        students.find((s) => s.guardians?.some((g) => 
+          (currentUser.email && g.email?.toLowerCase() === currentUser.email.toLowerCase()) || 
+          (currentUser.name && g.name && g.name.toLowerCase() === currentUser.name.toLowerCase())
+        )) || null
       );
     }
 
     // Admin / Directivo: free to select any student
-    return students.find((s) => s.id === selectedStudentId) || students[0];
+    if (selectedStudentId) {
+      const found = students.find((s) => s.id === selectedStudentId);
+      if (found) return found;
+    }
+    return students.length > 0 ? students[0] : null;
   };
 
   const student = resolveStudent();
 
   if (!student) {
     return (
-      <div className="p-8 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800">
-        <p className="text-slate-500">{language === 'es' ? 'Estudiante no encontrado.' : 'Student not found.'}</p>
-        <button
-          onClick={() => setActiveTab(currentUser?.role === 'admin' ? 'students' : 'status')}
-          className="mt-4 px-4 py-2 bg-teal-700 text-white rounded-xl text-xs font-semibold"
-        >
-          {language === 'es' ? 'Volver' : 'Go back'}
-        </button>
+      <div className="p-10 text-center bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm max-w-lg mx-auto my-8">
+        <div className="w-16 h-16 rounded-2xl bg-teal-50 dark:bg-teal-950/60 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto mb-4 border border-teal-200 dark:border-teal-800">
+          <User className="w-8 h-8" />
+        </div>
+        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+          {language === 'es' ? 'No hay estudiante matriculado aún' : 'No student enrolled yet'}
+        </h3>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+          {language === 'es'
+            ? 'Actualmente no tienes ningún estudiante matriculado asociado a tu cuenta. Puedes iniciar el proceso de matrícula oficial en este momento.'
+            : 'You do not have any enrolled student associated with your account. You can start the enrollment process now.'}
+        </p>
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
+          <button
+            onClick={() => setActiveTab('wizard')}
+            className="w-full sm:w-auto px-5 py-2.5 bg-teal-700 hover:bg-teal-800 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+          >
+            {language === 'es' ? 'Iniciar Nueva Matrícula' : 'Start New Enrollment'}
+          </button>
+          <button
+            onClick={() => setActiveTab('status')}
+            className="w-full sm:w-auto px-4 py-2.5 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl text-xs font-semibold transition-all cursor-pointer"
+          >
+            {language === 'es' ? 'Consultar Estado' : 'Check Status'}
+          </button>
+        </div>
       </div>
     );
   }
@@ -146,10 +168,10 @@ export const StudentProfileView: React.FC = () => {
       {/* Main Student Header Card */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <img
-            src={student.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'}
-            alt={student.fullName}
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover border-2 border-teal-500 shadow-md"
+          <UserAvatar 
+            name={student.fullName} 
+            size="xl" 
+            className="rounded-2xl border-2 border-teal-500 shadow-md" 
           />
           <div>
             <div className="flex items-center gap-2.5">

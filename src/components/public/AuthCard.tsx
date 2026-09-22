@@ -31,12 +31,24 @@ import {
   MessageSquare,
   Briefcase,
   Building2,
-  BadgeCheck
+  BadgeCheck,
+  Edit3
 } from 'lucide-react';
+import { UserAvatar } from '../common/UserAvatar';
 
 interface AuthCardProps {
   onSuccess?: () => void;
 }
+
+const FieldError: React.FC<{ message?: string }> = ({ message }) => {
+  if (!message) return null;
+  return (
+    <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400 mt-1 flex items-center gap-1 animate-in fade-in duration-150 text-left">
+      <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-500" />
+      <span>{message}</span>
+    </p>
+  );
+};
 
 export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const { 
@@ -52,7 +64,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     customLogoUrl,
     requestPasswordResetCode,
     verifyPasswordResetCode,
-    resetPasswordWithCode
+    resetPasswordWithCode,
+    setIsProfileModalOpen
   } = useApp();
 
   const [mode, setMode] = useState<'login' | 'register' | 'forgot-password'>('login');
@@ -110,14 +123,71 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Field-specific error messages displayed below each input bar
+  const [loginFieldErrors, setLoginFieldErrors] = useState<{
+    identifier?: string;
+    password?: string;
+    role?: string;
+  }>({});
+
+  const [regFieldErrors, setRegFieldErrors] = useState<{
+    name?: string;
+    docNumber?: string;
+    email?: string;
+    phone?: string;
+    password?: string;
+    confirmPassword?: string;
+    terms?: string;
+  }>({});
+
+  const [staffFieldErrors, setStaffFieldErrors] = useState<{
+    name?: string;
+    docNumber?: string;
+    email?: string;
+    phone?: string;
+    code?: string;
+    password?: string;
+    confirmPassword?: string;
+    terms?: string;
+  }>({});
+
+  const [recoveryFieldErrors, setRecoveryFieldErrors] = useState<{
+    email?: string;
+    code?: string;
+    newPassword?: string;
+    confirmPassword?: string;
+  }>({});
+
+  const clearAllErrors = () => {
+    setErrorMsg(null);
+    setSuccessMsg(null);
+    setLoginFieldErrors({});
+    setRegFieldErrors({});
+    setStaffFieldErrors({});
+    setRecoveryFieldErrors({});
+  };
+
   // Check in real-time if the email being registered already exists in the platform
   const isRegEmailTaken = regEmail.trim().length > 3 && regEmail.includes('@') && isEmailRegistered(regEmail.trim().toLowerCase());
   const isStaffEmailTaken = staffEmail.trim().length > 3 && staffEmail.includes('@') && isEmailRegistered(staffEmail.trim().toLowerCase());
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
-    setSuccessMsg(null);
+    clearAllErrors();
+    const newErrors: { identifier?: string; password?: string; role?: string } = {};
+
+    if (!loginIdentifier.trim()) {
+      newErrors.identifier = language === 'es' ? 'Por favor ingrese su correo electrónico o documento.' : 'Please enter your email or document.';
+    }
+    if (!loginPassword.trim()) {
+      newErrors.password = language === 'es' ? 'Por favor ingrese su contraseña.' : 'Please enter your password.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setLoginFieldErrors(newErrors);
+      return;
+    }
+
     setIsLoading(true);
 
     setTimeout(() => {
@@ -125,9 +195,18 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       setIsLoading(false);
       if (!res.success) {
         if (res.notFound) {
-          setErrorMsg(language === 'es' ? 'La cuenta no está registrada' : 'The account is not registered');
+          setLoginFieldErrors({
+            identifier: language === 'es' ? 'La cuenta no está registrada con este correo o documento.' : 'The account is not registered'
+          });
+        } else if (res.suggestedRole) {
+          setLoginFieldErrors({
+            role: res.message || (language === 'es' ? 'Esta cuenta no corresponde al portal seleccionado.' : 'This account belongs to another portal.')
+          });
+          setErrorMsg(res.message || null);
         } else {
-          setErrorMsg(res.message || (language === 'es' ? 'Error al iniciar sesión.' : 'Login failed.'));
+          setLoginFieldErrors({
+            password: language === 'es' ? 'Contraseña incorrecta. Verifique sus datos o recupere su clave.' : 'Incorrect password. Check your credentials or reset your password.'
+          });
         }
       } else {
         setSuccessMsg(res.message || (language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome back!'));
@@ -138,31 +217,54 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
-    setSuccessMsg(null);
+    clearAllErrors();
+    const newErrors: {
+      name?: string;
+      docNumber?: string;
+      email?: string;
+      phone?: string;
+      password?: string;
+      confirmPassword?: string;
+      terms?: string;
+    } = {};
 
-    if (!regPhone.trim()) {
-      setErrorMsg(language === 'es' 
-        ? 'Por favor ingrese su número de celular. Es requerido para recuperar la cuenta por SMS.' 
-        : 'Please enter your mobile phone number. It is required for SMS account recovery.');
-      return;
+    if (!regName.trim()) {
+      newErrors.name = language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.';
+    }
+
+    if (!regDocNumber.trim()) {
+      newErrors.docNumber = language === 'es' ? 'Ingrese su número de documento de identidad.' : 'Please enter your document number.';
     }
 
     const cleanRegEmail = regEmail.trim().toLowerCase();
-    if (isEmailRegistered(cleanRegEmail)) {
-      setErrorMsg(language === 'es' 
+    if (!cleanRegEmail || !cleanRegEmail.includes('@')) {
+      newErrors.email = language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.';
+    } else if (isEmailRegistered(cleanRegEmail)) {
+      newErrors.email = language === 'es' 
         ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado.' 
-        : 'This email is already registered in the system. Registration with a previously used email is not permitted.');
-      return;
+        : 'This email is already registered in the system. Registration with a previously used email is not permitted.';
+    }
+
+    if (!regPhone.trim()) {
+      newErrors.phone = language === 'es' 
+        ? 'Por favor ingrese su número de celular. Es requerido para recuperar la cuenta por SMS.' 
+        : 'Please enter your mobile phone number.';
+    }
+
+    if (!regPassword || regPassword.length < 5) {
+      newErrors.password = language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.';
     }
 
     if (regPassword !== regConfirmPassword) {
-      setErrorMsg(language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.');
-      return;
+      newErrors.confirmPassword = language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.';
     }
 
     if (!acceptTerms) {
-      setErrorMsg(language === 'es' ? 'Debe aceptar la política de tratamiento de datos.' : 'You must accept data policies.');
+      newErrors.terms = language === 'es' ? 'Debe aceptar la política de tratamiento de datos.' : 'You must accept data policies.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setRegFieldErrors(newErrors);
       return;
     }
 
@@ -179,7 +281,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       setIsLoading(false);
 
       if (!res.success) {
-        setErrorMsg(res.message || (language === 'es' ? 'Error al registrar usuario.' : 'Registration failed.'));
+        if (res.message && res.message.toLowerCase().includes('correo')) {
+          setRegFieldErrors({ email: res.message });
+        } else {
+          setErrorMsg(res.message || (language === 'es' ? 'Error al registrar usuario.' : 'Registration failed.'));
+        }
       } else {
         setSuccessMsg(language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!');
         if (onSuccess) onSuccess();
@@ -189,61 +295,78 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
 
   const handleStaffRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
-    setSuccessMsg(null);
+    clearAllErrors();
+    const newErrors: {
+      name?: string;
+      docNumber?: string;
+      email?: string;
+      phone?: string;
+      code?: string;
+      password?: string;
+      confirmPassword?: string;
+      terms?: string;
+    } = {};
 
     if (!staffName.trim()) {
-      setErrorMsg(language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.');
-      return;
+      newErrors.name = language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.';
+    }
+
+    const docDigits = staffDocNumber.replace(/\D/g, '');
+    if (!staffDocNumber.trim()) {
+      newErrors.docNumber = language === 'es' ? 'Ingrese su número de documento de identidad.' : 'Please enter your document number.';
+    } else if (docDigits.length < 4) {
+      newErrors.docNumber = language === 'es' ? 'El documento debe contener al menos 4 números.' : 'Document must have at least 4 numbers.';
     }
 
     const cleanStaffEmail = staffEmail.trim().toLowerCase();
     if (!cleanStaffEmail || !cleanStaffEmail.includes('@')) {
-      setErrorMsg(language === 'es' ? 'Ingrese una dirección de correo institucional válida.' : 'Please enter a valid institutional email address.');
-      return;
-    }
-
-    if (isEmailRegistered(cleanStaffEmail)) {
-      setErrorMsg(language === 'es' 
+      newErrors.email = language === 'es' ? 'Ingrese una dirección de correo institucional válida.' : 'Please enter a valid institutional email address.';
+    } else if (isEmailRegistered(cleanStaffEmail)) {
+      newErrors.email = language === 'es' 
         ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado.' 
-        : 'This email is already registered in the system. Registration with a previously used email is not permitted.');
-      return;
-    }
-
-    if (!staffDocNumber.trim()) {
-      setErrorMsg(language === 'es' ? 'Ingrese su número de documento de identidad.' : 'Please enter your document number.');
-      return;
+        : 'This email is already registered in the system. Registration with a previously used email is not permitted.';
     }
 
     if (!staffPhone.trim()) {
-      setErrorMsg(language === 'es' ? 'Ingrese su número de celular para notificaciones y seguridad.' : 'Please enter your mobile phone number.');
-      return;
+      newErrors.phone = language === 'es' ? 'Ingrese su número de celular para notificaciones y seguridad.' : 'Please enter your mobile phone number.';
     }
 
-    // Valid institutional authorization codes
-    const validCodes = ['DOC-2025', 'ADMIN-HENAO', 'HENAO2025', 'DOCENTE2025', 'ADMIN2025', 'IEFH-2025'];
-    const cleanCode = staffInstitutionCode.trim().toUpperCase();
-    if (!cleanCode || !validCodes.includes(cleanCode)) {
-      setErrorMsg(
-        language === 'es'
-          ? 'Código de Habilitación Institucional no válido. Ingrese el código suministrado por Rectoría o Secretaría.'
-          : 'Invalid institutional authorization code. Please enter the code provided by Rectorate or School Administration.'
-      );
-      return;
+    // Código de habilitación institucional: 4 dígitos numéricos que deben ser los 4 primeros números de su documento
+    const expectedCode = docDigits.slice(0, 4);
+    const cleanCode = staffInstitutionCode.trim().replace(/\D/g, '');
+
+    if (!cleanCode) {
+      newErrors.code = language === 'es' 
+        ? 'Ingrese el código de habilitación de 4 dígitos (los 4 primeros números de su documento).' 
+        : 'Please enter the 4-digit authorization code (first 4 numbers of your document).';
+    } else if (cleanCode.length !== 4) {
+      newErrors.code = language === 'es' 
+        ? 'El código de habilitación debe tener exactamente 4 dígitos.' 
+        : 'The authorization code must have exactly 4 digits.';
+    } else if (docDigits.length < 4) {
+      newErrors.code = language === 'es' 
+        ? 'Ingrese primero un documento con al menos 4 números para validar el código.' 
+        : 'Enter a valid document with at least 4 numbers first.';
+    } else if (cleanCode !== expectedCode) {
+      newErrors.code = language === 'es' 
+        ? `El código no coincide con su documento. Deben ser los 4 primeros números de su documento (${expectedCode}).` 
+        : `The code does not match your document. It must be the first 4 numbers of your document (${expectedCode}).`;
     }
 
     if (!staffPassword || staffPassword.length < 5) {
-      setErrorMsg(language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.');
-      return;
+      newErrors.password = language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.';
     }
 
     if (staffPassword !== staffConfirmPassword) {
-      setErrorMsg(language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.');
-      return;
+      newErrors.confirmPassword = language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.';
     }
 
     if (!staffAcceptTerms) {
-      setErrorMsg(language === 'es' ? 'Debe aceptar los términos de custodia de información y normatividad docente.' : 'You must accept the terms.');
+      newErrors.terms = language === 'es' ? 'Debe aceptar los términos de custodia de información y normatividad docente.' : 'You must accept the terms.';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setStaffFieldErrors(newErrors);
       return;
     }
 
@@ -267,7 +390,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       setIsLoading(false);
 
       if (!res.success) {
-        setErrorMsg(res.message || (language === 'es' ? 'Error al registrar funcionario institucional.' : 'Registration failed.'));
+        if (res.message && res.message.toLowerCase().includes('correo')) {
+          setStaffFieldErrors({ email: res.message });
+        } else if (res.message && res.message.toLowerCase().includes('código')) {
+          setStaffFieldErrors({ code: res.message });
+        } else {
+          setErrorMsg(res.message || (language === 'es' ? 'Error al registrar funcionario institucional.' : 'Registration failed.'));
+        }
       } else {
         setSuccessMsg(language === 'es' ? '¡Cuenta docente/administrativa vinculada con éxito! Bienvenido al portal directivo.' : 'Institutional account created successfully!');
         if (onSuccess) onSuccess();
@@ -277,11 +406,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
 
   const handleRequestRecoveryCode = (e?: React.FormEvent) => {
     if (e && e.preventDefault) e.preventDefault();
-    setErrorMsg(null);
-    setSuccessMsg(null);
+    clearAllErrors();
 
     if (!recoveryEmail.trim() || !recoveryEmail.includes('@')) {
-      setErrorMsg(language === 'es' ? 'Ingrese un correo electrónico válido.' : 'Enter a valid email address.');
+      setRecoveryFieldErrors({ email: language === 'es' ? 'Ingrese un correo electrónico válido.' : 'Enter a valid email address.' });
       return;
     }
 
@@ -290,7 +418,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       setIsLoading(false);
       const res = requestPasswordResetCode(recoveryEmail);
       if (!res.success) {
-        setErrorMsg(res.message || (language === 'es' ? 'No fue posible enviar el código.' : 'Could not send code.'));
+        setRecoveryFieldErrors({ email: res.message || (language === 'es' ? 'No fue posible enviar el código.' : 'Could not send code.') });
       } else {
         setRecoveryPhoneMasked(res.maskedPhone || '+57 300 *** **89');
         setSimulatedSmsBanner({
@@ -308,11 +436,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
 
   const handleVerifyRecoveryCode = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
-    setSuccessMsg(null);
+    clearAllErrors();
 
     if (!recoveryCodeInput.trim()) {
-      setErrorMsg(language === 'es' ? 'Por favor ingrese el código recibido.' : 'Please enter the code received.');
+      setRecoveryFieldErrors({ code: language === 'es' ? 'Por favor ingrese el código recibido.' : 'Please enter the code received.' });
       return;
     }
 
@@ -321,7 +448,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       setIsLoading(false);
       const res = verifyPasswordResetCode(recoveryEmail, recoveryCodeInput);
       if (!res.success) {
-        setErrorMsg(res.message || (language === 'es' ? 'Código de seguridad incorrecto.' : 'Invalid code.'));
+        setRecoveryFieldErrors({ code: res.message || (language === 'es' ? 'Código de seguridad incorrecto.' : 'Invalid code.') });
       } else {
         setRecoveryStep('new-password');
         setSuccessMsg(language === 'es' 
@@ -333,16 +460,18 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
 
   const handleSetNewPassword = (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
-    setSuccessMsg(null);
+    clearAllErrors();
 
+    const newErrors: { newPassword?: string; confirmPassword?: string } = {};
+    if (recoveryNewPassword.length < 5) {
+      newErrors.newPassword = language === 'es' ? 'La nueva contraseña debe tener mínimo 5 caracteres.' : 'Password must be at least 5 characters.';
+    }
     if (recoveryNewPassword !== recoveryConfirmPassword) {
-      setErrorMsg(language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.');
-      return;
+      newErrors.confirmPassword = language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.';
     }
 
-    if (recoveryNewPassword.length < 5) {
-      setErrorMsg(language === 'es' ? 'La nueva contraseña debe tener mínimo 5 caracteres.' : 'Password must be at least 5 characters.');
+    if (Object.keys(newErrors).length > 0) {
+      setRecoveryFieldErrors(newErrors);
       return;
     }
 
@@ -377,17 +506,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       >
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <img 
-                src={customLogoUrl} 
-                alt="EduMed Digital Logo" 
-                className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-2 ring-amber-400/20 shadow-md bg-white"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
-                }}
-              />
-              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
-            </div>
+            <UserAvatar name={currentUser.name} size="md" />
             <div>
               <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400">
                 {language === 'es' ? 'Sesión Activa' : 'Active Session'}
@@ -400,6 +519,15 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={() => setIsProfileModalOpen(true)}
+            className="p-2 rounded-xl bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            title={language === 'es' ? 'Editar mi información de perfil' : 'Edit profile info'}
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">{language === 'es' ? 'Editar Perfil' : 'Edit Profile'}</span>
+          </button>
         </div>
 
         <div className="mt-5 space-y-3">
@@ -526,7 +654,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         <button
           id="tab-btn-login"
           type="button"
-          onClick={() => { setMode('login'); setErrorMsg(null); setSuccessMsg(null); }}
+          onClick={() => { setMode('login'); clearAllErrors(); }}
           className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             mode === 'login'
               ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-slate-200/60 dark:border-slate-700'
@@ -540,7 +668,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         <button
           id="tab-btn-register"
           type="button"
-          onClick={() => { setMode('register'); setErrorMsg(null); setSuccessMsg(null); }}
+          onClick={() => { setMode('register'); clearAllErrors(); }}
           className={`py-2 text-xs sm:text-sm font-bold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
             mode === 'register'
               ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-slate-200/60 dark:border-slate-700'
@@ -582,13 +710,19 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               onChange={(e) => {
                 const role = e.target.value as 'guardian' | 'student' | 'admin';
                 setLoginRole(role);
+                if (loginFieldErrors.role) setLoginFieldErrors(prev => ({ ...prev, role: undefined }));
               }}
-              className="w-full px-3.5 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all cursor-pointer"
+              className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 transition-all cursor-pointer ${
+                loginFieldErrors.role
+                  ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                  : 'bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+              }`}
             >
               <option value="guardian">{language === 'es' ? 'Portal Acudiente (Padres y Tutores)' : 'Guardian Portal (Parents & Tutors)'}</option>
               <option value="admin">{language === 'es' ? 'Portal Profesor / Docente (Cuerpo Académico)' : 'Teacher / Professor Portal'}</option>
               <option value="student">{language === 'es' ? 'Portal Estudiante (Alumnos y Aspirantes)' : 'Student Portal'}</option>
             </select>
+            <FieldError message={loginFieldErrors.role} />
           </div>
 
           {/* Campo Correo Electrónico (Personal o Institucional) */}
@@ -610,9 +744,14 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 value={loginIdentifier}
                 onChange={(e) => {
                   setLoginIdentifier(e.target.value);
+                  if (loginFieldErrors.identifier) setLoginFieldErrors(prev => ({ ...prev, identifier: undefined }));
                   if (errorMsg) setErrorMsg(null);
                 }}
-                className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
+                className={`w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                  loginFieldErrors.identifier
+                    ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                    : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800'
+                }`}
               />
             </div>
             <p className="text-[11px] text-slate-500 dark:text-slate-400 pl-0.5">
@@ -620,6 +759,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 ? 'Ingrese el correo personal o institucional con el que creó su cuenta.'
                 : 'Enter the personal or institutional email used when creating your account.'}
             </p>
+            <FieldError message={loginFieldErrors.identifier} />
           </div>
 
           {/* Campo para rellenar la contraseña */}
@@ -636,8 +776,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 onClick={() => { 
                   setMode('forgot-password');
                   setRecoveryStep('request');
-                  setErrorMsg(null);
-                  setSuccessMsg(null);
+                  clearAllErrors();
                   if (loginIdentifier && loginIdentifier.includes('@')) {
                     setRecoveryEmail(loginIdentifier);
                   }
@@ -658,9 +797,14 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 value={loginPassword}
                 onChange={(e) => {
                   setLoginPassword(e.target.value);
+                  if (loginFieldErrors.password) setLoginFieldErrors(prev => ({ ...prev, password: undefined }));
                   if (errorMsg) setErrorMsg(null);
                 }}
-                className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800 transition-all"
+                className={`w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                  loginFieldErrors.password
+                    ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                    : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500 dark:focus:ring-teal-400 focus:bg-white dark:focus:bg-slate-800'
+                }`}
               />
               <button
                 type="button"
@@ -671,6 +815,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 {showLoginPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <FieldError message={loginFieldErrors.password} />
           </div>
 
           {/* Remember me checkbox */}
@@ -773,10 +918,18 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     type="email"
                     required
                     value={recoveryEmail}
-                    onChange={(e) => setRecoveryEmail(e.target.value)}
-                    className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => {
+                      setRecoveryEmail(e.target.value);
+                      if (recoveryFieldErrors.email) setRecoveryFieldErrors(prev => ({ ...prev, email: undefined }));
+                    }}
+                    className={`w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      recoveryFieldErrors.email
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
                   />
                 </div>
+                <FieldError message={recoveryFieldErrors.email} />
               </div>
 
               <button
@@ -847,9 +1000,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                   maxLength={6}
                   required
                   value={recoveryCodeInput}
-                  onChange={(e) => setRecoveryCodeInput(e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-4 py-3 text-center text-xl font-mono font-black tracking-widest bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  onChange={(e) => {
+                    setRecoveryCodeInput(e.target.value.replace(/\D/g, ''));
+                    if (recoveryFieldErrors.code) setRecoveryFieldErrors(prev => ({ ...prev, code: undefined }));
+                  }}
+                  className={`w-full px-4 py-3 text-center text-xl font-mono font-black tracking-widest rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                    recoveryFieldErrors.code
+                      ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                      : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                  }`}
                 />
+                <FieldError message={recoveryFieldErrors.code} />
               </div>
 
               <button
@@ -913,8 +1074,15 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     type={showRecoveryPassword ? 'text' : 'password'}
                     required
                     value={recoveryNewPassword}
-                    onChange={(e) => setRecoveryNewPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => {
+                      setRecoveryNewPassword(e.target.value);
+                      if (recoveryFieldErrors.newPassword) setRecoveryFieldErrors(prev => ({ ...prev, newPassword: undefined }));
+                    }}
+                    className={`w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      recoveryFieldErrors.newPassword
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
                   />
                   <button
                     type="button"
@@ -925,6 +1093,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     {showRecoveryPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+                <FieldError message={recoveryFieldErrors.newPassword} />
               </div>
 
               <div className="space-y-1">
@@ -940,10 +1109,18 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     type={showRecoveryPassword ? 'text' : 'password'}
                     required
                     value={recoveryConfirmPassword}
-                    onChange={(e) => setRecoveryConfirmPassword(e.target.value)}
-                    className="w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => {
+                      setRecoveryConfirmPassword(e.target.value);
+                      if (recoveryFieldErrors.confirmPassword) setRecoveryFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                    }}
+                    className={`w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      recoveryFieldErrors.confirmPassword
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
                   />
                 </div>
+                <FieldError message={recoveryFieldErrors.confirmPassword} />
               </div>
 
               <button
@@ -975,8 +1152,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               id="reg-form-type-standard"
               onClick={() => {
                 setRegFormType('standard');
-                setErrorMsg(null);
-                setSuccessMsg(null);
+                clearAllErrors();
               }}
               className={`py-2 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 regFormType === 'standard'
@@ -993,8 +1169,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               id="reg-form-type-staff"
               onClick={() => {
                 setRegFormType('staff');
-                setErrorMsg(null);
-                setSuccessMsg(null);
+                clearAllErrors();
               }}
               className={`py-2 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
                 regFormType === 'staff'
@@ -1022,12 +1197,20 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 <select
                   id="reg-role-select"
                   value={regRole}
-                  onChange={(e) => setRegRole(e.target.value as 'guardian' | 'student')}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  onChange={(e) => {
+                    setRegRole(e.target.value as 'guardian' | 'student');
+                    if (regFieldErrors.role) setRegFieldErrors(prev => ({ ...prev, role: undefined }));
+                  }}
+                  className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 cursor-pointer transition-all ${
+                    regFieldErrors.role
+                      ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                      : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                  }`}
                 >
                   <option value="guardian">{language === 'es' ? '👨‍👩‍👦 Acudiente / Padre o Tutor de Familia' : 'Parent / Guardian'}</option>
                   <option value="student">{language === 'es' ? '🎓 Estudiante / Aspirante' : 'Student / Applicant'}</option>
                 </select>
+                <FieldError message={regFieldErrors.role} />
               </div>
 
               {/* Full Name */}
@@ -1043,9 +1226,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                   type="text"
                   required
                   value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 dark:focus:ring-teal-400"
+                  onChange={(e) => {
+                    setRegName(e.target.value);
+                    if (regFieldErrors.name) setRegFieldErrors(prev => ({ ...prev, name: undefined }));
+                  }}
+                  className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                    regFieldErrors.name
+                      ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                      : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500 dark:focus:ring-teal-400'
+                  }`}
                 />
+                <FieldError message={regFieldErrors.name} />
               </div>
 
               {/* Document Type & Number */}
@@ -1082,9 +1273,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     type="text"
                     required
                     value={regDocNumber}
-                    onChange={(e) => setRegDocNumber(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => {
+                      setRegDocNumber(e.target.value);
+                      if (regFieldErrors.docNumber) setRegFieldErrors(prev => ({ ...prev, docNumber: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      regFieldErrors.docNumber
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
                   />
+                  <FieldError message={regFieldErrors.docNumber} />
                 </div>
               </div>
 
@@ -1104,14 +1303,16 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     value={regEmail}
                     onChange={(e) => {
                       setRegEmail(e.target.value);
+                      if (regFieldErrors.email) setRegFieldErrors(prev => ({ ...prev, email: undefined }));
                       if (errorMsg) setErrorMsg(null);
                     }}
                     className={`w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      isRegEmailTaken
+                      isRegEmailTaken || regFieldErrors.email
                         ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/50 dark:bg-rose-950/20'
                         : 'border-slate-200 dark:border-slate-700 focus:ring-teal-500'
                     }`}
                   />
+                  <FieldError message={regFieldErrors.email} />
                   {isRegEmailTaken && (
                     <div className="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-200 text-left animate-in fade-in duration-150 shadow-xs">
                       <div className="flex items-center gap-1.5 font-bold text-[11px] text-rose-700 dark:text-rose-300">
@@ -1129,8 +1330,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                           onClick={() => {
                             setLoginIdentifier(regEmail.trim().toLowerCase());
                             setMode('login');
-                            setErrorMsg(null);
-                            setSuccessMsg(null);
+                            clearAllErrors();
                           }}
                           className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] shadow-xs cursor-pointer transition-colors"
                         >
@@ -1142,8 +1342,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                             setRecoveryEmail(regEmail.trim().toLowerCase());
                             setMode('forgot-password');
                             setRecoveryStep('request');
-                            setErrorMsg(null);
-                            setSuccessMsg(null);
+                            clearAllErrors();
                           }}
                           className="px-2.5 py-1 rounded-lg bg-amber-100 dark:bg-amber-900/60 hover:bg-amber-200 dark:hover:bg-amber-800 text-amber-900 dark:text-amber-200 font-bold text-[10px] cursor-pointer transition-colors"
                         >
@@ -1166,9 +1365,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     type="tel"
                     required
                     value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => {
+                      setRegPhone(e.target.value);
+                      if (regFieldErrors.phone) setRegFieldErrors(prev => ({ ...prev, phone: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      regFieldErrors.phone
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
                   />
+                  <FieldError message={regFieldErrors.phone} />
                 </div>
               </div>
 
@@ -1186,9 +1393,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     type={showRegPassword ? 'text' : 'password'}
                     required
                     value={regPassword}
-                    onChange={(e) => setRegPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => {
+                      setRegPassword(e.target.value);
+                      if (regFieldErrors.password) setRegFieldErrors(prev => ({ ...prev, password: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      regFieldErrors.password
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
                   />
+                  <FieldError message={regFieldErrors.password} />
                 </div>
 
                 <div>
@@ -1203,9 +1418,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     type={showRegPassword ? 'text' : 'password'}
                     required
                     value={regConfirmPassword}
-                    onChange={(e) => setRegConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    onChange={(e) => {
+                      setRegConfirmPassword(e.target.value);
+                      if (regFieldErrors.confirmPassword) setRegFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      regFieldErrors.confirmPassword
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
                   />
+                  <FieldError message={regFieldErrors.confirmPassword} />
                 </div>
               </div>
 
@@ -1222,17 +1445,23 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               </div>
 
               {/* Terms checkbox */}
-              <div className="flex items-start pt-1">
-                <input
-                  id="accept-terms-checkbox"
-                  type="checkbox"
-                  checked={acceptTerms}
-                  onChange={(e) => setAcceptTerms(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-slate-300 dark:border-slate-700 cursor-pointer"
-                />
-                <label htmlFor="accept-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
-                  Acepto los términos de servicio y autorizo el tratamiento de datos personales conforme a la Ley 1581 para fines educativos.
-                </label>
+              <div className="space-y-1 pt-1">
+                <div className="flex items-start">
+                  <input
+                    id="accept-terms-checkbox"
+                    type="checkbox"
+                    checked={acceptTerms}
+                    onChange={(e) => {
+                      setAcceptTerms(e.target.checked);
+                      if (regFieldErrors.terms) setRegFieldErrors(prev => ({ ...prev, terms: undefined }));
+                    }}
+                    className="w-4 h-4 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-slate-300 dark:border-slate-700 cursor-pointer"
+                  />
+                  <label htmlFor="accept-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
+                    Acepto los términos de servicio y autorizo el tratamiento de datos personales conforme a la Ley 1581 para fines educativos.
+                  </label>
+                </div>
+                <FieldError message={regFieldErrors.terms} />
               </div>
 
               {/* Submit register */}
@@ -1322,9 +1551,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                   required
                   placeholder={language === 'es' ? 'Nombres y apellidos completos' : 'Full name'}
                   value={staffName}
-                  onChange={(e) => setStaffName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  onChange={(e) => {
+                    setStaffName(e.target.value);
+                    if (staffFieldErrors.name) setStaffFieldErrors(prev => ({ ...prev, name: undefined }));
+                  }}
+                  className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                    staffFieldErrors.name
+                      ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                      : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
+                  }`}
                 />
+                <FieldError message={staffFieldErrors.name} />
               </div>
 
               {/* Document Type & Number */}
@@ -1360,9 +1597,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     required
                     placeholder={language === 'es' ? 'Número de documento de identidad' : 'Document number'}
                     value={staffDocNumber}
-                    onChange={(e) => setStaffDocNumber(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    onChange={(e) => {
+                      setStaffDocNumber(e.target.value);
+                      if (staffFieldErrors.docNumber) setStaffFieldErrors(prev => ({ ...prev, docNumber: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      staffFieldErrors.docNumber
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
+                    }`}
                   />
+                  <FieldError message={staffFieldErrors.docNumber} />
                 </div>
               </div>
 
@@ -1474,14 +1719,16 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     value={staffEmail}
                     onChange={(e) => {
                       setStaffEmail(e.target.value);
+                      if (staffFieldErrors.email) setStaffFieldErrors(prev => ({ ...prev, email: undefined }));
                       if (errorMsg) setErrorMsg(null);
                     }}
                     className={`w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      isStaffEmailTaken
+                      isStaffEmailTaken || staffFieldErrors.email
                         ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/50 dark:bg-rose-950/20'
                         : 'border-slate-200 dark:border-slate-700 focus:ring-amber-500'
                     }`}
                   />
+                  <FieldError message={staffFieldErrors.email} />
                   {isStaffEmailTaken && (
                     <div className="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-200 text-left animate-in fade-in duration-150 shadow-xs">
                       <div className="flex items-center gap-1.5 font-bold text-[11px] text-rose-700 dark:text-rose-300">
@@ -1499,8 +1746,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                           onClick={() => {
                             setLoginIdentifier(staffEmail.trim().toLowerCase());
                             setMode('login');
-                            setErrorMsg(null);
-                            setSuccessMsg(null);
+                            clearAllErrors();
                           }}
                           className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] shadow-xs cursor-pointer transition-colors"
                         >
@@ -1524,9 +1770,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     required
                     placeholder={language === 'es' ? 'Número de celular de contacto' : 'Cell phone number'}
                     value={staffPhone}
-                    onChange={(e) => setStaffPhone(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    onChange={(e) => {
+                      setStaffPhone(e.target.value);
+                      if (staffFieldErrors.phone) setStaffFieldErrors(prev => ({ ...prev, phone: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      staffFieldErrors.phone
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
+                    }`}
                   />
+                  <FieldError message={staffFieldErrors.phone} />
                 </div>
               </div>
 
@@ -1538,23 +1792,34 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     className="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
                   >
                     <KeyRound className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                    <span>{language === 'es' ? 'Código de Habilitación Institucional *' : 'Institutional Auth Code *'}</span>
+                    <span>{language === 'es' ? 'Código de Habilitación Institucional (4 dígitos) *' : 'Institutional Auth Code (4 digits) *'}</span>
                   </label>
                 </div>
                 <input
                   id="staff-code-input"
                   type="text"
+                  inputMode="numeric"
+                  maxLength={4}
                   required
-                  placeholder={language === 'es' ? 'Código de habilitación institucional' : 'Institutional authorization code'}
+                  placeholder={language === 'es' ? '4 primeros números de su documento' : 'First 4 digits of ID document'}
                   value={staffInstitutionCode}
-                  onChange={(e) => setStaffInstitutionCode(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 text-xs sm:text-sm font-mono tracking-wider bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 uppercase"
+                  onChange={(e) => {
+                    const numeric = e.target.value.replace(/\D/g, '').slice(0, 4);
+                    setStaffInstitutionCode(numeric);
+                    if (staffFieldErrors.code) setStaffFieldErrors(prev => ({ ...prev, code: undefined }));
+                  }}
+                  className={`w-full px-3 py-2 text-xs sm:text-sm font-mono tracking-widest text-center bg-white dark:bg-slate-900 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                    staffFieldErrors.code
+                      ? 'border border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                      : 'border border-slate-300 dark:border-slate-600 focus:ring-amber-500'
+                  }`}
                 />
                 <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
                   {language === 'es' 
-                    ? 'Código de verificación interna provisto por Rectoría o Secretaría para dar de alta funcionarios.' 
-                    : 'Institutional authorization token required to activate staff access.'}
+                    ? 'Código de habilitación: 4 dígitos correspondientes a los 4 primeros números de su documento de identidad.' 
+                    : '4-digit authorization code matching the first 4 numbers of your identity document.'}
                 </p>
+                <FieldError message={staffFieldErrors.code} />
               </div>
 
               {/* Passwords */}
@@ -1572,9 +1837,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     required
                     placeholder={language === 'es' ? 'Contraseña institucional' : 'Password'}
                     value={staffPassword}
-                    onChange={(e) => setStaffPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    onChange={(e) => {
+                      setStaffPassword(e.target.value);
+                      if (staffFieldErrors.password) setStaffFieldErrors(prev => ({ ...prev, password: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      staffFieldErrors.password
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
+                    }`}
                   />
+                  <FieldError message={staffFieldErrors.password} />
                 </div>
 
                 <div>
@@ -1590,9 +1863,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                     required
                     placeholder={language === 'es' ? 'Confirmar contraseña institucional' : 'Confirm password'}
                     value={staffConfirmPassword}
-                    onChange={(e) => setStaffConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    onChange={(e) => {
+                      setStaffConfirmPassword(e.target.value);
+                      if (staffFieldErrors.confirmPassword) setStaffFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      staffFieldErrors.confirmPassword
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
+                    }`}
                   />
+                  <FieldError message={staffFieldErrors.confirmPassword} />
                 </div>
               </div>
 
@@ -1609,19 +1890,25 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               </div>
 
               {/* Official Custody Terms Checkbox */}
-              <div className="flex items-start pt-1">
-                <input
-                  id="staff-accept-terms-checkbox"
-                  type="checkbox"
-                  checked={staffAcceptTerms}
-                  onChange={(e) => setStaffAcceptTerms(e.target.checked)}
-                  className="w-4 h-4 mt-0.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-700 cursor-pointer"
-                />
-                <label htmlFor="staff-accept-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
-                  {language === 'es'
-                    ? 'Declaro mi vinculación institucional con la I.E. Félix Henao Botero y acepto el deber de confidencialidad y custodia de calificaciones e información académica (Decreto 1290 / Ley 1581).'
-                    : 'I declare official affiliation with the institution and accept confidentiality requirements.'}
-                </label>
+              <div className="space-y-1 pt-1">
+                <div className="flex items-start">
+                  <input
+                    id="staff-accept-terms-checkbox"
+                    type="checkbox"
+                    checked={staffAcceptTerms}
+                    onChange={(e) => {
+                      setStaffAcceptTerms(e.target.checked);
+                      if (staffFieldErrors.terms) setStaffFieldErrors(prev => ({ ...prev, terms: undefined }));
+                    }}
+                    className="w-4 h-4 mt-0.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-700 cursor-pointer"
+                  />
+                  <label htmlFor="staff-accept-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
+                    {language === 'es'
+                      ? 'Declaro mi vinculación institucional con la I.E. Félix Henao Botero y acepto el deber de confidencialidad y custodia de calificaciones e información académica (Decreto 1290 / Ley 1581).'
+                      : 'I declare official affiliation with the institution and accept confidentiality requirements.'}
+                  </label>
+                </div>
+                <FieldError message={staffFieldErrors.terms} />
               </div>
 
               {/* Submit Staff register button */}
@@ -1655,7 +1942,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               {language === 'es' ? '¿Ya tiene una cuenta creada?' : 'Already have an account?'}{' '}
               <button
                 type="button"
-                onClick={() => { setMode('login'); setErrorMsg(null); }}
+                onClick={() => { setMode('login'); clearAllErrors(); }}
                 className="font-bold text-teal-600 dark:text-teal-400 hover:underline cursor-pointer"
               >
                 {language === 'es' ? 'Iniciar sesión aquí' : 'Log in here'}

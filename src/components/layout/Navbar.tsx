@@ -16,8 +16,11 @@ import {
   X,
   Sparkles,
   LogOut,
-  LogIn
+  LogIn,
+  User,
+  Settings
 } from 'lucide-react';
+import { UserAvatar } from '../common/UserAvatar';
 
 export const Navbar: React.FC = () => {
   const { 
@@ -35,7 +38,8 @@ export const Navbar: React.FC = () => {
     unreadCount,
     currentUser,
     logout,
-    customLogoUrl
+    customLogoUrl,
+    setIsProfileModalOpen
   } = useApp();
 
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -345,35 +349,42 @@ export const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* If User Logged In: User profile chip with role and logout button */}
+            {/* If User Logged In: User profile chip with role, Edit Profile button, and logout button */}
             {currentUser ? (
-              <div className="flex items-center gap-2 pl-2">
-                <div 
-                  onClick={() => {
-                    setActiveRole(currentUser.role);
-                    if (currentUser.role === 'admin') setActiveTab('dashboard');
-                    else if (currentUser.role === 'student') setActiveTab('student-profile');
-                    else setActiveTab('student-profile');
-                  }}
-                  className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors"
+              <div className="flex items-center gap-1.5 sm:gap-2 pl-2">
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-teal-50 dark:bg-slate-800/80 dark:hover:bg-slate-750 border border-slate-200 hover:border-teal-300 dark:border-slate-700 transition-all cursor-pointer text-left group"
+                  title={language === 'es' ? 'Clic para editar mi perfil' : 'Click to edit my profile'}
                 >
-                  <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold">
-                    {currentUser.name.charAt(0)}
-                  </div>
+                  <UserAvatar name={currentUser.name} size="xs" />
                   <div className="text-left">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[120px]">
+                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[120px] group-hover:text-teal-600 dark:group-hover:text-teal-400">
                       {currentUser.name}
                     </p>
-                    <span className="text-[9px] font-semibold text-teal-600 dark:text-teal-400 capitalize">
-                      {currentUser.role === 'admin' ? 'Profesor / Docente' : currentUser.role === 'guardian' ? 'Acudiente' : 'Estudiante'}
+                    <span className="text-[9px] font-semibold text-teal-600 dark:text-teal-400 capitalize flex items-center gap-1">
+                      <span>{currentUser.role === 'admin' ? 'Profesor / Docente' : currentUser.role === 'guardian' ? 'Acudiente' : 'Estudiante'}</span>
+                      <span className="text-slate-400 font-normal underline">(Editar)</span>
                     </span>
                   </div>
-                </div>
+                </button>
+
+                {/* Mobile / Quick Profile Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsProfileModalOpen(true)}
+                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-teal-950/40 text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
+                  title={language === 'es' ? 'Editar Mi Perfil' : 'Edit My Profile'}
+                >
+                  <User className="w-3.5 h-3.5 text-teal-600" />
+                  <span className="hidden sm:inline">{language === 'es' ? 'Mi Perfil' : 'My Profile'}</span>
+                </button>
 
                 <button
                   id="nav-logout-btn"
                   onClick={logout}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   title={language === 'es' ? 'Cerrar Sesión' : 'Log Out'}
                 >
                   <LogOut className="w-3.5 h-3.5 text-rose-500" />
@@ -406,11 +417,7 @@ export const Navbar: React.FC = () => {
                 onClick={() => setActiveTab('settings')}
                 className="flex items-center gap-2 pl-2 pr-1 cursor-pointer"
               >
-                <img 
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" 
-                  alt="Admin Avatar"
-                  className="w-8 h-8 rounded-full object-cover border border-teal-500"
-                />
+                <UserAvatar name="Secretaría Académica" size="sm" />
                 <div className="hidden lg:block text-left">
                   <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Secretaría Académica</div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Admin Félix Henao</div>
