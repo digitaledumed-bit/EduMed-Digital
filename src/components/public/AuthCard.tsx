@@ -31,8 +31,10 @@ import {
   MessageSquare,
   Briefcase,
   Building2,
-  BadgeCheck
+  BadgeCheck,
+  Camera
 } from 'lucide-react';
+import { getDefaultAvatarByGender } from '../../utils/avatarUtils';
 
 interface AuthCardProps {
   onSuccess?: () => void;
@@ -87,7 +89,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
-  const [regGender, setRegGender] = useState<'Masculino' | 'Femenino'>('Masculino');
+  const [regGender, setRegGender] = useState<'Masculino' | 'Femenino' | 'Neutro'>('Masculino');
   const [acceptTerms, setAcceptTerms] = useState(true);
 
   // Dedicated Staff Register form state (Docente / Personal Administrativo)
@@ -507,11 +509,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
           <div className="flex items-center gap-3">
             <div className="relative">
               <img 
-                src={customLogoUrl} 
-                alt="EduMed Digital Logo" 
-                className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-2 ring-amber-400/20 shadow-md bg-white"
+                src={currentUser.role === 'student' ? (currentUser.avatarUrl || getDefaultAvatarByGender(currentUser.gender)) : customLogoUrl} 
+                alt={currentUser.name} 
+                className="w-12 h-12 rounded-full object-cover border-2 border-teal-500 ring-2 ring-teal-400/30 shadow-md bg-slate-100 dark:bg-slate-800"
                 onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
+                  (e.currentTarget as HTMLImageElement).src = currentUser.role === 'student' ? getDefaultAvatarByGender(currentUser.gender) : '/school_logo.jpg';
                 }}
               />
               <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
@@ -1222,11 +1224,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                   <select
                     id="reg-gender-select"
                     value={regGender}
-                    onChange={(e) => setRegGender(e.target.value as 'Masculino' | 'Femenino')}
+                    onChange={(e) => setRegGender(e.target.value as 'Masculino' | 'Femenino' | 'Neutro')}
                     className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
                   >
-                    <option value="Masculino">♂ {language === 'es' ? 'Masculino (Avatar de Chico / Hombre)' : 'Male (Boy / Man Avatar)'}</option>
-                    <option value="Femenino">♀ {language === 'es' ? 'Femenino (Avatar de Chica / Mujer)' : 'Female (Girl / Woman Avatar)'}</option>
+                    <option value="Masculino">♂ {language === 'es' ? 'Masculino (Avatar ilustrado de Chico)' : 'Male (Boy / Man Avatar)'}</option>
+                    <option value="Femenino">♀ {language === 'es' ? 'Femenino (Avatar ilustrada de Chica)' : 'Female (Girl / Woman Avatar)'}</option>
+                    <option value="Neutro">🎓 {language === 'es' ? 'No especificado / Neutro (Avatar ilustrado académico)' : 'Unspecified / Neutral (Academic Avatar)'}</option>
                   </select>
                   <p className="text-[10px] text-teal-700 dark:text-teal-300">
                     {language === 'es' 

@@ -27,7 +27,7 @@ import {
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { StudentEditProfileModal } from './StudentEditProfileModal';
-import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
+import { getDefaultAvatarByGender, isMaleGender, isFemaleGender, isDefaultIllustratedAvatar, getSavedCustomPhoto } from '../../utils/avatarUtils';
 
 interface StudentMainDashboardProps {
   onResetEnrollmentForTest?: () => void;
@@ -36,7 +36,7 @@ interface StudentMainDashboardProps {
 export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
   onResetEnrollmentForTest
 }) => {
-  const { currentUser, language, students, setActiveTab, resetStudentEnrollment } = useApp();
+  const { currentUser, language, students, setActiveTab, resetStudentEnrollment, restoreDefaultAvatar } = useApp();
 
   const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
@@ -70,12 +70,26 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
   };
 
   const studentName = currentUser?.name || student.fullName;
-  const studentGender = currentUser?.gender || student.gender || 'Masculino';
+  const studentGender = currentUser?.gender || student.gender;
   const defaultIllustratedAvatar = getDefaultAvatarByGender(studentGender);
   const currentAvatar = currentUser?.avatarUrl || defaultIllustratedAvatar;
 
   const isMale = isMaleGender(studentGender);
   const isFemale = isFemaleGender(studentGender);
+  const hasCustomPhoto = Boolean(
+    currentUser?.id && getSavedCustomPhoto(currentUser.id, currentUser.email)
+  ) || (!isDefaultIllustratedAvatar(currentAvatar));
+
+  const handleRestoreDefault = () => {
+    restoreDefaultAvatar();
+    const genderLabel = isMale ? 'Masculino' : isFemale ? 'Femenino' : 'Neutro / No especificado';
+    setFeedback(
+      language === 'es'
+        ? `✓ Fotografía personalizada eliminada. Se ha restaurado el avatar ilustrado oficial (${genderLabel}).`
+        : `✓ Custom photo removed. Restored default illustrated avatar (${genderLabel}).`
+    );
+    setTimeout(() => setFeedback(null), 4500);
+  };
 
   const subjects = [
     { id: 'mat', name: 'Matemáticas y Geometría', teacher: 'Lic. Claudia Restrepo', score: 4.8, period: 'Periodo 1', status: 'Superior' },
@@ -97,6 +111,22 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       
+      {/* Feedback Toast */}
+      {feedback && (
+        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm font-bold flex items-center justify-between shadow-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            <span>{feedback}</span>
+          </div>
+          <button 
+            onClick={() => setFeedback(null)}
+            className="p-1 rounded-lg text-emerald-700 hover:text-emerald-900 dark:text-emerald-300 dark:hover:text-white cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* ========================================================================= */}
       {/* 1. PARTE SUPERIOR: PANEL PRINCIPAL PERSONALIZADO DEL ESTUDIANTE           */}
       {/* Exact User Specification:                                                 */}
@@ -104,7 +134,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
       {/* - Nombre completo del estudiante (real de la cuenta)                      */}
       {/* - Opción para editar el perfil                                            */}
       {/* - Opción para cambiar la foto de perfil                                   */}
-      {/* - [AVATAR] Nombre Completo - Estudiante                                   */}
+      {/* - Botón "Restaurar avatar predeterminado"                                  */}
       {/* ========================================================================= */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs relative overflow-hidden">
         
@@ -121,7 +151,8 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               <img
                 src={currentAvatar}
                 alt={studentName}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-teal-500/90 shadow-xl bg-slate-100 dark:bg-slate-800 transition-transform group-hover:scale-105"
+                onClick={() => setShowAvatarModal(true)}
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-teal-500/90 shadow-xl bg-slate-100 dark:bg-slate-800 transition-transform group-hover:scale-105 cursor-pointer"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = defaultIllustratedAvatar;
                 }}
@@ -150,9 +181,20 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                   <User className="w-3.5 h-3.5" />
                   Estudiante
                 </span>
+                
+                {hasCustomPhoto ? (
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
+                    📷 Foto personalizada
+                  </span>
+                ) : (
+                  <span className="px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-800 flex items-center gap-1">
+                    🎨 Avatar oficial ({isMale ? 'Masculino' : isFemale ? 'Femenino' : 'Neutro'})
+                  </span>
+                )}
+
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Matrícula 100% Completada
+                  Matrícula 100%
                 </span>
               </div>
 
@@ -175,7 +217,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                   {student.neighborhood}
                 </span>
                 <span className="font-semibold text-teal-700 dark:text-teal-300">
-                  {isMale ? '♂ Sexo: Masculino (Hombre)' : isFemale ? '♀ Sexo: Femenino (Mujer)' : '🎓 Sexo: No especificado'}
+                  {isMale ? '♂ Sexo: Masculino (Hombre)' : isFemale ? '♀ Sexo: Femenino (Mujer)' : '🎓 Sexo: No registrado (Neutro)'}
                 </span>
               </div>
             </div>
@@ -187,6 +229,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
             {/* 1. Botón "Cambiar foto de perfil" */}
             <button
               type="button"
+              id="student-dashboard-btn-change-avatar"
               onClick={() => setShowAvatarModal(true)}
               className="px-4 py-2.5 rounded-2xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
             >
@@ -194,9 +237,22 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               <span>Cambiar foto de perfil</span>
             </button>
 
-            {/* 2. Botón "Editar perfil" */}
+            {/* 2. Botón "Restaurar avatar predeterminado" */}
             <button
               type="button"
+              id="student-dashboard-btn-restore-avatar"
+              onClick={handleRestoreDefault}
+              className="px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+              title="Elimina la fotografía personalizada y vuelve a mostrar automáticamente el avatar correspondiente al sexo registrado"
+            >
+              <RotateCcw className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <span>Restaurar avatar predeterminado</span>
+            </button>
+
+            {/* 3. Botón "Editar perfil" */}
+            <button
+              type="button"
+              id="student-dashboard-btn-edit-profile"
               onClick={() => setShowEditModal(true)}
               className="px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
             >

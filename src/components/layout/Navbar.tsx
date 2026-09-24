@@ -20,7 +20,7 @@ import {
   Camera
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
-import { getDefaultAvatarByGender, isMaleGender } from '../../utils/avatarUtils';
+import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
 
 export const Navbar: React.FC = () => {
   const { 
@@ -384,7 +384,7 @@ export const Navbar: React.FC = () => {
                         {currentUser.name}
                       </p>
                       <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 block leading-tight">
-                        {isMaleGender(currentUser.gender) ? '♂ Estudiante (Hombre)' : '♀ Estudiante (Mujer)'}
+                        {isMaleGender(currentUser.gender) ? '♂ Estudiante (Hombre)' : isFemaleGender(currentUser.gender) ? '♀ Estudiante (Mujer)' : '🎓 Estudiante (Neutro)'}
                       </span>
                     </div>
 

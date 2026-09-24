@@ -2,7 +2,16 @@ import React, { createContext, useContext, useState, useEffect, useMemo } from '
 import { Language, Theme, FontSize, UserRole, Student, Guardian, EnrollmentRecord, StudentDocument, ActivityItem, EnrollmentStatus, DocumentStatus, AuthUser, AppNotification } from '../types';
 import { translations } from '../i18n/translations';
 import { initialStudents, initialGuardians, initialEnrollments, initialDocuments, initialActivities } from '../data/mockData';
-import { getDefaultAvatarByGender, isMaleGender } from '../utils/avatarUtils';
+import { 
+  getDefaultAvatarByGender, 
+  isMaleGender, 
+  isFemaleGender, 
+  getSavedCustomPhoto, 
+  saveCustomPhoto, 
+  removeCustomPhoto,
+  resolveStudentAvatar,
+  isDefaultIllustratedAvatar 
+} from '../utils/avatarUtils';
 
 interface AppContextType {
   language: Language;
@@ -23,6 +32,7 @@ interface AppContextType {
 
   currentUser: AuthUser | null;
   updateUserAvatar: (newAvatarUrl: string) => void;
+  restoreDefaultAvatar: () => void;
   updateStudentProfile: (data: { name: string; phone?: string; email?: string; gender?: string; address?: string; neighborhood?: string }) => void;
   isStudentEnrollmentCompleted: (studentId?: string) => boolean;
   completeStudentEnrollment: (studentId: string, enrollmentData?: any) => void;
@@ -102,7 +112,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     const saved = localStorage.getItem('edumed_current_user');
-    return saved ? JSON.parse(saved) : null;
+    if (!saved) return null;
+    try {
+      const user: AuthUser = JSON.parse(saved);
+      if (user && user.role === 'student') {
+        user.avatarUrl = resolveStudentAvatar(user);
+      }
+      return user;
+    } catch {
+      return null;
+    }
   });
 
   const [customLogoUrl, setCustomLogoUrlState] = useState<string>(() => {
@@ -631,11 +650,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const storedPass = foundRegistered.password || '12345';
       passwordValid = cleanPass === storedPass || cleanPass === '12345' || cleanPass === 'admin2025' || isCustomPasswordMatch;
       if (passwordValid) {
-        const userGender = foundRegistered.gender || (isMaleGender(foundRegistered.name) ? 'Masculino' : 'Femenino');
-        const customAvatar = localStorage.getItem('edumed_user_avatar_' + foundRegistered.id) ||
-                             localStorage.getItem('edumed_user_avatar_' + foundRegistered.email) ||
-                             foundRegistered.avatarUrl ||
-                             (foundRegistered.role === 'student' ? getDefaultAvatarByGender(userGender) : undefined);
+        const userGender = foundRegistered.gender || undefined;
+        const customAvatar = getSavedCustomPhoto(foundRegistered.id, foundRegistered.email) || 
+                             (!isDefaultIllustratedAvatar(foundRegistered.avatarUrl) ? foundRegistered.avatarUrl : null);
+        const effectiveAvatar = customAvatar || (foundRegistered.role === 'student' ? getDefaultAvatarByGender(userGender) : undefined);
 
         authUser = {
           id: foundRegistered.id,
@@ -643,7 +661,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           email: foundRegistered.email,
           role: foundRegistered.role || 'guardian',
           gender: userGender,
-          avatarUrl: customAvatar,
+          avatarUrl: effectiveAvatar,
           documentNumber: foundRegistered.documentNumber,
           phone: foundRegistered.phone,
           position: foundRegistered.position,
@@ -667,16 +685,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       passwordValid = cleanPass === 'mateo2025' || cleanPass === '12345' || cleanPass === 'mateo' || isCustomPasswordMatch;
       if (passwordValid) {
         const studentGender = 'Masculino';
-        const customAvatar = localStorage.getItem('edumed_user_avatar_std-6') ||
-                             localStorage.getItem('edumed_user_avatar_mateo.restrepo@edumed.edu.co') ||
-                             getDefaultAvatarByGender(studentGender);
+        const customAvatar = getSavedCustomPhoto('std-6', 'mateo.restrepo@edumed.edu.co');
+        const effectiveAvatar = customAvatar || getDefaultAvatarByGender(studentGender);
         authUser = {
           id: 'std-6',
           name: 'Mateo Restrepo',
           email: 'mateo.restrepo@edumed.edu.co',
           role: 'student',
           gender: studentGender,
-          avatarUrl: customAvatar,
+          avatarUrl: effectiveAvatar,
           documentNumber: '1035982147',
           phone: '315 987 6543'
         };
@@ -707,18 +724,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } else if (foundStudent) {
       passwordValid = cleanPass === '12345' || cleanPass === 'mateo2025' || cleanPass === (foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
       if (passwordValid) {
-        const studentGender = foundStudent.gender || (isMaleGender(foundStudent.fullName) ? 'Masculino' : 'Femenino');
-        const customAvatar = localStorage.getItem('edumed_user_avatar_' + foundStudent.id) ||
-                             localStorage.getItem('edumed_user_avatar_' + foundStudent.email) ||
-                             foundStudent.avatarUrl ||
-                             getDefaultAvatarByGender(studentGender);
+        const studentGender = foundStudent.gender || undefined;
+        const customAvatar = getSavedCustomPhoto(foundStudent.id, foundStudent.email) ||
+                             (!isDefaultIllustratedAvatar(foundStudent.avatarUrl) ? foundStudent.avatarUrl : null);
+        const effectiveAvatar = customAvatar || getDefaultAvatarByGender(studentGender);
         authUser = {
           id: foundStudent.id,
           name: foundStudent.fullName,
           email: foundStudent.email || `${foundStudent.id}@edumed.edu.co`,
           role: 'student',
           gender: studentGender,
-          avatarUrl: customAvatar,
+          avatarUrl: effectiveAvatar,
           documentNumber: foundStudent.documentNumber,
           phone: '318 765 4321'
         };
@@ -1181,18 +1197,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateUserAvatar = (newAvatarUrl: string) => {
     if (!currentUser) return;
 
+    // 1. Save custom photo in localStorage specifically associated with this user
+    saveCustomPhoto(currentUser.id, newAvatarUrl, currentUser.email);
+
+    // 2. Update currentUser state and storage
     const updatedUser: AuthUser = {
       ...currentUser,
       avatarUrl: newAvatarUrl
     };
     setCurrentUser(updatedUser);
     localStorage.setItem('edumed_current_user', JSON.stringify(updatedUser));
-    localStorage.setItem(`edumed_user_avatar_${currentUser.id}`, newAvatarUrl);
-    if (currentUser.email) {
-      localStorage.setItem(`edumed_user_avatar_${currentUser.email}`, newAvatarUrl);
-    }
 
-    // Also update in students list if student
+    // 3. Also update in students list if student
     if (currentUser.role === 'student') {
       setStudents((prev) => {
         const next = prev.map((s) => {
@@ -1211,11 +1227,56 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
-    // Also update in registered users
+    // 4. Also update in registered users
     const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    const userIndex = registered.findIndex((u: any) => u.email?.toLowerCase() === currentUser.email?.toLowerCase());
+    const userIndex = registered.findIndex((u: any) => u.id === currentUser.id || (currentUser.email && u.email?.toLowerCase() === currentUser.email.toLowerCase()));
     if (userIndex >= 0) {
       registered[userIndex].avatarUrl = newAvatarUrl;
+      localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
+    }
+  };
+
+  const restoreDefaultAvatar = () => {
+    if (!currentUser) return;
+
+    // 1. Remove custom photo from localStorage for this user
+    removeCustomPhoto(currentUser.id, currentUser.email);
+
+    // 2. Determine default illustrated avatar based strictly on registered gender
+    const defaultAvatar = getDefaultAvatarByGender(currentUser.gender);
+
+    // 3. Update currentUser state and storage
+    const updatedUser: AuthUser = {
+      ...currentUser,
+      avatarUrl: defaultAvatar
+    };
+    setCurrentUser(updatedUser);
+    localStorage.setItem('edumed_current_user', JSON.stringify(updatedUser));
+
+    // 4. Update in students list
+    if (currentUser.role === 'student') {
+      setStudents((prev) => {
+        const next = prev.map((s) => {
+          if (
+            s.id === currentUser.id ||
+            (currentUser.documentNumber && s.documentNumber === currentUser.documentNumber) ||
+            (currentUser.email && s.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
+            s.fullName.toLowerCase() === currentUser.name.toLowerCase()
+          ) {
+            return { ...s, avatarUrl: defaultAvatar };
+          }
+          return s;
+        });
+        localStorage.setItem('edumed_students', JSON.stringify(next));
+        return next;
+      });
+    }
+
+    // 5. Update in registered users
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    const userIndex = registered.findIndex((u: any) => u.id === currentUser.id || (currentUser.email && u.email?.toLowerCase() === currentUser.email.toLowerCase()));
+    if (userIndex >= 0) {
+      delete registered[userIndex].avatarUrl;
       localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
     }
   };
@@ -1233,12 +1294,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newGender = data.gender || currentUser.gender;
     const defaultForGender = getDefaultAvatarByGender(newGender);
     
-    // Check if the student was using the default illustrated avatar
-    const isUsingDefault = !currentUser.avatarUrl || 
-      currentUser.avatarUrl.startsWith('data:image/svg+xml') ||
-      currentUser.avatarUrl === getDefaultAvatarByGender(currentUser.gender);
-
-    const newAvatar = isUsingDefault ? defaultForGender : currentUser.avatarUrl;
+    // Check if the student has a custom uploaded photo
+    const hasCustom = Boolean(getSavedCustomPhoto(currentUser.id, currentUser.email));
+    const newAvatar = hasCustom ? currentUser.avatarUrl : defaultForGender;
 
     const updatedUser: AuthUser = {
       ...currentUser,
@@ -1428,6 +1486,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedStudentId,
         currentUser,
         updateUserAvatar,
+        restoreDefaultAvatar,
         updateStudentProfile,
         isStudentEnrollmentCompleted,
         completeStudentEnrollment,

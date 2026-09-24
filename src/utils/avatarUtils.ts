@@ -295,13 +295,13 @@ export const PRESET_AVATARS: PresetAvatar[] = [
 export function isMaleGender(gender?: string): boolean {
   if (!gender) return false;
   const g = gender.toLowerCase().trim();
-  return g === 'masculino' || g === 'hombre' || g === 'm' || g === 'male';
+  return g === 'masculino' || g === 'hombre' || g === 'm' || g === 'male' || g.startsWith('masc') || g === 'chico';
 }
 
 export function isFemaleGender(gender?: string): boolean {
   if (!gender) return false;
   const g = gender.toLowerCase().trim();
-  return g === 'femenino' || g === 'mujer' || g === 'f' || g === 'female';
+  return g === 'femenino' || g === 'mujer' || g === 'f' || g === 'female' || g.startsWith('fem') || g === 'chica';
 }
 
 /**
@@ -318,4 +318,82 @@ export function getDefaultAvatarByGender(gender?: string): string {
     return ILLUSTRATED_FEMALE_AVATAR;
   }
   return ILLUSTRATED_NEUTRAL_AVATAR;
+}
+
+/**
+ * Checks if a given avatar is one of the default illustrated avatars
+ */
+export function isDefaultIllustratedAvatar(avatarUrl?: string): boolean {
+  if (!avatarUrl) return true;
+  return (
+    avatarUrl === ILLUSTRATED_MALE_AVATAR ||
+    avatarUrl === ILLUSTRATED_FEMALE_AVATAR ||
+    avatarUrl === ILLUSTRATED_NEUTRAL_AVATAR
+  );
+}
+
+/**
+ * Retrieves saved custom photo for a given user from localStorage
+ */
+export function getSavedCustomPhoto(userId?: string, email?: string): string | null {
+  if (!userId && !email) return null;
+  if (userId) {
+    const photoById = localStorage.getItem(`edumed_custom_photo_${userId}`);
+    if (photoById) return photoById;
+  }
+  if (email) {
+    const photoByEmail = localStorage.getItem(`edumed_custom_photo_${email.toLowerCase().trim()}`);
+    if (photoByEmail) return photoByEmail;
+  }
+  return null;
+}
+
+/**
+ * Saves a custom photo associated specifically with the user
+ */
+export function saveCustomPhoto(userId: string, photoDataUrl: string, email?: string): void {
+  if (!userId) return;
+  localStorage.setItem(`edumed_custom_photo_${userId}`, photoDataUrl);
+  localStorage.setItem(`edumed_user_avatar_${userId}`, photoDataUrl);
+  if (email) {
+    const cleanEmail = email.toLowerCase().trim();
+    localStorage.setItem(`edumed_custom_photo_${cleanEmail}`, photoDataUrl);
+    localStorage.setItem(`edumed_user_avatar_${cleanEmail}`, photoDataUrl);
+  }
+}
+
+/**
+ * Removes custom photo associated with the user, returning them to the default avatar
+ */
+export function removeCustomPhoto(userId: string, email?: string): void {
+  if (!userId) return;
+  localStorage.removeItem(`edumed_custom_photo_${userId}`);
+  localStorage.removeItem(`edumed_user_avatar_${userId}`);
+  if (email) {
+    const cleanEmail = email.toLowerCase().trim();
+    localStorage.removeItem(`edumed_custom_photo_${cleanEmail}`);
+    localStorage.removeItem(`edumed_user_avatar_${cleanEmail}`);
+  }
+}
+
+/**
+ * Resolves the effective avatar for a student:
+ * 1. If user has a saved custom photo -> return custom photo
+ * 2. If user.avatarUrl exists and is not an illustrated default -> return it
+ * 3. Otherwise -> return default avatar based on registered gender
+ */
+export function resolveStudentAvatar(user?: { id?: string; email?: string; gender?: string; avatarUrl?: string } | null): string {
+  if (!user) return ILLUSTRATED_NEUTRAL_AVATAR;
+
+  // 1. Check custom photo in localStorage for this specific user
+  const saved = getSavedCustomPhoto(user.id, user.email);
+  if (saved) return saved;
+
+  // 2. If avatarUrl is explicitly set and is not a default SVG, use it
+  if (user.avatarUrl && !isDefaultIllustratedAvatar(user.avatarUrl)) {
+    return user.avatarUrl;
+  }
+
+  // 3. Dynamic default according to registered gender
+  return getDefaultAvatarByGender(user.gender);
 }

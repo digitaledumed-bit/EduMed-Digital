@@ -20,7 +20,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
-import { getDefaultAvatarByGender, isMaleGender } from '../../utils/avatarUtils';
+import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
 
 export const StudentProfileView: React.FC = () => {
   const { 
@@ -156,6 +156,7 @@ export const StudentProfileView: React.FC = () => {
           ? currentUser.avatarUrl
           : (student.avatarUrl || getDefaultAvatarByGender(studentGender));
         const isMale = isMaleGender(studentGender);
+        const isFemale = isFemaleGender(studentGender);
 
         return (
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -173,7 +174,7 @@ export const StudentProfileView: React.FC = () => {
                 
                 {/* Gender Indicator Badge */}
                 <div className="absolute -bottom-2 -left-2 px-2.5 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-black shadow-md border border-slate-700">
-                  {isMale ? '♂ Hombre' : '♀ Mujer'}
+                  {isMale ? '♂ Hombre' : isFemale ? '♀ Mujer' : '🎓 Neutro'}
                 </div>
 
                 {/* Change photo button on hover/click */}
