@@ -23,6 +23,10 @@ interface AppContextType {
 
   currentUser: AuthUser | null;
   updateUserAvatar: (newAvatarUrl: string) => void;
+  updateStudentProfile: (data: { name: string; phone?: string; email?: string; gender?: string; address?: string; neighborhood?: string }) => void;
+  isStudentEnrollmentCompleted: (studentId?: string) => boolean;
+  completeStudentEnrollment: (studentId: string, enrollmentData?: any) => void;
+  resetStudentEnrollment: (studentId: string) => void;
   login: (identifier: string, pass: string, preferredRole?: UserRole) => { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
   register: (userData: { 
     name: string; 
@@ -1216,6 +1220,153 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const updateStudentProfile = (data: {
+    name: string;
+    phone?: string;
+    email?: string;
+    gender?: string;
+    address?: string;
+    neighborhood?: string;
+  }) => {
+    if (!currentUser) return;
+
+    const newGender = data.gender || currentUser.gender;
+    const defaultForGender = getDefaultAvatarByGender(newGender);
+    
+    // Check if the student was using the default illustrated avatar
+    const isUsingDefault = !currentUser.avatarUrl || 
+      currentUser.avatarUrl.startsWith('data:image/svg+xml') ||
+      currentUser.avatarUrl === getDefaultAvatarByGender(currentUser.gender);
+
+    const newAvatar = isUsingDefault ? defaultForGender : currentUser.avatarUrl;
+
+    const updatedUser: AuthUser = {
+      ...currentUser,
+      name: data.name,
+      phone: data.phone || currentUser.phone,
+      email: data.email || currentUser.email,
+      gender: newGender,
+      avatarUrl: newAvatar
+    };
+
+    setCurrentUser(updatedUser);
+    localStorage.setItem('edumed_current_user', JSON.stringify(updatedUser));
+
+    // Update in registered users
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    const idx = registered.findIndex((u: any) => u.id === currentUser.id || u.email?.toLowerCase() === currentUser.email?.toLowerCase());
+    if (idx >= 0) {
+      registered[idx] = { ...registered[idx], ...updatedUser };
+      localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
+    }
+
+    // Update in students list
+    setStudents((prev) => {
+      const next = prev.map((s) => {
+        if (
+          s.id === currentUser.id ||
+          (currentUser.documentNumber && s.documentNumber === currentUser.documentNumber) ||
+          (currentUser.email && s.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
+          s.fullName.toLowerCase() === currentUser.name.toLowerCase()
+        ) {
+          return {
+            ...s,
+            fullName: data.name,
+            gender: newGender || s.gender,
+            phone: data.phone || s.phone,
+            email: data.email || s.email,
+            address: data.address || s.address,
+            neighborhood: data.neighborhood || s.neighborhood,
+            avatarUrl: newAvatar
+          };
+        }
+        return s;
+      });
+      localStorage.setItem('edumed_students', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const isStudentEnrollmentCompleted = (studentId?: string): boolean => {
+    const targetId = studentId || currentUser?.id;
+    if (!targetId) return false;
+
+    // 1. Explicit localStorage check
+    const stored = localStorage.getItem(`edumed_enrollment_completed_${targetId}`);
+    if (stored !== null) {
+      return stored === 'true';
+    }
+    if (currentUser?.email) {
+      const storedByEmail = localStorage.getItem(`edumed_enrollment_completed_${currentUser.email.toLowerCase()}`);
+      if (storedByEmail !== null) {
+        return storedByEmail === 'true';
+      }
+    }
+
+    // 2. Check student record status
+    const std = students.find(
+      s => s.id === targetId ||
+           (currentUser?.email && s.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
+           (currentUser?.documentNumber && s.documentNumber === currentUser.documentNumber)
+    );
+
+    // If student status is in_process, enrollment is incomplete (must do 6 steps)
+    if (std && std.status === 'in_process') {
+      return false;
+    }
+
+    // By default, if the student has active status and was marked complete, return true
+    if (std && std.status === 'active') {
+      return true;
+    }
+
+    return false;
+  };
+
+  const completeStudentEnrollment = (studentId: string, enrollmentData?: any) => {
+    localStorage.setItem(`edumed_enrollment_completed_${studentId}`, 'true');
+    if (currentUser?.email) {
+      localStorage.setItem(`edumed_enrollment_completed_${currentUser.email.toLowerCase()}`, 'true');
+    }
+
+    setStudents((prev) => {
+      const next = prev.map((s) => {
+        if (
+          s.id === studentId ||
+          (currentUser?.email && s.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
+          (currentUser?.documentNumber && s.documentNumber === currentUser.documentNumber)
+        ) {
+          return { ...s, status: 'active' as EnrollmentStatus };
+        }
+        return s;
+      });
+      localStorage.setItem('edumed_students', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const resetStudentEnrollment = (studentId: string) => {
+    localStorage.setItem(`edumed_enrollment_completed_${studentId}`, 'false');
+    if (currentUser?.email) {
+      localStorage.setItem(`edumed_enrollment_completed_${currentUser.email.toLowerCase()}`, 'false');
+    }
+
+    setStudents((prev) => {
+      const next = prev.map((s) => {
+        if (
+          s.id === studentId ||
+          (currentUser?.email && s.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
+          (currentUser?.documentNumber && s.documentNumber === currentUser.documentNumber)
+        ) {
+          return { ...s, status: 'in_process' as EnrollmentStatus };
+        }
+        return s;
+      });
+      localStorage.setItem('edumed_students', JSON.stringify(next));
+      return next;
+    });
+  };
+
   const logout = () => {
     setCurrentUser(null);
     localStorage.removeItem('edumed_current_user');
@@ -1277,6 +1428,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedStudentId,
         currentUser,
         updateUserAvatar,
+        updateStudentProfile,
+        isStudentEnrollmentCompleted,
+        completeStudentEnrollment,
+        resetStudentEnrollment,
         login,
         register,
         isEmailRegistered,

@@ -18,7 +18,9 @@ import { LinkGuardianView } from './components/admin/LinkGuardianView';
 import { ParentsList } from './components/admin/ParentsList';
 import { DocumentsManagement } from './components/admin/DocumentsManagement';
 import { InstitutionalSettings } from './components/admin/InstitutionalSettings';
-import { UserProfileModal } from './components/common/UserProfileModal';
+import { MandatoryEnrollmentGate } from './components/student/MandatoryEnrollmentGate';
+import { StudentMainDashboard } from './components/student/StudentMainDashboard';
+import { StudentEditProfileModal } from './components/student/StudentEditProfileModal';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
@@ -30,7 +32,9 @@ const MainAppContent: React.FC = () => {
     customLogoUrl, 
     currentUser,
     isProfileModalOpen,
-    setIsProfileModalOpen
+    setIsProfileModalOpen,
+    isStudentEnrollmentCompleted,
+    resetStudentEnrollment
   } = useApp();
   const [splashFinished, setSplashFinished] = useState<boolean>(() => {
     return sessionStorage.getItem('edumed_welcome_splash_seen') === 'true';
@@ -59,6 +63,10 @@ const MainAppContent: React.FC = () => {
       </>
     );
   }
+
+  // Check mandatory enrollment status for students
+  const isStudent = currentUser.role === 'student';
+  const isEnrollmentDone = isStudent ? isStudentEnrollmentCompleted(currentUser.id) : true;
 
   // Define admin-only views to enforce strict role isolation
   const adminOnlyTabs = ['dashboard', 'enrollments', 'students', 'link-guardian', 'parents', 'documents', 'settings'];
@@ -131,12 +139,17 @@ const MainAppContent: React.FC = () => {
                     </button>
                   </div>
                 </div>
+              ) : isStudent && !isEnrollmentDone ? (
+                /* MANDATORY ENROLLMENT PROCESS GATE FOR STUDENTS */
+                <MandatoryEnrollmentGate 
+                  onEnrollmentCompleted={() => setActiveTab('student-profile')} 
+                />
               ) : (
                 <>
-                  {activeTab === 'dashboard' && <AdminDashboard />}
+                  {activeTab === 'dashboard' && (isStudent ? <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} /> : <AdminDashboard />)}
                   {activeTab === 'enrollments' && <EnrollmentsTable />}
                   {activeTab === 'students' && <StudentsList />}
-                  {activeTab === 'student-profile' && <StudentProfileView />}
+                  {activeTab === 'student-profile' && (isStudent ? <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} /> : <StudentProfileView />)}
                   {activeTab === 'link-guardian' && <LinkGuardianView />}
                   {activeTab === 'parents' && <ParentsList />}
                   {activeTab === 'documents' && <DocumentsManagement />}
@@ -192,7 +205,7 @@ const MainAppContent: React.FC = () => {
         </footer>
 
         {/* User Profile Editing Modal */}
-        <UserProfileModal 
+        <StudentEditProfileModal 
           isOpen={isProfileModalOpen} 
           onClose={() => setIsProfileModalOpen(false)} 
         />
