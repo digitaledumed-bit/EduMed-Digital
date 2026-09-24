@@ -115,8 +115,8 @@ export const InicioAccordions: React.FC = () => {
                 </strong>
                 <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
                   {isEs 
-                    ? 'Selecciona tu portal asignado (Acudiente, Estudiante o Docente) e ingresa con tus credenciales. El sistema te otorgará acceso únicamente a la información autorizada para tu rol.' 
-                    : 'Select your assigned portal (Guardian, Student, or Teacher) and sign in. You will only access data corresponding to your role.'}
+                    ? 'Selecciona tu portal asignado (Acudiente, Estudiante o Personal Administrativo) e ingresa con tus credenciales. El sistema te otorgará acceso únicamente a la información autorizada para tu rol.' 
+                    : 'Select your assigned portal (Guardian, Student, or Administrative Staff) and sign in. You will only access data corresponding to your role.'}
                 </p>
               </div>
             </div>

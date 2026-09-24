@@ -191,7 +191,7 @@ export const Navbar: React.FC = () => {
                       : 'bg-teal-50 dark:bg-teal-950/70 text-teal-800 dark:text-teal-300 border-teal-300 dark:border-teal-800'
                   }`}
                 >
-                  {currentUser.role === 'admin' && (language === 'es' ? 'Portal Docente / Directivo' : 'Teacher / Admin Portal')}
+                  {currentUser.role === 'admin' && (language === 'es' ? 'Portal Administrativo / Directivo' : 'Administrative / Staff Portal')}
                   {currentUser.role === 'student' && (language === 'es' ? 'Portal Estudiante' : 'Student Portal')}
                   {currentUser.role === 'guardian' && (language === 'es' ? 'Portal Acudiente' : 'Guardian Portal')}
                 </span>
@@ -294,7 +294,7 @@ export const Navbar: React.FC = () => {
                           {language === 'es' ? 'Perfil: ' : 'Profile: '}
                           <strong className="text-slate-700 dark:text-slate-200">
                             {currentUser.role === 'admin'
-                              ? (currentUser.position || 'Docente / Directivo')
+                              ? (currentUser.position || (language === 'es' ? 'Personal Administrativo' : 'Administrative Staff'))
                               : currentUser.role === 'student'
                               ? 'Estudiante'
                               : 'Acudiente'}
@@ -417,7 +417,7 @@ export const Navbar: React.FC = () => {
                         {currentUser.name}
                       </p>
                       <span className="text-[9px] font-semibold text-teal-600 dark:text-teal-400 capitalize">
-                        {currentUser.role === 'admin' ? 'Profesor / Docente' : 'Acudiente'}
+                        {currentUser.role === 'admin' ? (language === 'es' ? 'Directivo / Administrativo' : 'Administrative Staff') : 'Acudiente'}
                       </span>
                     </div>
                   </div>

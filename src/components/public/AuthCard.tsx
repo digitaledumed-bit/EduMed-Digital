@@ -74,7 +74,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
-  const [loginRole, setLoginRole] = useState<'guardian' | 'student' | 'admin'>('guardian');
   
   // Register form type selector: standard (families/students) vs staff (teachers/administrators)
   const [regFormType, setRegFormType] = useState<'standard' | 'staff'>('standard');
@@ -191,18 +190,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     setIsLoading(true);
 
     setTimeout(() => {
-      const res = login(loginIdentifier, loginPassword, loginRole);
+      const res = login(loginIdentifier, loginPassword);
       setIsLoading(false);
       if (!res.success) {
         if (res.notFound) {
           setLoginFieldErrors({
             identifier: language === 'es' ? 'La cuenta no está registrada con este correo o documento.' : 'The account is not registered'
           });
-        } else if (res.suggestedRole) {
-          setLoginFieldErrors({
-            role: res.message || (language === 'es' ? 'Esta cuenta no corresponde al portal seleccionado.' : 'This account belongs to another portal.')
-          });
-          setErrorMsg(res.message || null);
         } else {
           setLoginFieldErrors({
             password: language === 'es' ? 'Contraseña incorrecta. Verifique sus datos o recupere su clave.' : 'Incorrect password. Check your credentials or reset your password.'
@@ -700,33 +694,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       {/* TAB 1: INICIAR SESIÓN */}
       {mode === 'login' ? (
         <form onSubmit={handleLogin} className="mt-5 space-y-4">
-          
-          {/* Caja desplegable: Tipo de Portal / Rol de acceso */}
-          <div className="text-left space-y-1">
-            <label htmlFor="login-role-dropdown" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              {language === 'es' ? 'Portal al que desea ingresar:' : 'Portal to enter:'}
-            </label>
-            <select
-              id="login-role-dropdown"
-              value={loginRole}
-              onChange={(e) => {
-                const role = e.target.value as 'guardian' | 'student' | 'admin';
-                setLoginRole(role);
-                if (loginFieldErrors.role) setLoginFieldErrors(prev => ({ ...prev, role: undefined }));
-              }}
-              className={`w-full px-3.5 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 transition-all cursor-pointer ${
-                loginFieldErrors.role
-                  ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                  : 'bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
-              }`}
-            >
-              <option value="guardian">{language === 'es' ? 'Portal Acudiente (Padres y Tutores)' : 'Guardian Portal (Parents & Tutors)'}</option>
-              <option value="admin">{language === 'es' ? 'Portal Profesor / Docente (Cuerpo Académico)' : 'Teacher / Professor Portal'}</option>
-              <option value="student">{language === 'es' ? 'Portal Estudiante (Alumnos y Aspirantes)' : 'Student Portal'}</option>
-            </select>
-            <FieldError message={loginFieldErrors.role} />
-          </div>
-
           {/* Campo Correo Electrónico (Personal o Institucional) */}
           <div className="text-left space-y-1">
             <label 

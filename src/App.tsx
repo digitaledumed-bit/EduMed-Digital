@@ -119,8 +119,8 @@ const MainAppContent: React.FC = () => {
                   </h2>
                   <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                     {language === 'es'
-                      ? `Esta sección pertenece exclusivamente al Portal Docente y Administrativo de la I.E. Félix Henao Botero. Tu cuenta actual (${currentUser.name}) tiene asignado el rol de ${currentUser.role === 'student' ? 'Estudiante' : 'Acudiente'} y no tiene autorización para consultar estos registros.`
-                      : `This section belongs to the Teacher/Admin Portal. Your account does not have permission to view these records.`}
+                      ? `Esta sección pertenece exclusivamente al Portal Administrativo y Directivo de la I.E. Félix Henao Botero. Tu cuenta actual (${currentUser.name}) tiene asignado el rol de ${currentUser.role === 'student' ? 'Estudiante' : 'Acudiente'} y no tiene autorización para consultar estos registros.`
+                      : `This section belongs to the Administrative & Leadership Portal. Your account does not have permission to view these records.`}
                   </p>
                   <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <button

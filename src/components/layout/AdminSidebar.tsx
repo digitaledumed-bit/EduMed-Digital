@@ -216,7 +216,7 @@ export const AdminSidebar: React.FC = () => {
     return {
       title: 'EduMed',
       accent: 'Admin',
-      subtitle: language === 'es' ? 'Docentes y Rectoría' : 'Teachers & Admin'
+      subtitle: language === 'es' ? 'Rectoría y Personal Directivo' : 'Leadership & Staff'
     };
   };
 
@@ -331,7 +331,7 @@ export const AdminSidebar: React.FC = () => {
               </div>
               <div className="text-[10px] text-teal-400 font-medium truncate capitalize">
                 {currentUser?.role === 'admin' 
-                  ? (language === 'es' ? 'Docente / Admin' : 'Teacher / Admin')
+                  ? (language === 'es' ? 'Directivo / Administrativo' : 'Administrative / Staff')
                   : currentUser?.role === 'student'
                   ? (language === 'es' ? (isMaleGender(currentUser.gender) ? 'Estudiante (Hombre)' : 'Estudiante (Mujer)') : 'Student')
                   : (language === 'es' ? 'Acudiente' : 'Guardian')}

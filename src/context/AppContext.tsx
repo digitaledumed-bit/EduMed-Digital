@@ -159,7 +159,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const initialNotifications: AppNotification[] = [
-    // 1. Docentes y Directivos / Administrativos
+    // 1. Personal Administrativo y Directivos
     {
       id: 'notif-adm-1',
       title: 'Nuevas Solicitudes de Matrícula',
@@ -180,8 +180,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     },
     {
       id: 'notif-adm-3',
-      title: 'Comité de Convivencia y Promoción',
-      message: 'Convocatoria a reunión de docentes y directores de grupo el próximo viernes en la sala de profesores.',
+      title: 'Comité Directivo y de Convivencia',
+      message: 'Convocatoria a reunión de coordinación institucional y secretaría académica el próximo viernes en rectoría.',
       date: 'Hace 3 horas',
       read: false,
       targetRoles: ['admin'],
@@ -606,10 +606,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const isAdminMatch = cleanId === 'admin@edumed.edu.co' || 
       cleanId === 'admin' || 
       cleanId === '43981245' || 
-      cleanId === 'profesor@edumed.edu.co' || 
-      cleanId === 'docente@edumed.edu.co' || 
-      cleanId === 'profesor' || 
-      cleanId === 'docente';
+      cleanId === 'rector@edumed.edu.co' || 
+      cleanId === 'coordinador@edumed.edu.co' || 
+      cleanId === 'secretaria@edumed.edu.co';
     const isStudentMatch = cleanId === 'mateo.restrepo@edumed.edu.co' || cleanId === 'mateo' || cleanId === '1035982147' || cleanId === 'ti 1035982147';
     const isGuardianMatch = cleanId === 'maria.gonzalez@gmail.com' || cleanId === 'maria' || cleanId === '43892104' || cleanId === 'cc 43892104';
 
@@ -754,7 +753,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // Strict portal access isolation: Check that the account role matches the selected portal
     if (preferredRole && authUser.role !== preferredRole) {
       const portalNames: Record<string, string> = {
-        admin: language === 'es' ? 'Portal Docente / Directivo' : 'Teacher / Administrative Portal',
+        admin: language === 'es' ? 'Portal Administrativo y Directivo' : 'Administrative & Staff Portal',
         guardian: language === 'es' ? 'Portal Acudiente' : 'Guardian Portal',
         student: language === 'es' ? 'Portal Estudiante' : 'Student Portal',
       };
@@ -818,8 +817,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 3. Check in pre-configured institutional and system accounts
     const systemEmails = [
       'admin@edumed.edu.co',
-      'profesor@edumed.edu.co',
-      'docente@edumed.edu.co',
       'rector@edumed.edu.co',
       'coordinador@edumed.edu.co',
       'secretaria@edumed.edu.co',
@@ -979,7 +976,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     const roleName = newUser.role === 'admin' 
-      ? 'Docente / Administrativo' 
+      ? (language === 'es' ? 'Personal Administrativo y Directivo' : 'Administrative / Staff') 
       : newUser.role === 'student' 
         ? 'Estudiante' 
         : 'Acudiente';

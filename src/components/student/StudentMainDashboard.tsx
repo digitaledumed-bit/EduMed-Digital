@@ -397,7 +397,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                 Informe Académico Vigente (Periodo 1 - 2025)
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Calificaciones registradas por los docentes de la I.E. Félix Henao Botero
+                Calificaciones oficiales validadas por la secretaría académica de la I.E. Félix Henao Botero
               </p>
             </div>
             <span className="px-3 py-1 rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-800">
