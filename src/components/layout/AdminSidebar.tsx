@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   LayoutDashboard, 
@@ -17,8 +17,11 @@ import {
   Award,
   LifeBuoy,
   Globe,
-  FilePlus
+  FilePlus,
+  Camera
 } from 'lucide-react';
+import { AvatarChangeModal } from '../common/AvatarChangeModal';
+import { getDefaultAvatarByGender, isMaleGender } from '../../utils/avatarUtils';
 
 export const AdminSidebar: React.FC = () => {
   const { 
@@ -31,6 +34,8 @@ export const AdminSidebar: React.FC = () => {
     currentUser,
     logout
   } = useApp();
+
+  const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
 
   const pendingDocsCount = documents.filter(d => d.status === 'in_review' || d.status === 'pending').length;
 
@@ -48,7 +53,7 @@ export const AdminSidebar: React.FC = () => {
         },
         {
           id: 'wizard',
-          label: language === 'es' ? 'Nueva Matrícula' : 'New Enrollment',
+          label: language === 'es' ? 'Pasos para Matricularse' : 'Enrollment Steps',
           icon: FilePlus,
           badge: null
         },
@@ -85,6 +90,12 @@ export const AdminSidebar: React.FC = () => {
           id: 'student-profile',
           label: language === 'es' ? 'Mi Expediente y Notas' : 'My Grades & Profile',
           icon: GraduationCap,
+          badge: null
+        },
+        {
+          id: 'wizard',
+          label: language === 'es' ? 'Pasos para Matricularse' : 'Enrollment Steps',
+          icon: FilePlus,
           badge: null
         },
         {
@@ -284,12 +295,36 @@ export const AdminSidebar: React.FC = () => {
       <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
         <div className="flex items-center justify-between">
           <div 
-            onClick={() => setActiveTab('settings')}
-            className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setActiveTab(currentUser?.role === 'student' ? 'student-profile' : 'settings')}
+            className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
           >
-            <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold border border-teal-500/60">
-              {currentUser?.name ? currentUser.name.charAt(0) : 'A'}
-            </div>
+            {currentUser?.role === 'student' ? (
+              <div 
+                className="relative group cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAvatarModal(true);
+                }}
+                title={language === 'es' ? 'Cambiar foto de avatar' : 'Change avatar photo'}
+              >
+                <img
+                  src={currentUser.avatarUrl || getDefaultAvatarByGender(currentUser.gender)}
+                  alt={currentUser.name}
+                  className="w-9 h-9 rounded-full object-cover ring-2 ring-teal-500 bg-slate-800"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = getDefaultAvatarByGender(currentUser.gender);
+                  }}
+                />
+                <div className="absolute inset-0 rounded-full bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                  <Camera className="w-3 h-3" />
+                </div>
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold border border-teal-500/60">
+                {currentUser?.name ? currentUser.name.charAt(0) : 'A'}
+              </div>
+            )}
+            
             <div className="text-left">
               <div className="text-xs font-semibold text-white truncate max-w-[110px]">
                 {currentUser?.name || 'Administración'}
@@ -298,21 +333,46 @@ export const AdminSidebar: React.FC = () => {
                 {currentUser?.role === 'admin' 
                   ? (language === 'es' ? 'Docente / Admin' : 'Teacher / Admin')
                   : currentUser?.role === 'student'
-                  ? (language === 'es' ? 'Estudiante' : 'Student')
+                  ? (language === 'es' ? (isMaleGender(currentUser.gender) ? 'Estudiante (Hombre)' : 'Estudiante (Mujer)') : 'Student')
                   : (language === 'es' ? 'Acudiente' : 'Guardian')}
               </div>
             </div>
           </div>
-          <button
-            id="sidebar-logout-btn"
-            onClick={logout}
-            className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-            title={t.nav.logout}
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+
+          <div className="flex items-center gap-1">
+            {currentUser?.role === 'student' && (
+              <button
+                type="button"
+                onClick={() => setShowAvatarModal(true)}
+                className="p-1.5 text-teal-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                title={language === 'es' ? 'Cambiar foto' : 'Change photo'}
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            <button
+              id="sidebar-logout-btn"
+              onClick={logout}
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+              title={t.nav.logout}
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Avatar Change Modal for Student */}
+      {currentUser && currentUser.role === 'student' && (
+        <AvatarChangeModal
+          isOpen={showAvatarModal}
+          onClose={() => setShowAvatarModal(false)}
+          studentName={currentUser.name}
+          studentGender={currentUser.gender}
+          currentAvatarUrl={currentUser.avatarUrl}
+        />
+      )}
     </aside>
   );
 };

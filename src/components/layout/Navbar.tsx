@@ -17,10 +17,10 @@ import {
   Sparkles,
   LogOut,
   LogIn,
-  User,
-  Settings
+  Camera
 } from 'lucide-react';
-import { UserAvatar } from '../common/UserAvatar';
+import { AvatarChangeModal } from '../common/AvatarChangeModal';
+import { getDefaultAvatarByGender, isMaleGender } from '../../utils/avatarUtils';
 
 export const Navbar: React.FC = () => {
   const { 
@@ -38,13 +38,13 @@ export const Navbar: React.FC = () => {
     unreadCount,
     currentUser,
     logout,
-    customLogoUrl,
-    setIsProfileModalOpen
+    customLogoUrl
   } = useApp();
 
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
 
   const handleRoleChange = (role: 'public' | 'admin' | 'guardian' | 'student') => {
     setActiveRole(role);
@@ -349,42 +349,84 @@ export const Navbar: React.FC = () => {
               )}
             </div>
 
-            {/* If User Logged In: User profile chip with role, Edit Profile button, and logout button */}
+            {/* If User Logged In: User profile chip with role and logout button */}
             {currentUser ? (
-              <div className="flex items-center gap-1.5 sm:gap-2 pl-2">
-                <button
-                  type="button"
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-teal-50 dark:bg-slate-800/80 dark:hover:bg-slate-750 border border-slate-200 hover:border-teal-300 dark:border-slate-700 transition-all cursor-pointer text-left group"
-                  title={language === 'es' ? 'Clic para editar mi perfil' : 'Click to edit my profile'}
-                >
-                  <UserAvatar name={currentUser.name} size="xs" />
-                  <div className="text-left">
-                    <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[120px] group-hover:text-teal-600 dark:group-hover:text-teal-400">
-                      {currentUser.name}
-                    </p>
-                    <span className="text-[9px] font-semibold text-teal-600 dark:text-teal-400 capitalize flex items-center gap-1">
-                      <span>{currentUser.role === 'admin' ? 'Profesor / Docente' : currentUser.role === 'guardian' ? 'Acudiente' : 'Estudiante'}</span>
-                      <span className="text-slate-400 font-normal underline">(Editar)</span>
-                    </span>
-                  </div>
-                </button>
+              <div className="flex items-center gap-2 pl-2">
+                {currentUser.role === 'student' ? (
+                  /* Student Profile Badge with Gender-Based Avatar & Photo Customizer */
+                  <div className="flex items-center gap-2 px-2.5 py-1 rounded-2xl bg-teal-50 dark:bg-slate-800 border border-teal-300 dark:border-slate-700 shadow-xs">
+                    {/* Interactive Avatar with Gender and Photo-Changer */}
+                    <div 
+                      onClick={() => setShowAvatarModal(true)}
+                      className="relative group cursor-pointer"
+                      title={language === 'es' ? 'Cambiar tu foto de avatar' : 'Change avatar photo'}
+                    >
+                      <img
+                        src={currentUser.avatarUrl || getDefaultAvatarByGender(currentUser.gender)}
+                        alt={currentUser.name}
+                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-teal-500 shadow-xs bg-slate-200"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = getDefaultAvatarByGender(currentUser.gender);
+                        }}
+                      />
+                      <div className="absolute inset-0 rounded-full bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                        <Camera className="w-3.5 h-3.5" />
+                      </div>
+                    </div>
 
-                {/* Mobile / Quick Profile Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsProfileModalOpen(true)}
-                  className="p-1.5 sm:px-2.5 sm:py-1.5 rounded-xl bg-slate-100 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-teal-950/40 text-slate-700 dark:text-slate-200 hover:text-teal-700 dark:hover:text-teal-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer flex items-center gap-1.5"
-                  title={language === 'es' ? 'Editar Mi Perfil' : 'Edit My Profile'}
-                >
-                  <User className="w-3.5 h-3.5 text-teal-600" />
-                  <span className="hidden sm:inline">{language === 'es' ? 'Mi Perfil' : 'My Profile'}</span>
-                </button>
+                    {/* Student Name & Gender Label */}
+                    <div 
+                      onClick={() => { setActiveRole('student'); setActiveTab('student-profile'); }}
+                      className="text-left cursor-pointer"
+                      title="Ver expediente del estudiante"
+                    >
+                      <p className="text-xs font-black text-slate-900 dark:text-white leading-tight truncate max-w-[130px]">
+                        {currentUser.name}
+                      </p>
+                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 block leading-tight">
+                        {isMaleGender(currentUser.gender) ? '♂ Estudiante (Hombre)' : '♀ Estudiante (Mujer)'}
+                      </span>
+                    </div>
+
+                    {/* Quick Button to Change Avatar Photo */}
+                    <button
+                      type="button"
+                      onClick={() => setShowAvatarModal(true)}
+                      className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-teal-100 dark:hover:bg-slate-600 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-slate-600 transition-colors cursor-pointer shadow-2xs"
+                      title={language === 'es' ? 'Cambiar foto de avatar' : 'Change avatar photo'}
+                    >
+                      <Camera className="w-3 h-3 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span className="hidden sm:inline">{language === 'es' ? 'Cambiar foto' : 'Change'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  /* Admin / Guardian Chip */
+                  <div 
+                    onClick={() => {
+                      setActiveRole(currentUser.role);
+                      if (currentUser.role === 'admin') setActiveTab('dashboard');
+                      else setActiveTab('status');
+                    }}
+                    className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold">
+                      {currentUser.name.charAt(0)}
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[120px]">
+                        {currentUser.name}
+                      </p>
+                      <span className="text-[9px] font-semibold text-teal-600 dark:text-teal-400 capitalize">
+                        {currentUser.role === 'admin' ? 'Profesor / Docente' : 'Acudiente'}
+                      </span>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   id="nav-logout-btn"
                   onClick={logout}
-                  className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   title={language === 'es' ? 'Cerrar Sesión' : 'Log Out'}
                 >
                   <LogOut className="w-3.5 h-3.5 text-rose-500" />
@@ -417,7 +459,11 @@ export const Navbar: React.FC = () => {
                 onClick={() => setActiveTab('settings')}
                 className="flex items-center gap-2 pl-2 pr-1 cursor-pointer"
               >
-                <UserAvatar name="Secretaría Académica" size="sm" />
+                <img 
+                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" 
+                  alt="Admin Avatar"
+                  className="w-8 h-8 rounded-full object-cover border border-teal-500"
+                />
                 <div className="hidden lg:block text-left">
                   <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Secretaría Académica</div>
                   <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">Admin Félix Henao</div>
@@ -427,6 +473,17 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Avatar Customization Modal for Student */}
+      {currentUser && currentUser.role === 'student' && (
+        <AvatarChangeModal
+          isOpen={showAvatarModal}
+          onClose={() => setShowAvatarModal(false)}
+          studentName={currentUser.name}
+          studentGender={currentUser.gender}
+          currentAvatarUrl={currentUser.avatarUrl}
+        />
+      )}
     </header>
   );
 };

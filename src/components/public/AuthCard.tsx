@@ -31,10 +31,8 @@ import {
   MessageSquare,
   Briefcase,
   Building2,
-  BadgeCheck,
-  Edit3
+  BadgeCheck
 } from 'lucide-react';
-import { UserAvatar } from '../common/UserAvatar';
 
 interface AuthCardProps {
   onSuccess?: () => void;
@@ -64,8 +62,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     customLogoUrl,
     requestPasswordResetCode,
     verifyPasswordResetCode,
-    resetPasswordWithCode,
-    setIsProfileModalOpen
+    resetPasswordWithCode
   } = useApp();
 
   const [mode, setMode] = useState<'login' | 'register' | 'forgot-password'>('login');
@@ -90,6 +87,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
+  const [regGender, setRegGender] = useState<'Masculino' | 'Femenino'>('Masculino');
   const [acceptTerms, setAcceptTerms] = useState(true);
 
   // Dedicated Staff Register form state (Docente / Personal Administrativo)
@@ -275,6 +273,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         email: cleanRegEmail,
         password: regPassword,
         role: regRole,
+        gender: regRole === 'student' ? regGender : undefined,
         documentNumber: `${regDocType} ${regDocNumber}`,
         phone: regPhone
       });
@@ -506,7 +505,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       >
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <UserAvatar name={currentUser.name} size="md" />
+            <div className="relative">
+              <img 
+                src={customLogoUrl} 
+                alt="EduMed Digital Logo" 
+                className="w-12 h-12 rounded-full object-cover border-2 border-amber-400 dark:border-amber-300 ring-2 ring-amber-400/20 shadow-md bg-white"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
+                }}
+              />
+              <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full" />
+            </div>
             <div>
               <span className="text-xs font-semibold uppercase tracking-wider text-teal-600 dark:text-teal-400">
                 {language === 'es' ? 'Sesión Activa' : 'Active Session'}
@@ -519,15 +528,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsProfileModalOpen(true)}
-            className="p-2 rounded-xl bg-teal-50 hover:bg-teal-100 dark:bg-teal-950/60 dark:hover:bg-teal-900/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold"
-            title={language === 'es' ? 'Editar mi información de perfil' : 'Edit profile info'}
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">{language === 'es' ? 'Editar Perfil' : 'Edit Profile'}</span>
-          </button>
         </div>
 
         <div className="mt-5 space-y-3">
@@ -1212,6 +1212,29 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 </select>
                 <FieldError message={regFieldErrors.role} />
               </div>
+
+              {/* Sexo / Género para Estudiantes (Asigna avatar de hombre o mujer) */}
+              {regRole === 'student' && (
+                <div className="space-y-1 p-2.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 animate-in fade-in duration-200">
+                  <label htmlFor="reg-gender-select" className="block text-xs font-bold text-teal-900 dark:text-teal-200">
+                    {language === 'es' ? 'Sexo del Estudiante (Para tu avatar inicial):' : 'Student Gender (For your initial avatar):'}
+                  </label>
+                  <select
+                    id="reg-gender-select"
+                    value={regGender}
+                    onChange={(e) => setRegGender(e.target.value as 'Masculino' | 'Femenino')}
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
+                  >
+                    <option value="Masculino">♂ {language === 'es' ? 'Masculino (Avatar de Chico / Hombre)' : 'Male (Boy / Man Avatar)'}</option>
+                    <option value="Femenino">♀ {language === 'es' ? 'Femenino (Avatar de Chica / Mujer)' : 'Female (Girl / Woman Avatar)'}</option>
+                  </select>
+                  <p className="text-[10px] text-teal-700 dark:text-teal-300">
+                    {language === 'es' 
+                      ? 'Podrás personalizar o cambiar tu foto en cualquier momento desde tu perfil.' 
+                      : 'You can customize or change your photo at any time from your profile.'}
+                  </p>
+                </div>
+              )}
 
               {/* Full Name */}
               <div>
