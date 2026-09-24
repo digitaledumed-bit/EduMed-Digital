@@ -23,7 +23,8 @@ import {
   Printer,
   ChevronRight,
   Check,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { StudentEditProfileModal } from './StudentEditProfileModal';
