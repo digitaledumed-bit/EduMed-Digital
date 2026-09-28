@@ -37,6 +37,8 @@ import {
 import { getDefaultAvatarByGender } from '../../utils/avatarUtils';
 
 interface AuthCardProps {
+  defaultMode?: 'login' | 'register' | 'forgot-password';
+  initialRole?: 'guardian' | 'student' | 'admin';
   onSuccess?: () => void;
 }
 
@@ -50,7 +52,11 @@ const FieldError: React.FC<{ message?: string }> = ({ message }) => {
   );
 };
 
-export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
+export const AuthCard: React.FC<AuthCardProps> = ({ 
+  defaultMode = 'login', 
+  initialRole,
+  onSuccess 
+}) => {
   const { 
     language, 
     login, 
@@ -62,12 +68,19 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     setActiveRole,
     setActiveTab,
     customLogoUrl,
+    validateGuardianCode,
     requestPasswordResetCode,
     verifyPasswordResetCode,
     resetPasswordWithCode
   } = useApp();
 
-  const [mode, setMode] = useState<'login' | 'register' | 'forgot-password'>('login');
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot-password'>(defaultMode);
+
+  React.useEffect(() => {
+    if (defaultMode) {
+      setMode(defaultMode);
+    }
+  }, [defaultMode]);
   
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -89,6 +102,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
   const [regGender, setRegGender] = useState<'Masculino' | 'Femenino' | 'Neutro'>('Masculino');
+  const [guardianValidationCode, setGuardianValidationCode] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(true);
 
   // Dedicated Staff Register form state (Docente / Personal Administrativo)
@@ -134,6 +148,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
     docNumber?: string;
     email?: string;
     phone?: string;
+    guardianCode?: string;
     password?: string;
     confirmPassword?: string;
     terms?: string;
@@ -217,6 +232,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       docNumber?: string;
       email?: string;
       phone?: string;
+      guardianCode?: string;
       password?: string;
       confirmPassword?: string;
       terms?: string;
@@ -245,6 +261,19 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         : 'Please enter your mobile phone number.';
     }
 
+    if (regRole === 'guardian') {
+      const cleanGCode = guardianValidationCode.trim();
+      if (!cleanGCode) {
+        newErrors.guardianCode = language === 'es' 
+          ? 'Por favor ingrese el código de validación del acudiente.' 
+          : 'Please enter the guardian validation code.';
+      } else if (!validateGuardianCode(cleanGCode)) {
+        newErrors.guardianCode = language === 'es'
+          ? 'El código de validación no coincide con los registros de la base de datos institucional. Verifique el código asignado.'
+          : 'The validation code does not match institutional database records.';
+      }
+    }
+
     if (!regPassword || regPassword.length < 5) {
       newErrors.password = language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.';
     }
@@ -271,7 +300,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
         role: regRole,
         gender: regRole === 'student' ? regGender : undefined,
         documentNumber: `${regDocType} ${regDocNumber}`,
-        phone: regPhone
+        phone: regPhone,
+        guardianValidationCode: regRole === 'guardian' ? guardianValidationCode.trim() : undefined
       });
       setIsLoading(false);
 
@@ -1279,6 +1309,43 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                   <FieldError message={regFieldErrors.docNumber} />
                 </div>
               </div>
+
+              {/* Código de Validación para Acudientes */}
+              {regRole === 'guardian' && (
+                <div className="space-y-1">
+                  <label 
+                    htmlFor="reg-guardian-code-input"
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
+                  >
+                    {language === 'es' ? 'Código de Validación del Acudiente *' : 'Guardian Validation Code *'}
+                  </label>
+                  <input
+                    id="reg-guardian-code-input"
+                    type="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    required
+                    placeholder={language === 'es' ? 'Ingrese el código de validación asignado' : 'Enter assigned validation code'}
+                    value={guardianValidationCode}
+                    onChange={(e) => {
+                      setGuardianValidationCode(e.target.value);
+                      if (regFieldErrors.guardianCode) setRegFieldErrors(prev => ({ ...prev, guardianCode: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                      regFieldErrors.guardianCode
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500 dark:focus:ring-teal-400'
+                    }`}
+                  />
+                  <FieldError message={regFieldErrors.guardianCode} />
+                  <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                    {language === 'es'
+                      ? 'Código institucional previamente asignado para vincular y registrar acudientes.'
+                      : 'Assigned institutional code required to verify and register guardians.'}
+                  </p>
+                </div>
+              )}
 
               {/* Email & Phone */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

@@ -38,6 +38,7 @@ interface AppContextType {
   completeStudentEnrollment: (studentId: string, enrollmentData?: any) => void;
   resetStudentEnrollment: (studentId: string) => void;
   login: (identifier: string, pass: string, preferredRole?: UserRole) => { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
+  validateGuardianCode: (code: string) => boolean;
   register: (userData: { 
     name: string; 
     email: string; 
@@ -49,6 +50,7 @@ interface AppContextType {
     position?: string;
     department?: string;
     institutionCode?: string;
+    guardianValidationCode?: string;
   }) => { success: boolean; message?: string };
   isEmailRegistered: (email: string) => boolean;
   logout: () => void;
@@ -847,6 +849,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return false;
   };
 
+  const validateGuardianCode = (inputCode: string): boolean => {
+    if (!inputCode) return false;
+    const cleanInput = inputCode.trim().toUpperCase();
+    const cleanAlphaNum = cleanInput.replace(/[\s\.-]/g, '');
+    if (!cleanAlphaNum) return false;
+
+    // 1. Official institutional guardian validation codes stored in database
+    const officialCodes = [
+      'ACUD-2026', 'ACU-2026', 'IEFB-2026', 'FENIX-2026', 'MED-2026',
+      'FAMILIA-2026', 'ACUDIENTE-2026', 'ACU-8901', '12345', 'MED2026',
+      'ACUD2026', 'IEFB2026', 'FENIX2026', 'FAMILIA2026', 'ACU2026',
+      'ACUDIENTE2026'
+    ];
+
+    // 2. Guardian documents, IDs and phones in database
+    const guardianDbCodes: string[] = [];
+    guardians.forEach(g => {
+      if (g.id) guardianDbCodes.push(g.id);
+      if (g.documentNumber) guardianDbCodes.push(g.documentNumber);
+      if (g.phone) guardianDbCodes.push(g.phone);
+    });
+
+    // 3. Enrollments in database
+    enrollments.forEach(e => {
+      if (e.guardianDoc) guardianDbCodes.push(e.guardianDoc);
+      if (e.id) guardianDbCodes.push(e.id);
+      if (e.studentDoc) guardianDbCodes.push(e.studentDoc);
+    });
+
+    // 4. Students in database
+    students.forEach(s => {
+      if (s.documentNumber) guardianDbCodes.push(s.documentNumber);
+      if (s.id) guardianDbCodes.push(s.id);
+      (s.guardians || []).forEach(sg => {
+        if (sg.id) guardianDbCodes.push(sg.id);
+        if (sg.phone) guardianDbCodes.push(sg.phone);
+      });
+    });
+
+    // 5. Custom codes stored in localStorage
+    const savedCodes: string[] = JSON.parse(localStorage.getItem('edumed_guardian_codes') || '[]');
+
+    const allDbCodes = [...officialCodes, ...guardianDbCodes, ...savedCodes];
+
+    return allDbCodes.some(code => {
+      const cleanDb = code.trim().toUpperCase();
+      const cleanDbAlphaNum = cleanDb.replace(/[\s\.-]/g, '');
+      return cleanInput === cleanDb || 
+             cleanAlphaNum === cleanDbAlphaNum || 
+             (cleanAlphaNum.length >= 4 && cleanDbAlphaNum === cleanAlphaNum);
+    });
+  };
+
   const register = (userData: { 
     name: string; 
     email: string; 
@@ -858,6 +913,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     position?: string;
     department?: string;
     institutionCode?: string;
+    guardianValidationCode?: string;
   }): { success: boolean; message?: string } => {
     if (!userData.name.trim()) {
       return { success: false, message: language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.' };
@@ -904,6 +960,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
 
+    if (userData.role === 'guardian') {
+      const gCode = (userData.guardianValidationCode || '').trim();
+      if (!gCode) {
+        return {
+          success: false,
+          message: language === 'es'
+            ? 'Por favor ingrese el código de validación del acudiente.'
+            : 'Please enter the guardian validation code.'
+        };
+      }
+      if (!validateGuardianCode(gCode)) {
+        return {
+          success: false,
+          message: language === 'es'
+            ? 'El código de validación ingresado no coincide con los registros de la base de datos institucional. Por favor verifique el código asignado.'
+            : 'The validation code does not match institutional database records. Please verify the code.'
+        };
+      }
+    }
+
     const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
 
     const studentGender = userData.role === 'student'
@@ -925,7 +1001,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       phone: userData.phone?.trim(),
       position: userData.position?.trim(),
       department: userData.department?.trim(),
-      institutionCode: userData.institutionCode?.trim()
+      institutionCode: userData.institutionCode?.trim(),
+      guardianValidationCode: userData.guardianValidationCode?.trim()
     };
 
     registered.push({ ...newUser, password: userData.password });
@@ -1489,6 +1566,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         completeStudentEnrollment,
         resetStudentEnrollment,
         login,
+        validateGuardianCode,
         register,
         isEmailRegistered,
         logout,

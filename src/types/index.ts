@@ -111,6 +111,7 @@ export interface AuthUser {
   position?: string;
   department?: string;
   institutionCode?: string;
+  guardianValidationCode?: string;
 }
 
 export interface AppNotification {

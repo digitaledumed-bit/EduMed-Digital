@@ -1,8 +1,8 @@
 import React from 'react';
-import { BetowaPortalHome } from './BetowaPortalHome';
+import { LoginScreen } from '../auth/LoginScreen';
 
 export const LandingPage: React.FC = () => {
-  return <BetowaPortalHome />;
+  return <LoginScreen />;
 };
 
 export default LandingPage;
