@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AuthCard } from '../public/AuthCard';
-import matriculasImg from '../../assets/images/matriculas_cartoon_1790637705135.jpg';
-import institucionesImg from '../../assets/images/instituciones_cartoon_1790637716747.jpg';
-import programasImg from '../../assets/images/programas_cartoon_1790637726636.jpg';
-import futuroImg from '../../assets/images/futuro_cartoon_1790637735129.jpg';
-import cardInstitucionesImg from '../../assets/images/card_instituciones_1790638618671.jpg';
-import cardProgramasImg from '../../assets/images/card_programas_1790638629586.jpg';
-import cardMatriculasImg from '../../assets/images/card_matriculas_1790638645528.jpg';
+import slideMatriculasImg from '../../assets/images/slide_matriculas_1790639400660.jpg';
+import slideInstitucionesImg from '../../assets/images/slide_instituciones_1790639410030.jpg';
+import slideProgramasImg from '../../assets/images/slide_programas_1790639419682.jpg';
+import slideFuturoImg from '../../assets/images/slide_futuro_1790639428330.jpg';
+import cardEdificioImg from '../../assets/images/card_edificio_1790639438814.jpg';
+import cardBirreteImg from '../../assets/images/card_birrete_1790639448073.jpg';
+import cardCarpetaImg from '../../assets/images/card_carpeta_1790639457052.jpg';
 import { 
   Sun, 
   Moon, 
@@ -32,7 +32,11 @@ import {
   ChevronLeft,
   Pause,
   Play,
-  X
+  X,
+  ShieldCheck,
+  Award,
+  Layers,
+  Check
 } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -72,21 +76,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const authSectionRef = useRef<HTMLDivElement>(null);
   const opportunitiesRef = useRef<HTMLDivElement>(null);
 
-  // 4 Diapositivas exactas solicitadas con ilustraciones tipo muñequitos y movimiento muy suave
+  // 4 Diapositivas exactas con ilustraciones digitales modernas, elegantes y luminosas (punto intermedio)
   const heroSlides = [
     {
       id: 1,
       badge: isEs ? 'ADMISIONES OFICIALES' : 'OFFICIAL ADMISSIONS',
       title: '¡Matrículas disponibles!',
       subtitle: isEs 
-        ? 'Infórmate sobre las oportunidades de matrícula.'
-        : 'Learn about all enrollment opportunities.',
+        ? 'Infórmate sobre las oportunidades de matrícula disponibles.'
+        : 'Learn about all available school enrollment opportunities.',
       ctaText: isEs ? 'Ver matrículas' : 'View enrollments',
       secondaryText: isEs ? 'Consultar cupo' : 'Check status',
       action: 'matriculas',
       tag: isEs ? 'Cupos Gratuitos • SIMAT' : 'Free Tuition • SIMAT',
-      image: matriculasImg,
-      alt: 'Ilustración animada de estudiantes celebrando matrícula escolar',
+      image: slideMatriculasImg,
+      alt: 'Ilustración digital moderna y elegante de estudiantes celebrando matrícula escolar',
       themeGradient: 'from-emerald-950 via-teal-900 to-slate-950',
       lightGlow: 'bg-emerald-400/20',
       buttonBg: 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/25',
@@ -98,13 +102,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       title: '¡Conoce nuevas instituciones!',
       subtitle: isEs 
         ? 'Explora instituciones y sus opciones de formación.'
-        : 'Explore institutions and their training options.',
+        : 'Explore institutions and discover their training options.',
       ctaText: isEs ? 'Ver instituciones' : 'View institutions',
       secondaryText: isEs ? 'Ver sedes' : 'View campuses',
       action: 'instituciones',
       tag: isEs ? 'Sede Principal y Sede Infantil' : 'Main & Elementary Campuses',
-      image: institucionesImg,
-      alt: 'Ilustración animada de personajes conociendo campus educativo',
+      image: slideInstitucionesImg,
+      alt: 'Ilustración digital moderna y elegante de campus arquitectónico educativo',
       themeGradient: 'from-blue-950 via-sky-900 to-slate-950',
       lightGlow: 'bg-sky-400/20',
       buttonBg: 'bg-sky-400 hover:bg-sky-300 text-slate-950 shadow-sky-500/25',
@@ -116,13 +120,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       title: '¡Encuentra tu programa!',
       subtitle: isEs 
         ? 'Descubre programas según tus intereses.'
-        : 'Discover programs according to your interests.',
+        : 'Discover programs aligned with your educational interests.',
       ctaText: isEs ? 'Explorar programas' : 'Explore programs',
       secondaryText: isEs ? 'Ver programas' : 'View programs',
       action: 'programas',
       tag: isEs ? 'Sistemas, Software y Contabilidad' : 'Software & Business Tracks',
-      image: programasImg,
-      alt: 'Ilustración animada de estudiantes aprendiendo con tecnología',
+      image: slideProgramasImg,
+      alt: 'Ilustración digital moderna y elegante de estudiantes explorando programas y tecnología',
       themeGradient: 'from-purple-950 via-indigo-900 to-slate-950',
       lightGlow: 'bg-purple-400/20',
       buttonBg: 'bg-purple-400 hover:bg-purple-300 text-slate-950 shadow-purple-500/25',
@@ -134,13 +138,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       title: '¡Construye tu futuro!',
       subtitle: isEs 
         ? 'Descubre nuevas oportunidades para estudiar.'
-        : 'Discover new opportunities to study.',
+        : 'Discover new opportunities to continue your studies.',
       ctaText: isEs ? 'Comenzar ahora' : 'Get started',
       secondaryText: isEs ? 'Crear cuenta' : 'Sign up',
       action: 'register',
       tag: isEs ? 'Plataforma EduMed Digital' : 'EduMed Digital Platform',
-      image: futuroImg,
-      alt: 'Ilustración animada de estudiante proyectando su futuro',
+      image: slideFuturoImg,
+      alt: 'Ilustración digital moderna y elegante de estudiante proyectando su futuro hacia el éxito',
       themeGradient: 'from-amber-950 via-orange-950 to-slate-950',
       lightGlow: 'bg-amber-400/20',
       buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/25',
@@ -256,14 +260,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     }
   };
 
-  // 3 Tarjetas visuales mejoradas con ilustraciones elegantes y efectos al tocar/pasar el cursor
+  // 3 Tarjetas visuales solicitadas: Edificio educativo, Birrete decorado, Carpeta de inscripción
   const opportunityCards = [
     {
       id: 'instituciones',
       emoji: '🎓',
       icon: Building2,
-      illustration: cardInstitucionesImg,
-      illustrationAlt: 'Ilustración 3D de edificio educativo con personaje amigable',
+      illustration: cardEdificioImg,
+      illustrationAlt: 'Ilustración digital moderna de edificio educativo institucional',
       title: isEs ? 'Instituciones' : 'Institutions',
       description: isEs 
         ? 'Encuentra instituciones educativas y conoce su oferta.'
@@ -288,8 +292,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       id: 'programas',
       emoji: '📚',
       icon: BookOpen,
-      illustration: cardProgramasImg,
-      illustrationAlt: 'Ilustración 3D de birrete decorado flotante con libros educativos',
+      illustration: cardBirreteImg,
+      illustrationAlt: 'Ilustración digital moderna de birrete decorado con libros',
       title: isEs ? 'Programas' : 'Programs',
       description: isEs 
         ? 'Explora diferentes programas de formación.'
@@ -314,8 +318,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       id: 'matriculas',
       emoji: '📝',
       icon: FileText,
-      illustration: cardMatriculasImg,
-      illustrationAlt: 'Ilustración 3D de carpeta de matrícula con sello de aprobación',
+      illustration: cardCarpetaImg,
+      illustrationAlt: 'Ilustración digital moderna de carpeta de inscripción con sello de verificación',
       title: isEs ? 'Matrículas' : 'Enrollments',
       description: isEs 
         ? 'Consulta qué oportunidades de matrícula están disponibles.'
@@ -343,7 +347,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
       
       {/* =========================================================================
-          1. HEADER INSTITUCIONAL OFICIAL (EDUMED DIGITAL CON IDENTIDAD PROPIA)
+          1. HEADER INSTITUCIONAL OFICIAL (MANTENIENDO LOGO, NOMBRE Y ENCABEZADO)
+             CON BOTONES EXACTOS: "Iniciar sesión" Y "Crear cuenta"
           ========================================================================= */}
       <header className="w-full border-b border-slate-200/90 dark:border-slate-800/90 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
@@ -405,6 +410,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               {isEs ? 'Oportunidades' : 'Opportunities'}
             </a>
             <a 
+              href="#beneficios-clave"
+              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
+            >
+              {isEs ? 'Cómo Funciona' : 'How it works'}
+            </a>
+            <a 
               href="#portales"
               className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
@@ -424,28 +435,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             </a>
           </nav>
 
-          {/* Action Buttons: Ingresar & Registrarme & Settings */}
+          {/* Action Buttons: "Iniciar sesión" y "Crear cuenta" */}
           <div className="flex items-center gap-2">
             
-            {/* Botón Ingresar */}
+            {/* Botón Iniciar sesión */}
             <button
               type="button"
               onClick={() => handleOpenAuthModal('login')}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl bg-[#002f49] hover:bg-[#001e30] text-white text-xs sm:text-sm font-bold shadow-sm transition-all cursor-pointer active:scale-98"
+              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-[#002f49] hover:bg-[#001e30] text-white text-xs sm:text-sm font-bold shadow-sm transition-all cursor-pointer active:scale-98"
             >
               <LogIn className="w-3.5 h-3.5 text-amber-300" />
-              <span>{isEs ? 'Ingresar' : 'Sign In'}</span>
+              <span>{isEs ? 'Iniciar sesión' : 'Sign In'}</span>
             </button>
 
-            {/* Botón Registrarme */}
+            {/* Botón Crear cuenta */}
             <button
               type="button"
               onClick={() => handleOpenAuthModal('register')}
-              className="flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl border border-teal-600/70 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/60 text-xs sm:text-sm font-bold transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl border border-teal-600/70 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/60 text-xs sm:text-sm font-bold transition-all cursor-pointer"
             >
               <UserPlus className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-              <span className="hidden sm:inline">{isEs ? 'Registrarme' : 'Register'}</span>
-              <span className="sm:hidden">{isEs ? 'Registro' : 'Reg'}</span>
+              <span className="hidden sm:inline">{isEs ? 'Crear cuenta' : 'Create account'}</span>
+              <span className="sm:hidden">{isEs ? 'Crear' : 'Join'}</span>
             </button>
 
             {/* Theme Toggle */}
@@ -475,9 +486,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </header>
 
       {/* =========================================================================
-          2. BANNER PRINCIPAL: GRANDE, LUMINOSO Y ATRACTIVO CON ILUSTRACIONES TIPO MUÑEQUITOS
-             CON MOVIMIENTO MUY SUAVE Y ELEGANTE
-             CADA SLIDE: ILUSTRACIÓN + TÍTULO + TEXTO CORTO + UN BOTÓN
+          2. BANNER PRINCIPAL GRANDE Y ANCHO:
+             ILUSTRACIONES DIGITALES MODERNAS, LUMINOSAS Y ELEGANTES
+             (PUNTO INTERMEDIO: ATRACTIVO PARA JÓVENES Y ADULTOS, NO FOTOS, NO INFANTIL)
           ========================================================================= */}
       <section 
         className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[620px] sm:min-h-[680px] lg:min-h-[720px] xl:min-h-[760px] flex items-center select-none"
@@ -573,13 +584,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
                   </div>
 
-                  {/* Columna Derecha: Ilustración tipo muñequitos/personajes con movimiento muy suave y elegante */}
+                  {/* Columna Derecha: Ilustración digital moderna, luminosa y elegante */}
                   <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center relative">
                     
-                    {/* Tarjeta de personajes con animación flotante sutil y marco luminoso */}
+                    {/* Tarjeta de personajes/escena con animación flotante sutil y marco luminoso */}
                     <div className="relative w-full max-w-lg xl:max-w-xl aspect-[16/11] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl bg-slate-900/40 backdrop-blur-sm group animate-subtle-float">
                       
-                      {/* Imagen tipo muñequitos/personajes animados */}
+                      {/* Imagen digital moderna */}
                       <img 
                         src={slide.image} 
                         alt={slide.alt} 
@@ -674,7 +685,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
       {/* =========================================================================
           3. SECCIÓN: "Todo lo que necesitas para encontrar tu próxima oportunidad"
-             3 TARJETAS MEJORADAS CON ILUSTRACIONES ELEGANTES (Instituciones, Programas, Matrículas)
+             3 TARJETAS MEJORADAS CON ILUSTRACIONES ELEGANTES:
+             - EDIFICIO EDUCATIVO (Instituciones)
+             - BIRRETE DECORADO (Programas)
+             - CARPETA DE INSCRIPCIÓN (Matrículas)
              CON EFECTO DE MOVIMIENTO Y BRILLO AL TOCAR O PASAR EL CURSOR
           ========================================================================= */}
       <section 
@@ -699,7 +713,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             </p>
           </div>
 
-          {/* Grid de las 3 Tarjetas visuales mejoradas con ilustraciones elegantes y efectos de brillo/movimiento */}
+          {/* Grid de las 3 Tarjetas visuales con edificio educativo, birrete decorado y carpeta de inscripción */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {opportunityCards.map((card) => {
               const IconComponent = card.icon;
@@ -717,7 +731,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
                   <div className="relative z-10">
                     
-                    {/* Contenedor de la ilustración elegante (edificio educativo / birrete decorado / carpeta de matrícula) */}
+                    {/* Contenedor de la ilustración elegante */}
                     <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-6 border border-slate-200/80 dark:border-slate-700/80 shadow-xs bg-slate-100 dark:bg-slate-800 group-hover:shadow-md transition-shadow">
                       <img 
                         src={card.illustration} 
@@ -765,12 +779,108 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </section>
 
       {/* =========================================================================
-          4. SECCIÓN DIRECTA DE ACCESO Y MATRÍCULA (INGRESAR Y REGISTRARME)
+          4. ELEMENTOS VISUALES EDUCATIVOS ADICIONALES:
+             - CIFRAS DE IMPACTO Y COBERTURA OFICIAL
+             - CÓMO FUNCIONA EL PROCESO EN 4 PASOS CLAROS
+          ========================================================================= */}
+      <section id="beneficios-clave" className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 transition-colors">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+          
+          {/* Cifras de Impacto Institucional EduMed */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-16 sm:mb-20">
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center">
+              <span className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400">2</span>
+              <h4 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">Sedes Oficiales</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Principal e Infantil</p>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center">
+              <span className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400">1.450+</span>
+              <h4 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">Estudiantes</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Matriculados en SIMAT</p>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center">
+              <span className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400">100%</span>
+              <h4 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">Gratuidad Oficial</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sin intermediarios</p>
+            </div>
+
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center">
+              <span className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400">24/7</span>
+              <h4 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">Gestión Virtual</h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Trámites y consultas</p>
+            </div>
+          </div>
+
+          {/* Cómo Funciona: Ruta en 4 pasos visuales para jóvenes y familias */}
+          <div className="max-w-5xl mx-auto text-center">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-2">
+              {isEs ? 'PROCESO SENCILLO Y PROTEGIDO' : 'SIMPLE & SECURE PROCESS'}
+            </span>
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
+              {isEs ? '¿Cómo iniciar tu formación en EduMed Digital?' : 'How to Get Started on EduMed Digital?'}
+            </h2>
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
+              {isEs 
+                ? 'Un camino ágil, moderno y transparente diseñado para jóvenes y adultos que buscan oportunidades de estudio oficiales.'
+                : 'A modern, agile, and transparent pathway for students and families seeking official education.'}
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-10 text-left">
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs relative">
+                <span className="w-9 h-9 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-black text-sm flex items-center justify-center mb-4">
+                  1
+                </span>
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">Explora Cupos</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                  Conoce las sedes disponibles y consulta los programas de formación para tu grado escolar.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs relative">
+                <span className="w-9 h-9 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-black text-sm flex items-center justify-center mb-4">
+                  2
+                </span>
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">Crea tu Cuenta</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                  Regístrate como estudiante o acudiente con tu código de validación institucional protegido.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs relative">
+                <span className="w-9 h-9 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-black text-sm flex items-center justify-center mb-4">
+                  3
+                </span>
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">Carga Documentos</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                  Sube el documento de identidad y registros de salud en formato digital de forma confidencial.
+                </p>
+              </div>
+
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs relative">
+                <span className="w-9 h-9 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-black text-sm flex items-center justify-center mb-4">
+                  4
+                </span>
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">Carnet Digital</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
+                  Obtén tu estado de matrícula SIMAT confirmado y tu carnet estudiantil con código QR activo.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+          5. SECCIÓN DIRECTA DE ACCESO Y MATRÍCULA (PORTALES + AUTHCARD)
           ========================================================================= */}
       <section 
         id="portales" 
         ref={authSectionRef} 
-        className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 transition-colors"
+        className="py-16 sm:py-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors"
       >
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
@@ -796,7 +906,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
               {/* Roles visuales rápidos */}
               <div className="space-y-3 pt-2">
-                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs">
                   <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
                     <GraduationCap className="w-5 h-5" />
                   </div>
@@ -810,7 +920,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs">
                   <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
                     <Users className="w-5 h-5" />
                   </div>
@@ -824,7 +934,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-start gap-3.5 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs">
                   <div className="w-10 h-10 rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center shrink-0">
                     <Building2 className="w-5 h-5" />
                   </div>
@@ -854,9 +964,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </section>
 
       {/* =========================================================================
-          5. CONSULTA RÁPIDA DE ESTADO DE CUPO CON DOCUMENTO
+          6. CONSULTA RÁPIDA DE ESTADO DE CUPO CON DOCUMENTO
           ========================================================================= */}
-      <section id="consulta-cupo" className="py-14 sm:py-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
+      <section id="consulta-cupo" className="py-14 sm:py-16 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl border border-teal-500/20 text-left">
@@ -964,7 +1074,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </section>
 
       {/* =========================================================================
-          6. MODAL DETALLE DE LAS 3 TARJETAS VISUALES (Instituciones, Programas, Matrículas)
+          7. MODAL DETALLE DE LAS 3 TARJETAS VISUALES (Instituciones, Programas, Matrículas)
           ========================================================================= */}
       {selectedOpportunityCard && (
         <div 
@@ -1083,7 +1193,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       )}
 
       {/* =========================================================================
-          7. MODAL DE ACCESO DIRECTO RÁPIDO (CUANDO SE HACE CLIC EN EL HEADER)
+          8. MODAL DE ACCESO DIRECTO RÁPIDO (CUANDO SE HACE CLIC EN EL HEADER)
           ========================================================================= */}
       {isAuthModalOpen && (
         <div 
@@ -1111,7 +1221,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       )}
 
       {/* =========================================================================
-          8. PIE DE PÁGINA INSTITUCIONAL LIMPIO Y OFICIAL (EDUMED DIGITAL PROPIO)
+          9. PIE DE PÁGINA INSTITUCIONAL LIMPIO Y OFICIAL (EDUMED DIGITAL PROPIO)
           ========================================================================= */}
       <footer id="contacto" className="w-full bg-[#001e30] text-slate-300 border-t border-slate-800 pt-12 pb-8 text-xs text-left">
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
