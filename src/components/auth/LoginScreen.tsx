@@ -11,7 +11,6 @@ import {
   GraduationCap,
   Users,
   FileText,
-  Laptop,
   CheckCircle2,
   Clock,
   Phone,
@@ -27,7 +26,6 @@ import {
   Pause,
   Play,
   X,
-  Calendar,
   Compass
 } from 'lucide-react';
 
@@ -52,12 +50,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
-  // Modal para ver detalles de las 4 tarjetas (Instituciones, Programas, Matrículas, Cursos)
+  // Modal para ver detalles de las 3 tarjetas (Instituciones, Programas, Matrículas - sin Cursos)
   const [selectedOpportunityCard, setSelectedOpportunityCard] = useState<string | null>(null);
 
   // Carrusel automático del Banner Principal
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
+  const [slideProgress, setSlideProgress] = useState(0);
 
   // Quick lookup state
   const [lookupDoc, setLookupDoc] = useState('');
@@ -67,98 +66,99 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const authSectionRef = useRef<HTMLDivElement>(null);
   const opportunitiesRef = useRef<HTMLDivElement>(null);
 
-  // Slides del carrusel con escenas educativas naturales, modernas y profesionales
+  // 4 Diapositivas exactas solicitadas por el usuario, luminosas, modernas y juveniles
   const heroSlides = [
     {
       id: 1,
-      badge: isEs ? 'Formación con Sentido Humano' : 'Comprehensive Education',
-      title: isEs ? 'Construye tu futuro' : 'Build Your Future',
+      badge: isEs ? 'Cupos 2026 Abiertos' : '2026 Admissions Open',
+      title: isEs ? '¡Matrículas disponibles!' : 'Open Enrollments!',
       subtitle: isEs 
-        ? 'Encuentra oportunidades de formación que se adapten a ti y transforma tus metas en logros reales con educación oficial de calidad.'
-        : 'Find educational opportunities that adapt to you and transform your aspirations into real achievements.',
-      ctaText: isEs ? 'Explorar ahora' : 'Explore Now',
-      themeCategory: isEs ? 'Estudiantes aprendiendo' : 'Students learning',
-      image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1920&q=85',
+        ? 'Infórmate sobre las oportunidades de matrícula disponibles.'
+        : 'Learn about all available school enrollment opportunities.',
+      ctaText: isEs ? 'Ver matrículas' : 'View enrollments',
+      secondaryText: isEs ? 'Consultar cupo' : 'Check status',
+      action: 'matriculas',
+      // Escena luminosa, estudiantes sonrientes y ambiente educativo con luz natural
+      image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=2070&q=85',
       badgeColor: 'emerald'
     },
     {
       id: 2,
-      badge: isEs ? 'Innovación Escolar & SENA' : 'Tech & Innovation',
-      title: isEs ? 'Educación y Tecnología para el Mañana' : 'Education & Technology for Tomorrow',
-      subtitle: isEs
-        ? 'Aulas interactivas, articulación técnica SENA en sistemas y software, y herramientas digitales para liderar el cambio.'
-        : 'Digital classrooms, software tech articulation with SENA, and modern computing tools for future leaders.',
-      ctaText: isEs ? 'Explorar ahora' : 'Explore Now',
-      themeCategory: isEs ? 'Jóvenes utilizando computadores' : 'Students with computers',
-      image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1920&q=85',
-      badgeColor: 'teal'
+      badge: isEs ? 'Institución Oficial • Medellín' : 'Official Public School',
+      title: isEs ? '¡Conoce nuevas instituciones!' : 'Discover New Campuses!',
+      subtitle: isEs 
+        ? 'Explora instituciones y sus opciones de formación.'
+        : 'Explore institutions and their educational opportunities.',
+      ctaText: isEs ? 'Ver instituciones' : 'View institutions',
+      secondaryText: isEs ? 'Nuestras sedes' : 'Our campuses',
+      action: 'instituciones',
+      // Escena luminosa de campus moderno con estudiantes caminando y luz solar
+      image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=2070&q=85',
+      badgeColor: 'cyan'
     },
     {
       id: 3,
-      badge: isEs ? 'Ambientes de Estudio Flexibles' : 'Modern Learning Spaces',
-      title: isEs ? 'Aprende en Diferentes Espacios' : 'Learn in Inspiring Spaces',
-      subtitle: isEs
-        ? 'Espacios colaborativos y bibliotecas que estimulan la creatividad, el diálogo constructivo y el aprendizaje a tu propio ritmo.'
-        : 'Collaborative spaces, reading corners, and creative environments built for self-paced student discovery.',
-      ctaText: isEs ? 'Explorar ahora' : 'Explore Now',
-      themeCategory: isEs ? 'Personas estudiando en diferentes espacios' : 'Students in varied spaces',
-      image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1920&q=85',
-      badgeColor: 'blue'
+      badge: isEs ? 'Doble Titulación SENA' : 'SENA Dual Certification',
+      title: isEs ? '¡Encuentra tu programa!' : 'Find Your Program!',
+      subtitle: isEs 
+        ? 'Descubre programas según tus intereses.'
+        : 'Discover educational programs aligned with your interests.',
+      ctaText: isEs ? 'Explorar programas' : 'Explore programs',
+      secondaryText: isEs ? 'Media técnica' : 'Technical track',
+      action: 'programas',
+      // Estudiantes jóvenes utilizando computadores en ambiente tecnológico iluminado y moderno
+      image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=2070&q=85',
+      badgeColor: 'teal'
     },
     {
       id: 4,
-      badge: isEs ? 'I.E. Félix Henao Botero • Medellín' : 'Our School Campus',
-      title: isEs ? 'Una Institución Comprometida Contigo' : 'A School Committed to You',
-      subtitle: isEs
-        ? 'Instalaciones seguras, docentes con vocación y un entorno escolar cálido en la Comuna 8 para acompañar tu crecimiento personal.'
-        : 'Safe modern facilities, supportive educators, and a welcoming school environment in Medellín.',
-      ctaText: isEs ? 'Explorar ahora' : 'Explore Now',
-      themeCategory: isEs ? 'Estudiantes entrando a la institución' : 'Students entering school',
-      image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?auto=format&fit=crop&w=1920&q=85',
+      badge: isEs ? 'Tu Futuro Empieza Hoy' : 'Your Future Starts Here',
+      title: isEs ? '¡Construye tu futuro!' : 'Build Your Future!',
+      subtitle: isEs 
+        ? 'Descubre nuevas oportunidades para continuar tus estudios.'
+        : 'Discover new opportunities to continue and advance your education.',
+      ctaText: isEs ? 'Comenzar ahora' : 'Get started',
+      secondaryText: isEs ? 'Crear cuenta' : 'Sign up',
+      action: 'register',
+      // Jóvenes colaborando y estudiando en un espacio abierto, inspirador y radiante
+      image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=2070&q=85',
       badgeColor: 'amber'
-    },
-    {
-      id: 5,
-      badge: isEs ? 'Cupos 100% Gratuitos 2026' : 'Free 2026 Enrollments',
-      title: isEs ? 'Descubre Nuevas Oportunidades de Formación' : 'Discover New Opportunities',
-      subtitle: isEs
-        ? 'Desde preescolar hasta grado 11° con doble titulación técnica. Programas inclusivos diseñados para abrir puertas a la educación superior.'
-        : 'From preschool to 11th grade with technical dual degree. Inclusive public programs opening doors to higher education.',
-      ctaText: isEs ? 'Explorar ahora' : 'Explore Now',
-      themeCategory: isEs ? 'Nuevas oportunidades de formación' : 'Discovering training opportunities',
-      image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1920&q=85',
-      badgeColor: 'purple'
-    },
-    {
-      id: 6,
-      badge: isEs ? 'Ciencia & Enfoque STEAM' : 'Science & STEAM',
-      title: isEs ? 'Despierta tu Curiosidad y Talento' : 'Awaken Your Curiosity',
-      subtitle: isEs
-        ? 'Semilleros de robótica, laboratorio de ciencias experimentales y programas bilingües que potencian tus capacidades al máximo.'
-        : 'Robotics clubs, modern science lab experiments, and communicative English hubs.',
-      ctaText: isEs ? 'Explorar ahora' : 'Explore Now',
-      themeCategory: isEs ? 'Educación y tecnología experimental' : 'Hands-on learning',
-      image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1920&q=85',
-      badgeColor: 'cyan'
     }
   ];
 
-  // Cambio automático del carrusel cada 5 segundos
+  // Cambio automático del carrusel con temporizador y barra de progreso fluida
+  const SLIDE_DURATION = 5500; // 5.5 segundos por diapositiva
+
   useEffect(() => {
     if (isCarouselPaused) return;
 
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
-    }, 5000);
+    setSlideProgress(0);
+    const startTime = Date.now();
 
-    return () => clearInterval(interval);
-  }, [isCarouselPaused, heroSlides.length]);
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const pct = Math.min(100, (elapsed / SLIDE_DURATION) * 100);
+      setSlideProgress(pct);
+    }, 50);
+
+    const slideTimer = setTimeout(() => {
+      setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      setSlideProgress(0);
+    }, SLIDE_DURATION);
+
+    return () => {
+      clearInterval(progressInterval);
+      clearTimeout(slideTimer);
+    };
+  }, [currentSlide, isCarouselPaused, heroSlides.length]);
 
   const handlePrevSlide = () => {
+    setSlideProgress(0);
     setCurrentSlide((prev) => (prev === 0 ? heroSlides.length - 1 : prev - 1));
   };
 
   const handleNextSlide = () => {
+    setSlideProgress(0);
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
   };
 
@@ -174,6 +174,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const scrollToAuthSection = (mode: 'login' | 'register') => {
     setAuthModalMode(mode);
     authSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Manejador del botón principal de cada diapositiva
+  const handleSlideAction = (action: string) => {
+    if (action === 'matriculas') {
+      setSelectedOpportunityCard('matriculas');
+    } else if (action === 'instituciones') {
+      setSelectedOpportunityCard('instituciones');
+    } else if (action === 'programas') {
+      setSelectedOpportunityCard('programas');
+    } else if (action === 'register') {
+      handleOpenAuthModal('register');
+    }
   };
 
   const handleLookup = (e: React.FormEvent) => {
@@ -221,7 +234,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     }
   };
 
-  // 4 Tarjetas visuales solicitadas específicamente por el usuario
+  // 3 Tarjetas visuales solicitadas específicamente por el usuario (sin Cursos)
   const opportunityCards = [
     {
       id: 'instituciones',
@@ -234,7 +247,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       details: {
         headline: isEs ? 'I.E. Félix Henao Botero - Medellín' : 'I.E. Félix Henao Botero School',
         summary: isEs
-          ? 'Institución Educativa Oficial de carácter público en la Comuna 8 de Medellín, comprometida con la excelencia y la inclusión social.'
+          ? 'Institución Educativa Oficial de carácter público en la Comuna 8 de Medellín, comprometida con la excelencia, la inclusión social y la formación integral.'
           : 'Official public school in Medellín providing inclusive education from early childhood to high school technical tracks.',
         campuses: [
           { name: isEs ? 'Sede Principal (Enciso - Boston)' : 'Main Campus', address: 'Calle 52 # 18-40, Comuna 8', grades: isEs ? 'Secundaria y Media Técnica (6° a 11°)' : 'Grades 6-11' },
@@ -244,8 +257,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         alliance: isEs ? 'Articulación oficial con el SENA' : 'Official partnership with SENA'
       },
       gradient: 'from-emerald-500/10 via-teal-500/5 to-transparent',
-      borderColor: 'group-hover:border-teal-500',
-      tagColor: 'bg-teal-50 text-teal-700 dark:bg-teal-950 dark:text-teal-300 border-teal-200 dark:border-teal-800'
+      borderColor: 'hover:border-teal-500',
+      badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
     },
     {
       id: 'programas',
@@ -267,9 +280,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
           { name: isEs ? 'Primaria Integral y Grado Transición' : 'Elementary & Transition', duration: 'Grados Preescolar a 5°', badge: isEs ? 'PAE Gratuito' : 'Meals PAE' }
         ]
       },
-      gradient: 'from-blue-500/10 via-indigo-500/5 to-transparent',
-      borderColor: 'group-hover:border-blue-500',
-      tagColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+      gradient: 'from-blue-500/10 via-cyan-500/5 to-transparent',
+      borderColor: 'hover:border-blue-500',
+      badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800'
     },
     {
       id: 'matriculas',
@@ -293,32 +306,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         ]
       },
       gradient: 'from-amber-500/10 via-orange-500/5 to-transparent',
-      borderColor: 'group-hover:border-amber-500',
-      tagColor: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800'
-    },
-    {
-      id: 'cursos',
-      emoji: '💻',
-      icon: Laptop,
-      title: isEs ? 'Cursos' : 'Courses',
-      description: isEs 
-        ? 'Descubre cursos para aprender y desarrollar nuevas habilidades.'
-        : 'Discover courses to learn and build real-world skills.',
-      details: {
-        headline: isEs ? 'Semilleros y Habilidades del Siglo XXI' : 'Skill Workshops & Extracurriculars',
-        summary: isEs
-          ? 'Espacios extracurriculares de formación complementaria para que los estudiantes fortalezcan sus talentos.'
-          : 'Complementary extracurricular workshops for digital, language, and scientific development.',
-        coursesList: [
-          { name: isEs ? 'Semillero de Robótica y Kits Arduino' : 'Robotics & Arduino Lab', schedule: isEs ? 'Jornada Contraclase' : 'After school', certified: isEs ? 'Certificado Escolar' : 'Certified' },
-          { name: isEs ? 'Inmersión en Inglés Comunicativo' : 'Communicative English Hub', schedule: isEs ? 'Sábados Mañana' : 'Saturdays', certified: isEs ? '120 Horas' : '120 Hours' },
-          { name: isEs ? 'Lógica de Programación Web y Python' : 'Web & Python Coding', schedule: isEs ? 'Aula Virtual' : 'LMS Virtual', certified: isEs ? 'Articulación SENA' : 'SENA Track' },
-          { name: isEs ? 'Club de Lectura y Pensamiento Crítico' : 'Debate & Reading Club', schedule: isEs ? 'Tardes Culturales' : 'Cultural afternoons', certified: isEs ? 'Actividad Libre' : 'Free Track' }
-        ]
-      },
-      gradient: 'from-purple-500/10 via-violet-500/5 to-transparent',
-      borderColor: 'group-hover:border-purple-500',
-      tagColor: 'bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300 border-purple-200 dark:border-purple-800'
+      borderColor: 'hover:border-amber-500',
+      badgeColor: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800'
     }
   ];
 
@@ -326,7 +315,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
       
       {/* =========================================================================
-          1. HEADER INSTITUCIONAL OFICIAL (INTACTO SEGÚN INSTRUCCIÓN)
+          1. HEADER INSTITUCIONAL OFICIAL (INTACTO SEGÚN INSTRUCCIÓN ESTRICTA)
           ========================================================================= */}
       <header className="w-full border-b border-slate-200/90 dark:border-slate-800/90 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
@@ -458,14 +447,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </header>
 
       {/* =========================================================================
-          2. BANNER PRINCIPAL CON CARRUSEL AUTOMÁTICO DE IMÁGENES EDUCATIVAS
+          2. BANNER PRINCIPAL CON CARRUSEL REDISEÑADO:
+             GRANDE, LUMINOSO, DINÁMICO, CON MOVIMIENTO SUAVE Y 4 DIAPOSITIVAS CLAVE
           ========================================================================= */}
       <section 
-        className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[540px] sm:min-h-[600px] lg:min-h-[660px] flex items-center select-none"
+        className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[580px] sm:min-h-[640px] lg:min-h-[720px] flex items-center select-none"
         onMouseEnter={() => setIsCarouselPaused(true)}
         onMouseLeave={() => setIsCarouselPaused(false)}
       >
-        {/* Diapositivas con transición suave de opacidad y sutil zoom */}
+        {/* Diapositivas con transición suave de opacidad y zoom sutil dinámico */}
         {heroSlides.map((slide, index) => {
           const isActive = index === currentSlide;
           return (
@@ -475,60 +465,69 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                 isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
               }`}
             >
-              {/* Fotografía de fondo de alta resolución */}
+              {/* Fotografía luminosa, vibrante y juvenil con efecto dinámico de movimiento (Ken Burns) */}
               <img 
                 src={slide.image} 
                 alt={slide.title} 
-                className={`w-full h-full object-cover object-center transform transition-transform duration-7000 ease-out ${
-                  isActive ? 'scale-105' : 'scale-100'
+                className={`w-full h-full object-cover object-center transform transition-transform duration-[7000ms] ease-out ${
+                  isActive ? 'scale-110 translate-y-0' : 'scale-100 translate-y-1'
                 }`}
               />
 
-              {/* Degradados profesionales para garantizar legibilidad óptima WCAG */}
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/70 to-slate-950/40" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/60" />
+              {/* Degradados translúcidos luminosos para garantizar alto contraste y legibilidad óptima */}
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-slate-950/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-slate-950/40" />
               
-              {/* Textura sutil y reflejo luminoso ambiental */}
-              <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-teal-400/15 rounded-full blur-3xl pointer-events-none" />
+              {/* Resplandor ambiental de luz cálida y tecnológica */}
+              <div className="absolute top-1/4 right-1/4 w-[480px] h-[480px] bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
+              <div className="absolute bottom-1/4 right-1/3 w-[360px] h-[360px] bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
 
               {/* Contenido textual sobre la imagen */}
               <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative z-20 h-full flex flex-col justify-center">
-                <div className="max-w-2xl text-left space-y-4 sm:space-y-6">
+                <div className="max-w-3xl text-left space-y-4 sm:space-y-6">
                   
-                  {/* Badge de categoría / escena */}
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-amber-300 text-xs font-bold uppercase tracking-wider animate-in fade-in slide-in-from-bottom-2 duration-500">
+                  {/* Badge de categoría / escena luminosa */}
+                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/20 backdrop-blur-md border border-white/25 text-amber-300 text-xs font-bold uppercase tracking-wider shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <Sparkles className="w-3.5 h-3.5 text-amber-400" />
                     <span>{slide.badge}</span>
                   </div>
 
-                  {/* Título Principal Atractivo */}
-                  <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-tight drop-shadow-md animate-in fade-in slide-in-from-bottom-3 duration-700">
+                  {/* Título Grande y Llamativo */}
+                  <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white tracking-tight leading-[1.08] drop-shadow-md animate-in fade-in slide-in-from-bottom-3 duration-700">
                     {slide.title}
                   </h1>
 
-                  {/* Subtítulo corto y moderno */}
-                  <p className="text-sm sm:text-lg text-slate-200/95 font-normal leading-relaxed max-w-xl animate-in fade-in slide-in-from-bottom-4 duration-700">
+                  {/* Texto Corto y Atractivo */}
+                  <p className="text-base sm:text-xl text-slate-100 font-medium leading-relaxed max-w-2xl drop-shadow animate-in fade-in slide-in-from-bottom-4 duration-700">
                     {slide.subtitle}
                   </p>
 
-                  {/* Botón Principal "Explorar ahora" */}
-                  <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-3.5 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                  {/* Botones de acción principales de la diapositiva */}
+                  <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-3.5 sm:gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                    {/* Botón Principal Específico de cada slide */}
                     <button
                       type="button"
-                      onClick={scrollToOpportunities}
-                      className="px-6 sm:px-8 py-3.5 rounded-2xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm sm:text-base shadow-xl shadow-teal-500/25 transition-all flex items-center gap-2.5 cursor-pointer active:scale-95 group"
+                      onClick={() => handleSlideAction(slide.action)}
+                      className="px-7 sm:px-9 py-3.5 sm:py-4 rounded-2xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm sm:text-base shadow-xl shadow-teal-500/30 transition-all flex items-center gap-2.5 cursor-pointer active:scale-95 group"
                     >
                       <Compass className="w-5 h-5 text-slate-950 group-hover:rotate-45 transition-transform" />
                       <span>{slide.ctaText}</span>
-                      <ArrowRight className="w-4 h-4 ml-0.5 group-hover:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-4.5 h-4.5 ml-0.5 group-hover:translate-x-1 transition-transform" />
                     </button>
 
+                    {/* Botón Secundario complementario */}
                     <button
                       type="button"
-                      onClick={() => handleOpenAuthModal('login')}
-                      className="px-5 sm:px-6 py-3.5 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm sm:text-base border border-white/25 backdrop-blur-md transition-all cursor-pointer"
+                      onClick={() => {
+                        if (slide.action === 'register') {
+                          handleOpenAuthModal('login');
+                        } else {
+                          scrollToOpportunities();
+                        }
+                      }}
+                      className="px-5 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm sm:text-base border border-white/25 backdrop-blur-md transition-all cursor-pointer active:scale-95 flex items-center gap-2"
                     >
-                      {isEs ? 'Iniciar Sesión' : 'Sign In'}
+                      <span>{slide.secondaryText}</span>
                     </button>
                   </div>
 
@@ -539,11 +538,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
           );
         })}
 
-        {/* Flechas de navegación del carrusel */}
+        {/* Flechas de navegación lateral del carrusel */}
         <button
           type="button"
           onClick={handlePrevSlide}
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
           aria-label={isEs ? 'Diapositiva anterior' : 'Previous slide'}
         >
           <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -552,27 +551,38 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         <button
           type="button"
           onClick={handleNextSlide}
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
           aria-label={isEs ? 'Siguiente diapositiva' : 'Next slide'}
         >
           <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
 
-        {/* Indicadores inferiores y control de pausa */}
-        <div className="absolute bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 bg-slate-950/60 px-4 py-2 rounded-full border border-white/15 backdrop-blur-md">
-          {heroSlides.map((slide, idx) => (
-            <button
-              key={slide.id}
-              type="button"
-              onClick={() => setCurrentSlide(idx)}
-              className={`h-2 sm:h-2.5 rounded-full transition-all cursor-pointer ${
-                idx === currentSlide 
-                  ? 'w-8 sm:w-10 bg-teal-400' 
-                  : 'w-2 sm:w-2.5 bg-white/40 hover:bg-white/70'
-              }`}
-              title={`Diapositiva ${idx + 1}: ${slide.title}`}
-            />
-          ))}
+        {/* Indicadores inferiores con barra de progreso interactiva */}
+        <div className="absolute bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 bg-slate-950/70 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/15 backdrop-blur-md shadow-xl">
+          {heroSlides.map((slide, idx) => {
+            const isActive = idx === currentSlide;
+            return (
+              <button
+                key={slide.id}
+                type="button"
+                onClick={() => {
+                  setSlideProgress(0);
+                  setCurrentSlide(idx);
+                }}
+                className={`relative h-2 sm:h-2.5 rounded-full overflow-hidden transition-all cursor-pointer ${
+                  isActive ? 'w-10 sm:w-14 bg-white/25' : 'w-2.5 sm:w-3 bg-white/30 hover:bg-white/60'
+                }`}
+                title={`Diapositiva ${idx + 1}: ${slide.title}`}
+              >
+                {isActive && (
+                  <span 
+                    className="absolute inset-y-0 left-0 bg-teal-400 rounded-full transition-all duration-75"
+                    style={{ width: `${slideProgress}%` }}
+                  />
+                )}
+              </button>
+            );
+          })}
 
           <span className="w-px h-3.5 bg-white/20 ml-1 mr-0.5" />
 
@@ -591,6 +601,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
       {/* =========================================================================
           3. SECCIÓN: "Todo lo que necesitas para encontrar tu próxima oportunidad"
+             (3 TARJETAS VISUALES MODERNAS: Instituciones, Programas, Matrículas - sin Cursos)
           ========================================================================= */}
       <section 
         id="oportunidades" 
@@ -599,7 +610,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Encabezado elegante con mucho espacio visual */}
+          {/* Encabezado limpio y moderno */}
           <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-18">
             <span className="text-xs font-extrabold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-2">
               {isEs ? 'EXPLORA Y TRANSFORMA TU FORMACIÓN' : 'EXPLORE YOUR EDUCATION'}
@@ -609,20 +620,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             </h2>
             <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
               {isEs
-                ? 'Conoce nuestras instituciones, descubre programas con articulación técnica SENA, gestiona tus matrículas oficiales y potencia tus talentos con cursos especializados.'
-                : 'Discover our campuses, learn about certified programs, manage your school enrollments, and develop skills.'}
+                ? 'Conoce nuestras instituciones oficiales, explora programas con articulación técnica SENA y gestiona tus matrículas de manera rápida y segura.'
+                : 'Discover our official campuses, explore technical programs with SENA dual certification, and manage your school admissions.'}
             </p>
           </div>
 
-          {/* Grid de las 4 Tarjetas visuales solicitadas */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+          {/* Grid de las 3 Tarjetas visuales solicitadas (Instituciones, Programas, Matrículas) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {opportunityCards.map((card) => {
               const IconComponent = card.icon;
               return (
                 <div
                   key={card.id}
                   onClick={() => setSelectedOpportunityCard(card.id)}
-                  className={`group relative p-7 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-1.5 text-left overflow-hidden ${card.borderColor}`}
+                  className={`group relative p-8 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-1.5 text-left overflow-hidden ${card.borderColor}`}
                 >
                   {/* Subtle top background gradient glow */}
                   <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
@@ -631,31 +642,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     
                     {/* Header de la tarjeta con Icono Grande y Emoji */}
                     <div className="flex items-center justify-between mb-6">
-                      <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                      <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
                         <span>{card.emoji}</span>
                       </div>
-                      <div className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                        <IconComponent className="w-5 h-5" />
+                      <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                        <IconComponent className="w-6 h-6" />
                       </div>
                     </div>
 
                     {/* Título de la tarjeta */}
-                    <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    <h3 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
                       {card.title}
                     </h3>
 
                     {/* Pequeño texto descriptivo */}
-                    <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
+                    <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
                       {card.description}
                     </p>
 
                   </div>
 
                   {/* Footer de la tarjeta con acción moderna */}
-                  <div className="relative z-10 mt-6 pt-4 border-t border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between text-xs font-bold text-teal-700 dark:text-teal-400">
-                    <span>{isEs ? 'Ver detalles' : 'Learn more'}</span>
-                    <div className="w-7 h-7 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 flex items-center justify-center group-hover:translate-x-1 group-hover:bg-teal-600 group-hover:text-white transition-all">
-                      <ArrowRight className="w-3.5 h-3.5" />
+                  <div className="relative z-10 mt-8 pt-4 border-t border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between text-xs font-bold text-teal-700 dark:text-teal-400">
+                    <span>{isEs ? 'Conocer más detalles' : 'Learn more'}</span>
+                    <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 flex items-center justify-center group-hover:translate-x-1 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-xs">
+                      <ArrowRight className="w-4 h-4" />
                     </div>
                   </div>
 
@@ -867,7 +878,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </section>
 
       {/* =========================================================================
-          6. MODAL DETALLE DE LAS 4 TARJETAS VISUALES
+          6. MODAL DETALLE DE LAS 3 TARJETAS VISUALES (Instituciones, Programas, Matrículas)
           ========================================================================= */}
       {selectedOpportunityCard && (
         <div 
@@ -954,25 +965,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                         </div>
                       ))}
                     </div>
-                  </div>
-                )}
-
-                {card.id === 'cursos' && card.details.coursesList && (
-                  <div className="space-y-2.5 my-4">
-                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      {isEs ? 'Talleres y Semilleros Disponibles:' : 'Available Skill Workshops:'}
-                    </h4>
-                    {card.details.coursesList.map((crs, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
-                        <div>
-                          <strong className="text-slate-900 dark:text-white block">{crs.name}</strong>
-                          <span className="text-slate-500 dark:text-slate-400">{crs.schedule}</span>
-                        </div>
-                        <span className="px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 font-bold border border-purple-200 dark:border-purple-800 text-[10px]">
-                          {crs.certified}
-                        </span>
-                      </div>
-                    ))}
                   </div>
                 )}
 

@@ -18,3 +18,21 @@ input, select, textarea, button {
   font-family: inherit;
 }
 
+/* Animación sutil de movimiento tipo Ken Burns para imágenes del carrusel */
+@keyframes kenburns-slow {
+  0% {
+    transform: scale(1.02) translate(0%, 0%);
+  }
+  50% {
+    transform: scale(1.08) translate(-1%, -0.8%);
+  }
+  100% {
+    transform: scale(1.05) translate(0.8%, -0.4%);
+  }
+}
+
+.animate-kenburns {
+  animation: kenburns-slow 14s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
