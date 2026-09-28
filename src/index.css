@@ -18,21 +18,44 @@ input, select, textarea, button {
   font-family: inherit;
 }
 
-/* Animación sutil de movimiento tipo Ken Burns para imágenes del carrusel */
-@keyframes kenburns-slow {
-  0% {
-    transform: scale(1.02) translate(0%, 0%);
+@keyframes gentle-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
   }
   50% {
-    transform: scale(1.08) translate(-1%, -0.8%);
-  }
-  100% {
-    transform: scale(1.05) translate(0.8%, -0.4%);
+    transform: translateY(-8px) rotate(0.8deg);
   }
 }
 
-.animate-kenburns {
-  animation: kenburns-slow 14s ease-in-out infinite alternate;
-  will-change: transform;
+@keyframes subtle-bob {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes gentle-pulse-glow {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.05);
+  }
+}
+
+.animate-gentle-float {
+  animation: gentle-float 4.5s ease-in-out infinite;
+}
+
+.animate-subtle-bob {
+  animation: subtle-bob 3s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: gentle-pulse-glow 5s ease-in-out infinite;
 }
 

@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AuthCard } from '../public/AuthCard';
+import matriculasImg from '../../assets/images/matriculas_cartoon_1790637705135.jpg';
+import institucionesImg from '../../assets/images/instituciones_cartoon_1790637716747.jpg';
+import programasImg from '../../assets/images/programas_cartoon_1790637726636.jpg';
+import futuroImg from '../../assets/images/futuro_cartoon_1790637735129.jpg';
 import { 
   Sun, 
   Moon, 
@@ -26,7 +30,8 @@ import {
   Pause,
   Play,
   X,
-  Compass
+  Star,
+  Rocket
 } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -66,68 +71,88 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const authSectionRef = useRef<HTMLDivElement>(null);
   const opportunitiesRef = useRef<HTMLDivElement>(null);
 
-  // 4 Diapositivas exactas solicitadas por el usuario, luminosas, modernas y juveniles
+  // 4 Diapositivas exactas con ilustraciones tipo personajes/muñequitos educativos 3D
   const heroSlides = [
     {
       id: 1,
-      badge: isEs ? 'Cupos 2026 Abiertos' : '2026 Admissions Open',
+      badge: isEs ? 'Admisiones 2026 Abiertas' : '2026 Admissions Open',
+      emojiTitle: '🎓',
       title: isEs ? '¡Matrículas disponibles!' : 'Open Enrollments!',
       subtitle: isEs 
         ? 'Infórmate sobre las oportunidades de matrícula disponibles.'
         : 'Learn about all available school enrollment opportunities.',
       ctaText: isEs ? 'Ver matrículas' : 'View enrollments',
-      secondaryText: isEs ? 'Consultar cupo' : 'Check status',
       action: 'matriculas',
-      // Escena luminosa, estudiantes sonrientes y ambiente educativo con luz natural
-      image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=2070&q=85',
-      badgeColor: 'emerald'
+      tag: isEs ? 'Cupos 100% Gratuitos • SIMAT' : '100% Free Tuition',
+      image: matriculasImg,
+      alt: 'Personajes animados estudiantes celebrando matrícula escolar',
+      themeGradient: 'from-emerald-950 via-teal-900 to-slate-950',
+      lightGlow: 'bg-emerald-400/25',
+      accentColor: 'text-emerald-400',
+      buttonBg: 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/30',
+      badgeBorder: 'border-emerald-400/40 text-emerald-300 bg-emerald-950/60'
     },
     {
       id: 2,
-      badge: isEs ? 'Institución Oficial • Medellín' : 'Official Public School',
+      badge: isEs ? 'Sedes Oficiales • Comuna 8' : 'Official Campuses',
+      emojiTitle: '🏫',
       title: isEs ? '¡Conoce nuevas instituciones!' : 'Discover New Campuses!',
       subtitle: isEs 
-        ? 'Explora instituciones y sus opciones de formación.'
-        : 'Explore institutions and their educational opportunities.',
+        ? 'Explora instituciones y descubre sus opciones de formación.'
+        : 'Explore institutions and discover their educational options.',
       ctaText: isEs ? 'Ver instituciones' : 'View institutions',
-      secondaryText: isEs ? 'Nuestras sedes' : 'Our campuses',
       action: 'instituciones',
-      // Escena luminosa de campus moderno con estudiantes caminando y luz solar
-      image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&w=2070&q=85',
-      badgeColor: 'cyan'
+      tag: isEs ? 'Sede Principal y Sede Infantil' : 'Main & Elementary Campus',
+      image: institucionesImg,
+      alt: 'Personajes animados conociendo moderno campus escolar',
+      themeGradient: 'from-blue-950 via-sky-900 to-slate-950',
+      lightGlow: 'bg-sky-400/25',
+      accentColor: 'text-sky-400',
+      buttonBg: 'bg-sky-400 hover:bg-sky-300 text-slate-950 shadow-sky-500/30',
+      badgeBorder: 'border-sky-400/40 text-sky-300 bg-sky-950/60'
     },
     {
       id: 3,
-      badge: isEs ? 'Doble Titulación SENA' : 'SENA Dual Certification',
+      badge: isEs ? 'Articulación Técnica SENA' : 'SENA Technical Track',
+      emojiTitle: '📚',
       title: isEs ? '¡Encuentra tu programa!' : 'Find Your Program!',
       subtitle: isEs 
-        ? 'Descubre programas según tus intereses.'
-        : 'Discover educational programs aligned with your interests.',
+        ? 'Descubre programas de formación según tus intereses.'
+        : 'Discover training programs according to your interests.',
       ctaText: isEs ? 'Explorar programas' : 'Explore programs',
-      secondaryText: isEs ? 'Media técnica' : 'Technical track',
       action: 'programas',
-      // Estudiantes jóvenes utilizando computadores en ambiente tecnológico iluminado y moderno
-      image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=2070&q=85',
-      badgeColor: 'teal'
+      tag: isEs ? 'Sistemas, Software y Contabilidad' : 'Software & Business Tracks',
+      image: programasImg,
+      alt: 'Personajes animados aprendiendo con laptops y libros',
+      themeGradient: 'from-purple-950 via-indigo-900 to-slate-950',
+      lightGlow: 'bg-purple-400/25',
+      accentColor: 'text-purple-300',
+      buttonBg: 'bg-purple-400 hover:bg-purple-300 text-slate-950 shadow-purple-500/30',
+      badgeBorder: 'border-purple-400/40 text-purple-300 bg-purple-950/60'
     },
     {
       id: 4,
-      badge: isEs ? 'Tu Futuro Empieza Hoy' : 'Your Future Starts Here',
+      badge: isEs ? 'Tu Futuro Comienza Hoy' : 'Your Future Starts Today',
+      emojiTitle: '🚀',
       title: isEs ? '¡Construye tu futuro!' : 'Build Your Future!',
       subtitle: isEs 
         ? 'Descubre nuevas oportunidades para continuar tus estudios.'
-        : 'Discover new opportunities to continue and advance your education.',
+        : 'Discover new opportunities to continue your studies.',
       ctaText: isEs ? 'Comenzar ahora' : 'Get started',
-      secondaryText: isEs ? 'Crear cuenta' : 'Sign up',
       action: 'register',
-      // Jóvenes colaborando y estudiando en un espacio abierto, inspirador y radiante
-      image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=2070&q=85',
-      badgeColor: 'amber'
+      tag: isEs ? 'Registro Rápido y Seguro' : 'Quick & Secure Sign Up',
+      image: futuroImg,
+      alt: 'Personaje animado lanzando cohete hacia sus metas educativas',
+      themeGradient: 'from-amber-950 via-orange-950 to-slate-950',
+      lightGlow: 'bg-amber-400/25',
+      accentColor: 'text-amber-300',
+      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/30',
+      badgeBorder: 'border-amber-400/40 text-amber-300 bg-amber-950/60'
     }
   ];
 
-  // Cambio automático del carrusel con temporizador y barra de progreso fluida
-  const SLIDE_DURATION = 5500; // 5.5 segundos por diapositiva
+  // Cambio automático fluido del carrusel cada 5.5 segundos
+  const SLIDE_DURATION = 5500;
 
   useEffect(() => {
     if (isCarouselPaused) return;
@@ -447,15 +472,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </header>
 
       {/* =========================================================================
-          2. BANNER PRINCIPAL CON CARRUSEL REDISEÑADO:
-             GRANDE, LUMINOSO, DINÁMICO, CON MOVIMIENTO SUAVE Y 4 DIAPOSITIVAS CLAVE
+          2. BANNER PRINCIPAL CON CARRUSEL ANIMADO CON ILUSTRACIONES DE PERSONAJES:
+             GRANDE, LLAMATIVO, LUMINOSO, CON PERSONAJES/MUÑEQUITOS EDUCATIVOS Y MOVIMIENTO SUAVE
           ========================================================================= */}
       <section 
-        className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[580px] sm:min-h-[640px] lg:min-h-[720px] flex items-center select-none"
+        className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[600px] sm:min-h-[660px] lg:min-h-[720px] flex items-center select-none"
         onMouseEnter={() => setIsCarouselPaused(true)}
         onMouseLeave={() => setIsCarouselPaused(false)}
       >
-        {/* Diapositivas con transición suave de opacidad y zoom sutil dinámico */}
+        {/* Diapositivas con transiciones suaves y personajes animados con movimiento */}
         {heroSlides.map((slide, index) => {
           const isActive = index === currentSlide;
           return (
@@ -465,70 +490,126 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                 isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
               }`}
             >
-              {/* Fotografía luminosa, vibrante y juvenil con efecto dinámico de movimiento (Ken Burns) */}
-              <img 
-                src={slide.image} 
-                alt={slide.title} 
-                className={`w-full h-full object-cover object-center transform transition-transform duration-[7000ms] ease-out ${
-                  isActive ? 'scale-110 translate-y-0' : 'scale-100 translate-y-1'
-                }`}
-              />
-
-              {/* Degradados translúcidos luminosos para garantizar alto contraste y legibilidad óptima */}
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/65 to-slate-950/30" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-transparent to-slate-950/40" />
+              {/* Fondo degradado ambiental luminoso por diapositiva */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${slide.themeGradient}`} />
               
-              {/* Resplandor ambiental de luz cálida y tecnológica */}
-              <div className="absolute top-1/4 right-1/4 w-[480px] h-[480px] bg-teal-400/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="absolute bottom-1/4 right-1/3 w-[360px] h-[360px] bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
+              {/* Resplandor luminoso ambiental dinámico */}
+              <div className={`absolute top-1/4 right-1/4 w-[520px] h-[520px] ${slide.lightGlow} rounded-full blur-3xl pointer-events-none animate-glow-pulse`} />
+              <div className="absolute -bottom-10 -left-10 w-[380px] h-[380px] bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
 
-              {/* Contenido textual sobre la imagen */}
-              <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 relative z-20 h-full flex flex-col justify-center">
-                <div className="max-w-3xl text-left space-y-4 sm:space-y-6">
+              {/* Contenido dentro del banner: texto, botón e ilustración de personajes visible y clara */}
+              <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-20 h-full flex flex-col justify-center">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                   
-                  {/* Badge de categoría / escena luminosa */}
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 hover:bg-white/20 backdrop-blur-md border border-white/25 text-amber-300 text-xs font-bold uppercase tracking-wider shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{slide.badge}</span>
+                  {/* Columna Izquierda: Badge + Título Grande con Emoji + Texto Corto + Botón */}
+                  <div className="lg:col-span-7 text-left space-y-4 sm:space-y-6">
+                    
+                    {/* Badge temático */}
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border backdrop-blur-md text-xs font-bold uppercase tracking-wider shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ${slide.badgeBorder}`}>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>{slide.badge}</span>
+                      </div>
+                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 text-slate-300 border border-white/15 hidden sm:inline-block">
+                        {slide.tag}
+                      </span>
+                    </div>
+
+                    {/* Título Grande con Emoji */}
+                    <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1] drop-shadow-md animate-in fade-in slide-in-from-bottom-3 duration-700">
+                      <span className="mr-2 sm:mr-3 inline-block animate-subtle-bob">{slide.emojiTitle}</span>
+                      <span>{slide.title}</span>
+                    </h1>
+
+                    {/* Texto Corto y Atractivo visible dentro del banner */}
+                    <p className="text-base sm:text-xl text-slate-100 font-medium leading-relaxed max-w-xl drop-shadow animate-in fade-in slide-in-from-bottom-4 duration-700">
+                      “{slide.subtitle}”
+                    </p>
+
+                    {/* Botones de acción principales visibles dentro del banner */}
+                    <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-3.5 sm:gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                      
+                      {/* Botón Principal Requerido */}
+                      <button
+                        type="button"
+                        onClick={() => handleSlideAction(slide.action)}
+                        className={`px-7 sm:px-9 py-3.5 sm:py-4 rounded-2xl font-black text-sm sm:text-base shadow-xl transition-all flex items-center gap-2.5 cursor-pointer active:scale-95 group ${slide.buttonBg}`}
+                      >
+                        <span>{slide.ctaText}</span>
+                        <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1.5 transition-transform" />
+                      </button>
+
+                      {/* Botón Secundario de Acceso */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (slide.action === 'register') {
+                            handleOpenAuthModal('login');
+                          } else {
+                            scrollToOpportunities();
+                          }
+                        }}
+                        className="px-5 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm sm:text-base border border-white/25 backdrop-blur-md transition-all cursor-pointer active:scale-95"
+                      >
+                        {isEs ? 'Explorar opciones' : 'Explore options'}
+                      </button>
+
+                    </div>
+
+                    {/* Pequeñas insignias de confianza institucional */}
+                    <div className="pt-2 flex items-center gap-4 text-xs text-slate-300 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                        <span>Educación 100% Oficial</span>
+                      </span>
+                      <span className="hidden sm:flex items-center gap-1.5">
+                        <Star className="w-4 h-4 text-amber-400" />
+                        <span>Articulación SENA</span>
+                      </span>
+                    </div>
+
                   </div>
 
-                  {/* Título Grande y Llamativo */}
-                  <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white tracking-tight leading-[1.08] drop-shadow-md animate-in fade-in slide-in-from-bottom-3 duration-700">
-                    {slide.title}
-                  </h1>
+                  {/* Columna Derecha: Ilustración llamativa de muñequitos / personajes educativos con movimiento suave */}
+                  <div className="lg:col-span-5 flex justify-center items-center relative">
+                    
+                    {/* Elementos flotantes decorativos animados alrededor de los personajes */}
+                    <div className="absolute -top-4 -right-2 z-20 p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-lg animate-subtle-bob hidden sm:flex items-center gap-2">
+                      <span className="text-xl">✨</span>
+                      <span className="text-xs font-bold text-white">Edumed Digital</span>
+                    </div>
 
-                  {/* Texto Corto y Atractivo */}
-                  <p className="text-base sm:text-xl text-slate-100 font-medium leading-relaxed max-w-2xl drop-shadow animate-in fade-in slide-in-from-bottom-4 duration-700">
-                    {slide.subtitle}
-                  </p>
+                    <div className="absolute -bottom-3 -left-2 z-20 p-2.5 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/20 shadow-lg animate-gentle-float hidden sm:flex items-center gap-2">
+                      <span className="text-lg">🎉</span>
+                      <span className="text-xs font-bold text-teal-300">Medellín • Comuna 8</span>
+                    </div>
 
-                  {/* Botones de acción principales de la diapositiva */}
-                  <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-3.5 sm:gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
-                    {/* Botón Principal Específico de cada slide */}
-                    <button
-                      type="button"
-                      onClick={() => handleSlideAction(slide.action)}
-                      className="px-7 sm:px-9 py-3.5 sm:py-4 rounded-2xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-black text-sm sm:text-base shadow-xl shadow-teal-500/30 transition-all flex items-center gap-2.5 cursor-pointer active:scale-95 group"
-                    >
-                      <Compass className="w-5 h-5 text-slate-950 group-hover:rotate-45 transition-transform" />
-                      <span>{slide.ctaText}</span>
-                      <ArrowRight className="w-4.5 h-4.5 ml-0.5 group-hover:translate-x-1 transition-transform" />
-                    </button>
+                    {/* Tarjeta de personajes con animación flotante suave y borde luminoso */}
+                    <div className="relative w-full max-w-md sm:max-w-lg aspect-[16/10] sm:aspect-[16/11] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl bg-slate-900/50 backdrop-blur-sm group animate-gentle-float">
+                      
+                      {/* Imagen de muñequitos/personajes educativos 3D */}
+                      <img 
+                        src={slide.image} 
+                        alt={slide.alt} 
+                        className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
+                      />
 
-                    {/* Botón Secundario complementario */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (slide.action === 'register') {
-                          handleOpenAuthModal('login');
-                        } else {
-                          scrollToOpportunities();
-                        }
-                      }}
-                      className="px-5 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm sm:text-base border border-white/25 backdrop-blur-md transition-all cursor-pointer active:scale-95 flex items-center gap-2"
-                    >
-                      <span>{slide.secondaryText}</span>
-                    </button>
+                      {/* Brillo reflectante suave sobre el contenedor */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-white/10 pointer-events-none" />
+
+                      {/* Etiqueta flotante inferior con el emoji */}
+                      <div className="absolute bottom-3 left-3 right-3 p-3 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-white/15 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-2xl">{slide.emojiTitle}</span>
+                          <span className="text-xs font-bold text-white">{slide.title}</span>
+                        </div>
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-white/20 text-white">
+                          Oficial
+                        </span>
+                      </div>
+
+                    </div>
+
                   </div>
 
                 </div>
@@ -558,7 +639,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         </button>
 
         {/* Indicadores inferiores con barra de progreso interactiva */}
-        <div className="absolute bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 bg-slate-950/70 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/15 backdrop-blur-md shadow-xl">
+        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 bg-slate-950/80 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/15 backdrop-blur-md shadow-xl">
           {heroSlides.map((slide, idx) => {
             const isActive = idx === currentSlide;
             return (
@@ -569,8 +650,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                   setSlideProgress(0);
                   setCurrentSlide(idx);
                 }}
-                className={`relative h-2 sm:h-2.5 rounded-full overflow-hidden transition-all cursor-pointer ${
-                  isActive ? 'w-10 sm:w-14 bg-white/25' : 'w-2.5 sm:w-3 bg-white/30 hover:bg-white/60'
+                className={`relative h-2.5 sm:h-3 rounded-full overflow-hidden transition-all cursor-pointer flex items-center ${
+                  isActive ? 'w-12 sm:w-16 bg-white/20' : 'w-3 sm:w-4 bg-white/30 hover:bg-white/60'
                 }`}
                 title={`Diapositiva ${idx + 1}: ${slide.title}`}
               >
