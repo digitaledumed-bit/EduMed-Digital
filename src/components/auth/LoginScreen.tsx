@@ -5,6 +5,9 @@ import matriculasImg from '../../assets/images/matriculas_cartoon_1790637705135.
 import institucionesImg from '../../assets/images/instituciones_cartoon_1790637716747.jpg';
 import programasImg from '../../assets/images/programas_cartoon_1790637726636.jpg';
 import futuroImg from '../../assets/images/futuro_cartoon_1790637735129.jpg';
+import cardInstitucionesImg from '../../assets/images/card_instituciones_1790638618671.jpg';
+import cardProgramasImg from '../../assets/images/card_programas_1790638629586.jpg';
+import cardMatriculasImg from '../../assets/images/card_matriculas_1790638645528.jpg';
 import { 
   Sun, 
   Moon, 
@@ -29,8 +32,7 @@ import {
   ChevronLeft,
   Pause,
   Play,
-  X,
-  Compass
+  X
 } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -70,21 +72,21 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const authSectionRef = useRef<HTMLDivElement>(null);
   const opportunitiesRef = useRef<HTMLDivElement>(null);
 
-  // 4 Diapositivas exactas solicitadas con títulos en mayúsculas, textos precisos e ilustraciones modernas
+  // 4 Diapositivas exactas solicitadas con ilustraciones tipo muñequitos y movimiento muy suave
   const heroSlides = [
     {
       id: 1,
-      badge: isEs ? 'CONVOCATORIA Y ADMISIONES' : 'OFFICIAL ADMISSIONS',
-      title: '¡MATRÍCULAS DISPONIBLES!',
+      badge: isEs ? 'ADMISIONES OFICIALES' : 'OFFICIAL ADMISSIONS',
+      title: '¡Matrículas disponibles!',
       subtitle: isEs 
-        ? 'Infórmate sobre las oportunidades de matrícula disponibles.'
-        : 'Learn about all available school enrollment opportunities.',
+        ? 'Infórmate sobre las oportunidades de matrícula.'
+        : 'Learn about all enrollment opportunities.',
       ctaText: isEs ? 'Ver matrículas' : 'View enrollments',
       secondaryText: isEs ? 'Consultar cupo' : 'Check status',
       action: 'matriculas',
-      tag: isEs ? 'Cupos Oficiales Gratuitos' : 'Free Official Tuition',
+      tag: isEs ? 'Cupos Gratuitos • SIMAT' : 'Free Tuition • SIMAT',
       image: matriculasImg,
-      alt: 'Ilustración animada moderna de estudiantes celebrando matrícula escolar',
+      alt: 'Ilustración animada de estudiantes celebrando matrícula escolar',
       themeGradient: 'from-emerald-950 via-teal-900 to-slate-950',
       lightGlow: 'bg-emerald-400/20',
       buttonBg: 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/25',
@@ -92,17 +94,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     },
     {
       id: 2,
-      badge: isEs ? 'SEDES EDUCATIVAS OFICIALES' : 'OFFICIAL CAMPUSES',
-      title: '¡CONOCE NUEVAS INSTITUCIONES!',
+      badge: isEs ? 'SEDES EDUCATIVAS' : 'EDUCATIONAL CAMPUSES',
+      title: '¡Conoce nuevas instituciones!',
       subtitle: isEs 
-        ? 'Explora instituciones y descubre sus opciones de formación.'
-        : 'Explore institutions and discover their educational options.',
+        ? 'Explora instituciones y sus opciones de formación.'
+        : 'Explore institutions and their training options.',
       ctaText: isEs ? 'Ver instituciones' : 'View institutions',
       secondaryText: isEs ? 'Ver sedes' : 'View campuses',
       action: 'instituciones',
       tag: isEs ? 'Sede Principal y Sede Infantil' : 'Main & Elementary Campuses',
       image: institucionesImg,
-      alt: 'Ilustración animada moderna de personajes conociendo campus educativo',
+      alt: 'Ilustración animada de personajes conociendo campus educativo',
       themeGradient: 'from-blue-950 via-sky-900 to-slate-950',
       lightGlow: 'bg-sky-400/20',
       buttonBg: 'bg-sky-400 hover:bg-sky-300 text-slate-950 shadow-sky-500/25',
@@ -110,17 +112,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     },
     {
       id: 3,
-      badge: isEs ? 'FORMACIÓN TÉCNICA Y ACADÉMICA' : 'ACADEMIC & TECHNICAL PROGRAMS',
-      title: '¡ENCUENTRA TU PROGRAMA!',
+      badge: isEs ? 'FORMACIÓN TÉCNICA OFICIAL' : 'OFFICIAL TECHNICAL TRACKS',
+      title: '¡Encuentra tu programa!',
       subtitle: isEs 
-        ? 'Descubre programas de formación según tus intereses.'
-        : 'Discover training programs according to your interests.',
+        ? 'Descubre programas según tus intereses.'
+        : 'Discover programs according to your interests.',
       ctaText: isEs ? 'Explorar programas' : 'Explore programs',
-      secondaryText: isEs ? 'Ver áreas' : 'View areas',
+      secondaryText: isEs ? 'Ver programas' : 'View programs',
       action: 'programas',
       tag: isEs ? 'Sistemas, Software y Contabilidad' : 'Software & Business Tracks',
       image: programasImg,
-      alt: 'Ilustración animada moderna de estudiantes aprendiendo con tecnología',
+      alt: 'Ilustración animada de estudiantes aprendiendo con tecnología',
       themeGradient: 'from-purple-950 via-indigo-900 to-slate-950',
       lightGlow: 'bg-purple-400/20',
       buttonBg: 'bg-purple-400 hover:bg-purple-300 text-slate-950 shadow-purple-500/25',
@@ -128,17 +130,17 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     },
     {
       id: 4,
-      badge: isEs ? 'NUEVAS OPORTUNIDADES' : 'YOUR FUTURE',
-      title: '¡CONSTRUYE TU FUTURO!',
+      badge: isEs ? 'PROYECCIÓN Y FUTURO' : 'FUTURE & GROWTH',
+      title: '¡Construye tu futuro!',
       subtitle: isEs 
-        ? 'Descubre nuevas oportunidades para continuar tus estudios.'
-        : 'Discover new opportunities to continue your studies.',
+        ? 'Descubre nuevas oportunidades para estudiar.'
+        : 'Discover new opportunities to study.',
       ctaText: isEs ? 'Comenzar ahora' : 'Get started',
       secondaryText: isEs ? 'Crear cuenta' : 'Sign up',
       action: 'register',
-      tag: isEs ? 'Acceso 100% Digital' : '100% Digital Access',
+      tag: isEs ? 'Plataforma EduMed Digital' : 'EduMed Digital Platform',
       image: futuroImg,
-      alt: 'Ilustración animada moderna de estudiante proyectando su futuro',
+      alt: 'Ilustración animada de estudiante proyectando su futuro',
       themeGradient: 'from-amber-950 via-orange-950 to-slate-950',
       lightGlow: 'bg-amber-400/20',
       buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/25',
@@ -254,12 +256,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     }
   };
 
-  // 3 Tarjetas visuales solicitadas específicamente por el usuario (Instituciones, Programas, Matrículas)
+  // 3 Tarjetas visuales mejoradas con ilustraciones elegantes y efectos al tocar/pasar el cursor
   const opportunityCards = [
     {
       id: 'instituciones',
       emoji: '🎓',
       icon: Building2,
+      illustration: cardInstitucionesImg,
+      illustrationAlt: 'Ilustración 3D de edificio educativo con personaje amigable',
       title: isEs ? 'Instituciones' : 'Institutions',
       description: isEs 
         ? 'Encuentra instituciones educativas y conoce su oferta.'
@@ -276,14 +280,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         codeDane: '105001002345',
         alliance: isEs ? 'Formación Técnica Oficial con Doble Titulación' : 'Official Dual Technical Certification'
       },
-      gradient: 'from-emerald-500/10 via-teal-500/5 to-transparent',
-      borderColor: 'hover:border-teal-500',
+      gradient: 'from-emerald-500/15 via-teal-500/5 to-transparent',
+      borderColor: 'border-teal-200 dark:border-teal-900/60 hover:border-teal-500',
       badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
     },
     {
       id: 'programas',
       emoji: '📚',
       icon: BookOpen,
+      illustration: cardProgramasImg,
+      illustrationAlt: 'Ilustración 3D de birrete decorado flotante con libros educativos',
       title: isEs ? 'Programas' : 'Programs',
       description: isEs 
         ? 'Explora diferentes programas de formación.'
@@ -300,14 +306,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
           { name: isEs ? 'Primaria Integral y Grado Transición' : 'Elementary & Transition', duration: 'Grados Preescolar a 5°', badge: isEs ? 'PAE Gratuito' : 'Meals PAE' }
         ]
       },
-      gradient: 'from-blue-500/10 via-cyan-500/5 to-transparent',
-      borderColor: 'hover:border-blue-500',
+      gradient: 'from-blue-500/15 via-cyan-500/5 to-transparent',
+      borderColor: 'border-blue-200 dark:border-blue-900/60 hover:border-blue-500',
       badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800'
     },
     {
       id: 'matriculas',
       emoji: '📝',
       icon: FileText,
+      illustration: cardMatriculasImg,
+      illustrationAlt: 'Ilustración 3D de carpeta de matrícula con sello de aprobación',
       title: isEs ? 'Matrículas' : 'Enrollments',
       description: isEs 
         ? 'Consulta qué oportunidades de matrícula están disponibles.'
@@ -325,8 +333,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
           isEs ? '4. Confirmación de cupo y carnet digital' : '4. Spot allocation & digital student ID'
         ]
       },
-      gradient: 'from-amber-500/10 via-orange-500/5 to-transparent',
-      borderColor: 'hover:border-amber-500',
+      gradient: 'from-amber-500/15 via-orange-500/5 to-transparent',
+      borderColor: 'border-amber-200 dark:border-amber-900/60 hover:border-amber-500',
       badgeColor: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800'
     }
   ];
@@ -467,9 +475,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </header>
 
       {/* =========================================================================
-          2. BANNER PRINCIPAL AMPLIO (OCUPA CASI TODO EL ANCHO DE PANTALLA)
-             CON ILUSTRACIONES DE PERSONAJES ANIMADOS CON MOVIMIENTO SUTIL Y ELEGANTE
-             TEXTOS DIRECTAMENTE INTEGRADOS SOBRE EL BANNER CON ALTA LEGIBILIDAD
+          2. BANNER PRINCIPAL: GRANDE, LUMINOSO Y ATRACTIVO CON ILUSTRACIONES TIPO MUÑEQUITOS
+             CON MOVIMIENTO MUY SUAVE Y ELEGANTE
+             CADA SLIDE: ILUSTRACIÓN + TÍTULO + TEXTO CORTO + UN BOTÓN
           ========================================================================= */}
       <section 
         className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[620px] sm:min-h-[680px] lg:min-h-[720px] xl:min-h-[760px] flex items-center select-none"
@@ -497,7 +505,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 relative z-20 h-full flex flex-col justify-center">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
                   
-                  {/* Columna de Texto: TÍTULO GRANDE EN MAYÚSCULAS + TEXTO CORTO + BOTÓN VISIBLE */}
+                  {/* Columna de Texto: TÍTULO + TEXTO CORTO + BOTÓN */}
                   <div className="lg:col-span-7 xl:col-span-7 text-left space-y-4 sm:space-y-6">
                     
                     {/* Badge de categoría de la diapositiva */}
@@ -511,8 +519,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                       </span>
                     </div>
 
-                    {/* Título Grande en Mayúsculas, visible y fácil de leer */}
-                    <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white tracking-tight leading-[1.05] drop-shadow-lg animate-in fade-in slide-in-from-bottom-3 duration-700">
+                    {/* Título grande y visible */}
+                    <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white tracking-tight leading-[1.08] drop-shadow-lg animate-in fade-in slide-in-from-bottom-3 duration-700">
                       {slide.title}
                     </h1>
 
@@ -521,10 +529,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                       “{slide.subtitle}”
                     </p>
 
-                    {/* Botones de acción principales visibles dentro del banner */}
+                    {/* Botón de acción principal visible dentro del banner */}
                     <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
                       
-                      {/* Botón Principal Requerido */}
+                      {/* Botón Principal */}
                       <button
                         type="button"
                         onClick={() => handleSlideAction(slide.action)}
@@ -534,7 +542,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                         <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
                       </button>
 
-                      {/* Botón Secundario de Exploración */}
+                      {/* Botón Secundario complementario */}
                       <button
                         type="button"
                         onClick={() => {
@@ -555,7 +563,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     <div className="pt-3 flex flex-wrap items-center gap-5 text-xs sm:text-sm text-slate-200 font-medium">
                       <span className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>Educación Oficial 100% Gratuita</span>
+                        <span>Educación Oficial Gratuita</span>
                       </span>
                       <span className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-teal-300" />
@@ -565,13 +573,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
                   </div>
 
-                  {/* Columna Derecha: Ilustración de Personajes Animados con movimiento muy sutil y elegante */}
+                  {/* Columna Derecha: Ilustración tipo muñequitos/personajes con movimiento muy suave y elegante */}
                   <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center relative">
                     
-                    {/* Tarjeta de personajes con animación flotante muy sutil y borde luminoso */}
+                    {/* Tarjeta de personajes con animación flotante sutil y marco luminoso */}
                     <div className="relative w-full max-w-lg xl:max-w-xl aspect-[16/11] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl bg-slate-900/40 backdrop-blur-sm group animate-subtle-float">
                       
-                      {/* Imagen de personajes animados modernos, luminosos y coloridos */}
+                      {/* Imagen tipo muñequitos/personajes animados */}
                       <img 
                         src={slide.image} 
                         alt={slide.alt} 
@@ -658,7 +666,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             className="p-1 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
             title={isCarouselPaused ? (isEs ? 'Reanudar carrusel' : 'Play') : (isEs ? 'Pausar carrusel' : 'Pause')}
           >
-            {isCarouselPaused ? <Play className="w-4 h-4 text-amber-300" /> : <Pause className="w-4 h-4" />}
+            {isCarouselPaused ? <Play className="w-3.5 h-3.5 text-amber-300" /> : <Pause className="w-3.5 h-3.5" />}
           </button>
         </div>
 
@@ -666,7 +674,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
       {/* =========================================================================
           3. SECCIÓN: "Todo lo que necesitas para encontrar tu próxima oportunidad"
-             (3 TARJETAS VISUALES MODERNAS: Instituciones, Programas, Matrículas - sin Cursos)
+             3 TARJETAS MEJORADAS CON ILUSTRACIONES ELEGANTES (Instituciones, Programas, Matrículas)
+             CON EFECTO DE MOVIMIENTO Y BRILLO AL TOCAR O PASAR EL CURSOR
           ========================================================================= */}
       <section 
         id="oportunidades" 
@@ -690,7 +699,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             </p>
           </div>
 
-          {/* Grid de las 3 Tarjetas visuales solicitadas (Instituciones, Programas, Matrículas) */}
+          {/* Grid de las 3 Tarjetas visuales mejoradas con ilustraciones elegantes y efectos de brillo/movimiento */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {opportunityCards.map((card) => {
               const IconComponent = card.icon;
@@ -698,20 +707,32 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                 <div
                   key={card.id}
                   onClick={() => setSelectedOpportunityCard(card.id)}
-                  className={`group relative p-8 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/90 dark:border-slate-800/90 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-1.5 text-left overflow-hidden ${card.borderColor}`}
+                  className={`group relative p-7 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border ${card.borderColor} shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-2 text-left overflow-hidden`}
                 >
-                  {/* Subtle top background gradient glow */}
+                  {/* Destello de brillo diagonal al pasar el cursor o tocar */}
+                  <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 card-shine-effect z-20" />
+
+                  {/* Resplandor superior sutil */}
                   <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
 
                   <div className="relative z-10">
                     
-                    {/* Header de la tarjeta con Icono Grande y Emoji */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="w-16 h-16 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-xs flex items-center justify-center text-3xl group-hover:scale-110 transition-transform">
+                    {/* Contenedor de la ilustración elegante (edificio educativo / birrete decorado / carpeta de matrícula) */}
+                    <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-6 border border-slate-200/80 dark:border-slate-700/80 shadow-xs bg-slate-100 dark:bg-slate-800 group-hover:shadow-md transition-shadow">
+                      <img 
+                        src={card.illustration} 
+                        alt={card.illustrationAlt}
+                        className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
+                      />
+                      
+                      {/* Badge con emoji en la esquina de la ilustración */}
+                      <div className="absolute top-3 left-3 w-10 h-10 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/40 dark:border-slate-700/60 shadow-xs flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
                         <span>{card.emoji}</span>
                       </div>
-                      <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
-                        <IconComponent className="w-6 h-6" />
+
+                      {/* Icono de apoyo en la esquina opuesta */}
+                      <div className="absolute top-3 right-3 p-2 rounded-xl bg-slate-950/70 text-white backdrop-blur-md border border-white/20 shadow-xs">
+                        <IconComponent className="w-4 h-4 text-teal-300" />
                       </div>
                     </div>
 
@@ -721,16 +742,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     </h3>
 
                     {/* Pequeño texto descriptivo */}
-                    <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
+                    <p className="mt-2.5 text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
                       {card.description}
                     </p>
 
                   </div>
 
-                  {/* Footer de la tarjeta con acción moderna */}
-                  <div className="relative z-10 mt-8 pt-4 border-t border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between text-xs font-bold text-teal-700 dark:text-teal-400">
-                    <span>{isEs ? 'Conocer más detalles' : 'Learn more'}</span>
-                    <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 flex items-center justify-center group-hover:translate-x-1 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-xs">
+                  {/* Footer de la tarjeta con acción interactiva */}
+                  <div className="relative z-10 mt-6 pt-4 border-t border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between text-xs font-bold text-teal-700 dark:text-teal-400">
+                    <span className="group-hover:underline">{isEs ? 'Conocer más detalles' : 'Learn more'}</span>
+                    <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 flex items-center justify-center group-hover:translate-x-1.5 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-xs">
                       <ArrowRight className="w-4 h-4" />
                     </div>
                   </div>
