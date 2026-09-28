@@ -30,8 +30,7 @@ import {
   Pause,
   Play,
   X,
-  Star,
-  Rocket
+  Compass
 } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -55,7 +54,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
 
-  // Modal para ver detalles de las 3 tarjetas (Instituciones, Programas, Matrículas - sin Cursos)
+  // Modal para ver detalles de las 3 tarjetas (Instituciones, Programas, Matrículas)
   const [selectedOpportunityCard, setSelectedOpportunityCard] = useState<string | null>(null);
 
   // Carrusel automático del Banner Principal
@@ -71,87 +70,83 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const authSectionRef = useRef<HTMLDivElement>(null);
   const opportunitiesRef = useRef<HTMLDivElement>(null);
 
-  // 4 Diapositivas exactas con ilustraciones tipo personajes/muñequitos educativos 3D
+  // 4 Diapositivas exactas solicitadas con títulos en mayúsculas, textos precisos e ilustraciones modernas
   const heroSlides = [
     {
       id: 1,
-      badge: isEs ? 'Admisiones 2026 Abiertas' : '2026 Admissions Open',
-      emojiTitle: '🎓',
-      title: isEs ? '¡Matrículas disponibles!' : 'Open Enrollments!',
+      badge: isEs ? 'CONVOCATORIA Y ADMISIONES' : 'OFFICIAL ADMISSIONS',
+      title: '¡MATRÍCULAS DISPONIBLES!',
       subtitle: isEs 
         ? 'Infórmate sobre las oportunidades de matrícula disponibles.'
         : 'Learn about all available school enrollment opportunities.',
       ctaText: isEs ? 'Ver matrículas' : 'View enrollments',
+      secondaryText: isEs ? 'Consultar cupo' : 'Check status',
       action: 'matriculas',
-      tag: isEs ? 'Cupos 100% Gratuitos • SIMAT' : '100% Free Tuition',
+      tag: isEs ? 'Cupos Oficiales Gratuitos' : 'Free Official Tuition',
       image: matriculasImg,
-      alt: 'Personajes animados estudiantes celebrando matrícula escolar',
+      alt: 'Ilustración animada moderna de estudiantes celebrando matrícula escolar',
       themeGradient: 'from-emerald-950 via-teal-900 to-slate-950',
-      lightGlow: 'bg-emerald-400/25',
-      accentColor: 'text-emerald-400',
-      buttonBg: 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/30',
+      lightGlow: 'bg-emerald-400/20',
+      buttonBg: 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/25',
       badgeBorder: 'border-emerald-400/40 text-emerald-300 bg-emerald-950/60'
     },
     {
       id: 2,
-      badge: isEs ? 'Sedes Oficiales • Comuna 8' : 'Official Campuses',
-      emojiTitle: '🏫',
-      title: isEs ? '¡Conoce nuevas instituciones!' : 'Discover New Campuses!',
+      badge: isEs ? 'SEDES EDUCATIVAS OFICIALES' : 'OFFICIAL CAMPUSES',
+      title: '¡CONOCE NUEVAS INSTITUCIONES!',
       subtitle: isEs 
         ? 'Explora instituciones y descubre sus opciones de formación.'
         : 'Explore institutions and discover their educational options.',
       ctaText: isEs ? 'Ver instituciones' : 'View institutions',
+      secondaryText: isEs ? 'Ver sedes' : 'View campuses',
       action: 'instituciones',
-      tag: isEs ? 'Sede Principal y Sede Infantil' : 'Main & Elementary Campus',
+      tag: isEs ? 'Sede Principal y Sede Infantil' : 'Main & Elementary Campuses',
       image: institucionesImg,
-      alt: 'Personajes animados conociendo moderno campus escolar',
+      alt: 'Ilustración animada moderna de personajes conociendo campus educativo',
       themeGradient: 'from-blue-950 via-sky-900 to-slate-950',
-      lightGlow: 'bg-sky-400/25',
-      accentColor: 'text-sky-400',
-      buttonBg: 'bg-sky-400 hover:bg-sky-300 text-slate-950 shadow-sky-500/30',
+      lightGlow: 'bg-sky-400/20',
+      buttonBg: 'bg-sky-400 hover:bg-sky-300 text-slate-950 shadow-sky-500/25',
       badgeBorder: 'border-sky-400/40 text-sky-300 bg-sky-950/60'
     },
     {
       id: 3,
-      badge: isEs ? 'Articulación Técnica SENA' : 'SENA Technical Track',
-      emojiTitle: '📚',
-      title: isEs ? '¡Encuentra tu programa!' : 'Find Your Program!',
+      badge: isEs ? 'FORMACIÓN TÉCNICA Y ACADÉMICA' : 'ACADEMIC & TECHNICAL PROGRAMS',
+      title: '¡ENCUENTRA TU PROGRAMA!',
       subtitle: isEs 
         ? 'Descubre programas de formación según tus intereses.'
         : 'Discover training programs according to your interests.',
       ctaText: isEs ? 'Explorar programas' : 'Explore programs',
+      secondaryText: isEs ? 'Ver áreas' : 'View areas',
       action: 'programas',
       tag: isEs ? 'Sistemas, Software y Contabilidad' : 'Software & Business Tracks',
       image: programasImg,
-      alt: 'Personajes animados aprendiendo con laptops y libros',
+      alt: 'Ilustración animada moderna de estudiantes aprendiendo con tecnología',
       themeGradient: 'from-purple-950 via-indigo-900 to-slate-950',
-      lightGlow: 'bg-purple-400/25',
-      accentColor: 'text-purple-300',
-      buttonBg: 'bg-purple-400 hover:bg-purple-300 text-slate-950 shadow-purple-500/30',
+      lightGlow: 'bg-purple-400/20',
+      buttonBg: 'bg-purple-400 hover:bg-purple-300 text-slate-950 shadow-purple-500/25',
       badgeBorder: 'border-purple-400/40 text-purple-300 bg-purple-950/60'
     },
     {
       id: 4,
-      badge: isEs ? 'Tu Futuro Comienza Hoy' : 'Your Future Starts Today',
-      emojiTitle: '🚀',
-      title: isEs ? '¡Construye tu futuro!' : 'Build Your Future!',
+      badge: isEs ? 'NUEVAS OPORTUNIDADES' : 'YOUR FUTURE',
+      title: '¡CONSTRUYE TU FUTURO!',
       subtitle: isEs 
         ? 'Descubre nuevas oportunidades para continuar tus estudios.'
         : 'Discover new opportunities to continue your studies.',
       ctaText: isEs ? 'Comenzar ahora' : 'Get started',
+      secondaryText: isEs ? 'Crear cuenta' : 'Sign up',
       action: 'register',
-      tag: isEs ? 'Registro Rápido y Seguro' : 'Quick & Secure Sign Up',
+      tag: isEs ? 'Acceso 100% Digital' : '100% Digital Access',
       image: futuroImg,
-      alt: 'Personaje animado lanzando cohete hacia sus metas educativas',
+      alt: 'Ilustración animada moderna de estudiante proyectando su futuro',
       themeGradient: 'from-amber-950 via-orange-950 to-slate-950',
-      lightGlow: 'bg-amber-400/25',
-      accentColor: 'text-amber-300',
-      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/30',
+      lightGlow: 'bg-amber-400/20',
+      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/25',
       badgeBorder: 'border-amber-400/40 text-amber-300 bg-amber-950/60'
     }
   ];
 
-  // Cambio automático fluido del carrusel cada 5.5 segundos
+  // Cambio automático suave cada 5.5 segundos
   const SLIDE_DURATION = 5500;
 
   useEffect(() => {
@@ -259,7 +254,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     }
   };
 
-  // 3 Tarjetas visuales solicitadas específicamente por el usuario (sin Cursos)
+  // 3 Tarjetas visuales solicitadas específicamente por el usuario (Instituciones, Programas, Matrículas)
   const opportunityCards = [
     {
       id: 'instituciones',
@@ -279,7 +274,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
           { name: isEs ? 'Sede Infantil La Libertad' : 'La Libertad Elementary', address: 'Carrera 22 # 54-15, Medellín', grades: isEs ? 'Preescolar y Primaria (Transición a 5°)' : 'Preschool & Elementary' }
         ],
         codeDane: '105001002345',
-        alliance: isEs ? 'Articulación oficial con el SENA' : 'Official partnership with SENA'
+        alliance: isEs ? 'Formación Técnica Oficial con Doble Titulación' : 'Official Dual Technical Certification'
       },
       gradient: 'from-emerald-500/10 via-teal-500/5 to-transparent',
       borderColor: 'hover:border-teal-500',
@@ -296,11 +291,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       details: {
         headline: isEs ? 'Oferta de Formación Académica y Técnica' : 'Academic & Technical Programs',
         summary: isEs
-          ? 'Formación integral desde primera infancia hasta bachilleres técnicos con doble titulación SENA sin costo.'
-          : 'Complete academic tracks from preschool to high school with SENA dual certification.',
+          ? 'Formación integral desde primera infancia hasta bachilleres técnicos con doble titulación oficial sin costo.'
+          : 'Complete academic tracks from preschool to high school with official dual technical certification.',
         items: [
-          { name: isEs ? 'Técnico en Sistemas y Desarrollo' : 'IT & Systems Technician', duration: '2 Años (10° y 11°)', badge: 'SENA' },
-          { name: isEs ? 'Técnico en Contabilización y Finanzas' : 'Accounting & Finance', duration: '2 Años (10° y 11°)', badge: 'SENA' },
+          { name: isEs ? 'Técnico en Sistemas y Desarrollo' : 'IT & Systems Technician', duration: '2 Años (10° y 11°)', badge: isEs ? 'Oficial' : 'Official' },
+          { name: isEs ? 'Técnico en Contabilización y Finanzas' : 'Accounting & Finance', duration: '2 Años (10° y 11°)', badge: isEs ? 'Oficial' : 'Official' },
           { name: isEs ? 'Básica Secundaria con Énfasis STEAM' : 'Middle School STEAM', duration: 'Grados 6° a 9°', badge: isEs ? 'Oficial' : 'Official' },
           { name: isEs ? 'Primaria Integral y Grado Transición' : 'Elementary & Transition', duration: 'Grados Preescolar a 5°', badge: isEs ? 'PAE Gratuito' : 'Meals PAE' }
         ]
@@ -340,12 +335,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
       
       {/* =========================================================================
-          1. HEADER INSTITUCIONAL OFICIAL (INTACTO SEGÚN INSTRUCCIÓN ESTRICTA)
+          1. HEADER INSTITUCIONAL OFICIAL (EDUMED DIGITAL CON IDENTIDAD PROPIA)
           ========================================================================= */}
       <header className="w-full border-b border-slate-200/90 dark:border-slate-800/90 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
           
-          {/* Logo & School Identity */}
+          {/* Logo & School Identity Oficial EduMed */}
           <div className="flex items-center gap-3 select-none">
             <div 
               onClick={onReplaySplash}
@@ -361,10 +356,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                 }}
               />
               <span 
-                className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-emerald-600 text-white font-extrabold text-[8px] uppercase tracking-wider border border-white shadow-xs"
-                title="Articulación Técnica SENA"
+                className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-teal-600 text-white font-extrabold text-[8px] uppercase tracking-wider border border-white shadow-xs"
+                title="Plataforma Oficial EduMed Digital"
               >
-                SENA
+                OFICIAL
               </span>
             </div>
 
@@ -472,15 +467,16 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </header>
 
       {/* =========================================================================
-          2. BANNER PRINCIPAL CON CARRUSEL ANIMADO CON ILUSTRACIONES DE PERSONAJES:
-             GRANDE, LLAMATIVO, LUMINOSO, CON PERSONAJES/MUÑEQUITOS EDUCATIVOS Y MOVIMIENTO SUAVE
+          2. BANNER PRINCIPAL AMPLIO (OCUPA CASI TODO EL ANCHO DE PANTALLA)
+             CON ILUSTRACIONES DE PERSONAJES ANIMADOS CON MOVIMIENTO SUTIL Y ELEGANTE
+             TEXTOS DIRECTAMENTE INTEGRADOS SOBRE EL BANNER CON ALTA LEGIBILIDAD
           ========================================================================= */}
       <section 
-        className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[600px] sm:min-h-[660px] lg:min-h-[720px] flex items-center select-none"
+        className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[620px] sm:min-h-[680px] lg:min-h-[720px] xl:min-h-[760px] flex items-center select-none"
         onMouseEnter={() => setIsCarouselPaused(true)}
         onMouseLeave={() => setIsCarouselPaused(false)}
       >
-        {/* Diapositivas con transiciones suaves y personajes animados con movimiento */}
+        {/* Diapositivas con transiciones suaves automáticas */}
         {heroSlides.map((slide, index) => {
           const isActive = index === currentSlide;
           return (
@@ -490,56 +486,55 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                 isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
               }`}
             >
-              {/* Fondo degradado ambiental luminoso por diapositiva */}
+              {/* Fondo degradado amplio y ambiental de alta luminosidad */}
               <div className={`absolute inset-0 bg-gradient-to-br ${slide.themeGradient}`} />
               
-              {/* Resplandor luminoso ambiental dinámico */}
-              <div className={`absolute top-1/4 right-1/4 w-[520px] h-[520px] ${slide.lightGlow} rounded-full blur-3xl pointer-events-none animate-glow-pulse`} />
-              <div className="absolute -bottom-10 -left-10 w-[380px] h-[380px] bg-teal-500/15 rounded-full blur-3xl pointer-events-none" />
+              {/* Resplandor luminoso ambiental dinámico y sutil */}
+              <div className={`absolute top-1/4 right-1/4 w-[600px] h-[600px] ${slide.lightGlow} rounded-full blur-3xl pointer-events-none animate-glow-pulse`} />
+              <div className="absolute -bottom-16 -left-16 w-[450px] h-[450px] bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-              {/* Contenido dentro del banner: texto, botón e ilustración de personajes visible y clara */}
-              <div className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 relative z-20 h-full flex flex-col justify-center">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+              {/* Contenedor amplio que ocupa casi todo el ancho de la pantalla */}
+              <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 relative z-20 h-full flex flex-col justify-center">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
                   
-                  {/* Columna Izquierda: Badge + Título Grande con Emoji + Texto Corto + Botón */}
-                  <div className="lg:col-span-7 text-left space-y-4 sm:space-y-6">
+                  {/* Columna de Texto: TÍTULO GRANDE EN MAYÚSCULAS + TEXTO CORTO + BOTÓN VISIBLE */}
+                  <div className="lg:col-span-7 xl:col-span-7 text-left space-y-4 sm:space-y-6">
                     
-                    {/* Badge temático */}
+                    {/* Badge de categoría de la diapositiva */}
                     <div className="flex flex-wrap items-center gap-2.5">
-                      <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border backdrop-blur-md text-xs font-bold uppercase tracking-wider shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ${slide.badgeBorder}`}>
+                      <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border backdrop-blur-md text-xs font-extrabold uppercase tracking-wider shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ${slide.badgeBorder}`}>
                         <Sparkles className="w-3.5 h-3.5" />
                         <span>{slide.badge}</span>
                       </div>
-                      <span className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 text-slate-300 border border-white/15 hidden sm:inline-block">
+                      <span className="text-xs px-3 py-1 rounded-full bg-white/10 text-slate-200 border border-white/15 hidden sm:inline-block font-semibold">
                         {slide.tag}
                       </span>
                     </div>
 
-                    {/* Título Grande con Emoji */}
-                    <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1] drop-shadow-md animate-in fade-in slide-in-from-bottom-3 duration-700">
-                      <span className="mr-2 sm:mr-3 inline-block animate-subtle-bob">{slide.emojiTitle}</span>
-                      <span>{slide.title}</span>
+                    {/* Título Grande en Mayúsculas, visible y fácil de leer */}
+                    <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white tracking-tight leading-[1.05] drop-shadow-lg animate-in fade-in slide-in-from-bottom-3 duration-700">
+                      {slide.title}
                     </h1>
 
-                    {/* Texto Corto y Atractivo visible dentro del banner */}
-                    <p className="text-base sm:text-xl text-slate-100 font-medium leading-relaxed max-w-xl drop-shadow animate-in fade-in slide-in-from-bottom-4 duration-700">
+                    {/* Texto Corto directamente sobre el banner */}
+                    <p className="text-lg sm:text-2xl text-slate-100 font-medium leading-relaxed max-w-2xl drop-shadow animate-in fade-in slide-in-from-bottom-4 duration-700">
                       “{slide.subtitle}”
                     </p>
 
                     {/* Botones de acción principales visibles dentro del banner */}
-                    <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-3.5 sm:gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                    <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
                       
                       {/* Botón Principal Requerido */}
                       <button
                         type="button"
                         onClick={() => handleSlideAction(slide.action)}
-                        className={`px-7 sm:px-9 py-3.5 sm:py-4 rounded-2xl font-black text-sm sm:text-base shadow-xl transition-all flex items-center gap-2.5 cursor-pointer active:scale-95 group ${slide.buttonBg}`}
+                        className={`px-8 sm:px-10 py-4 rounded-2xl font-black text-base sm:text-lg shadow-xl transition-all flex items-center gap-3 cursor-pointer active:scale-95 group ${slide.buttonBg}`}
                       >
                         <span>{slide.ctaText}</span>
-                        <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1.5 transition-transform" />
+                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
                       </button>
 
-                      {/* Botón Secundario de Acceso */}
+                      {/* Botón Secundario de Exploración */}
                       <button
                         type="button"
                         onClick={() => {
@@ -549,62 +544,51 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                             scrollToOpportunities();
                           }
                         }}
-                        className="px-5 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-sm sm:text-base border border-white/25 backdrop-blur-md transition-all cursor-pointer active:scale-95"
+                        className="px-6 sm:px-8 py-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-base sm:text-lg border border-white/25 backdrop-blur-md transition-all cursor-pointer active:scale-95"
                       >
-                        {isEs ? 'Explorar opciones' : 'Explore options'}
+                        <span>{slide.secondaryText}</span>
                       </button>
 
                     </div>
 
-                    {/* Pequeñas insignias de confianza institucional */}
-                    <div className="pt-2 flex items-center gap-4 text-xs text-slate-300 font-medium">
-                      <span className="flex items-center gap-1.5">
+                    {/* Garantías institucionales de EduMed Digital */}
+                    <div className="pt-3 flex flex-wrap items-center gap-5 text-xs sm:text-sm text-slate-200 font-medium">
+                      <span className="flex items-center gap-2">
                         <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>Educación 100% Oficial</span>
+                        <span>Educación Oficial 100% Gratuita</span>
                       </span>
-                      <span className="hidden sm:flex items-center gap-1.5">
-                        <Star className="w-4 h-4 text-amber-400" />
-                        <span>Articulación SENA</span>
+                      <span className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-teal-300" />
+                        <span>I.E. Félix Henao Botero • Medellín</span>
                       </span>
                     </div>
 
                   </div>
 
-                  {/* Columna Derecha: Ilustración llamativa de muñequitos / personajes educativos con movimiento suave */}
-                  <div className="lg:col-span-5 flex justify-center items-center relative">
+                  {/* Columna Derecha: Ilustración de Personajes Animados con movimiento muy sutil y elegante */}
+                  <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center relative">
                     
-                    {/* Elementos flotantes decorativos animados alrededor de los personajes */}
-                    <div className="absolute -top-4 -right-2 z-20 p-3 rounded-2xl bg-white/15 backdrop-blur-md border border-white/25 shadow-lg animate-subtle-bob hidden sm:flex items-center gap-2">
-                      <span className="text-xl">✨</span>
-                      <span className="text-xs font-bold text-white">Edumed Digital</span>
-                    </div>
-
-                    <div className="absolute -bottom-3 -left-2 z-20 p-2.5 rounded-2xl bg-slate-900/80 backdrop-blur-md border border-white/20 shadow-lg animate-gentle-float hidden sm:flex items-center gap-2">
-                      <span className="text-lg">🎉</span>
-                      <span className="text-xs font-bold text-teal-300">Medellín • Comuna 8</span>
-                    </div>
-
-                    {/* Tarjeta de personajes con animación flotante suave y borde luminoso */}
-                    <div className="relative w-full max-w-md sm:max-w-lg aspect-[16/10] sm:aspect-[16/11] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl bg-slate-900/50 backdrop-blur-sm group animate-gentle-float">
+                    {/* Tarjeta de personajes con animación flotante muy sutil y borde luminoso */}
+                    <div className="relative w-full max-w-lg xl:max-w-xl aspect-[16/11] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl bg-slate-900/40 backdrop-blur-sm group animate-subtle-float">
                       
-                      {/* Imagen de muñequitos/personajes educativos 3D */}
+                      {/* Imagen de personajes animados modernos, luminosos y coloridos */}
                       <img 
                         src={slide.image} 
                         alt={slide.alt} 
-                        className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
+                        className="w-full h-full object-cover object-center transform transition-transform duration-1000 group-hover:scale-[1.02]"
                       />
 
                       {/* Brillo reflectante suave sobre el contenedor */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-white/10 pointer-events-none" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-white/10 pointer-events-none" />
 
-                      {/* Etiqueta flotante inferior con el emoji */}
-                      <div className="absolute bottom-3 left-3 right-3 p-3 rounded-2xl bg-slate-950/80 backdrop-blur-md border border-white/15 flex items-center justify-between">
+                      {/* Etiqueta flotante inferior elegante */}
+                      <div className="absolute bottom-3 left-3 right-3 p-3 rounded-2xl bg-slate-950/85 backdrop-blur-md border border-white/15 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <span className="text-2xl">{slide.emojiTitle}</span>
-                          <span className="text-xs font-bold text-white">{slide.title}</span>
+                          <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping" />
+                          <span className="text-xs font-bold text-white tracking-wide">{slide.title}</span>
                         </div>
-                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-white/20 text-white">
-                          Oficial
+                        <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-md bg-white/20 text-white uppercase tracking-wider">
+                          EduMed Digital
                         </span>
                       </div>
 
@@ -623,7 +607,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         <button
           type="button"
           onClick={handlePrevSlide}
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
+          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
           aria-label={isEs ? 'Diapositiva anterior' : 'Previous slide'}
         >
           <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -632,14 +616,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         <button
           type="button"
           onClick={handleNextSlide}
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3.5 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
+          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
           aria-label={isEs ? 'Siguiente diapositiva' : 'Next slide'}
         >
           <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
         </button>
 
         {/* Indicadores inferiores con barra de progreso interactiva */}
-        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-3 bg-slate-950/80 px-4 sm:px-5 py-2 sm:py-2.5 rounded-full border border-white/15 backdrop-blur-md shadow-xl">
+        <div className="absolute bottom-5 sm:bottom-7 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 sm:gap-3 bg-slate-950/85 px-5 sm:px-6 py-2.5 rounded-full border border-white/15 backdrop-blur-md shadow-xl">
           {heroSlides.map((slide, idx) => {
             const isActive = idx === currentSlide;
             return (
@@ -665,7 +649,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             );
           })}
 
-          <span className="w-px h-3.5 bg-white/20 ml-1 mr-0.5" />
+          <span className="w-px h-4 bg-white/20 ml-1.5 mr-1" />
 
           {/* Botón Pausa / Reproducir */}
           <button
@@ -674,7 +658,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             className="p-1 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
             title={isCarouselPaused ? (isEs ? 'Reanudar carrusel' : 'Play') : (isEs ? 'Pausar carrusel' : 'Pause')}
           >
-            {isCarouselPaused ? <Play className="w-3.5 h-3.5 text-amber-300" /> : <Pause className="w-3.5 h-3.5" />}
+            {isCarouselPaused ? <Play className="w-4 h-4 text-amber-300" /> : <Pause className="w-4 h-4" />}
           </button>
         </div>
 
@@ -689,7 +673,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         ref={opportunitiesRef} 
         className="py-16 sm:py-24 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Encabezado limpio y moderno */}
           <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-18">
@@ -701,8 +685,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             </h2>
             <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
               {isEs
-                ? 'Conoce nuestras instituciones oficiales, explora programas con articulación técnica SENA y gestiona tus matrículas de manera rápida y segura.'
-                : 'Discover our official campuses, explore technical programs with SENA dual certification, and manage your school admissions.'}
+                ? 'Conoce nuestras instituciones oficiales, explora programas técnicos con doble titulación y gestiona tus matrículas de manera rápida y segura.'
+                : 'Discover our official campuses, explore technical programs with dual certification, and manage your school admissions.'}
             </p>
           </div>
 
@@ -767,7 +751,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         ref={authSectionRef} 
         className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 transition-colors"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
             
@@ -1106,10 +1090,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       )}
 
       {/* =========================================================================
-          8. PIE DE PÁGINA INSTITUCIONAL LIMPIO Y OFICIAL (NO MODIFICAR)
+          8. PIE DE PÁGINA INSTITUCIONAL LIMPIO Y OFICIAL (EDUMED DIGITAL PROPIO)
           ========================================================================= */}
       <footer id="contacto" className="w-full bg-[#001e30] text-slate-300 border-t border-slate-800 pt-12 pb-8 text-xs text-left">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-10 border-b border-slate-800">
             
@@ -1129,7 +1113,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     I.E. Félix Henao Botero
                   </span>
                   <span className="text-[10px] text-teal-400 font-medium">
-                    EduMed Digital • Articulación SENA
+                    EduMed Digital • Plataforma Educativa Oficial
                   </span>
                 </div>
               </div>
@@ -1196,14 +1180,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                   </a>
                 </li>
                 <li>
-                  <a href="https://betowa.sena.edu.co" target="_blank" rel="noreferrer" className="text-teal-400 hover:underline flex items-center gap-1">
-                    <span>Portal Oficial SENA</span>
+                  <a href="https://www.mineducacion.gov.co" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white flex items-center gap-1">
+                    <span>Ministerio de Educación Nacional (MEN)</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </li>
                 <li>
-                  <a href="https://www.mineducacion.gov.co" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white flex items-center gap-1">
-                    <span>Ministerio de Educación (MEN)</span>
+                  <a href="https://www.simat.gov.co" target="_blank" rel="noreferrer" className="text-slate-400 hover:text-white flex items-center gap-1">
+                    <span>Portal Oficial SIMAT</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </li>

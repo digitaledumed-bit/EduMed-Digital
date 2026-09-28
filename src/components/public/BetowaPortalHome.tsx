@@ -81,8 +81,8 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
       id: 1,
       badge: language === 'es' ? 'CONVOCATORIA DE MATRÍCULAS 2026' : 'ENROLLMENT 2026 NOW OPEN',
       title: language === 'es' 
-        ? 'Educación Pública Gratuita con Articulación Técnica SENA'
-        : 'Free Public Education with SENA Technical Articulation',
+        ? 'Educación Pública Gratuita con Formación Técnica Oficial'
+        : 'Free Public Education with Technical Articulation',
       subtitle: language === 'es'
         ? 'Asegura tu cupo en la I.E. Félix Henao Botero de Medellín. Formación integral desde Transición hasta 11° con doble titulación técnica para transformar tu futuro.'
         : 'Secure your place at I.E. Félix Henao Botero in Medellín. Comprehensive education from Preschool to 11th grade with technical dual certification.',
@@ -93,17 +93,17 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
     },
     {
       id: 2,
-      badge: language === 'es' ? 'DOBLE TITULACIÓN SENA (GRADOS 10° Y 11°)' : 'DUAL CERTIFICATION SENA (GRADES 10-11)',
+      badge: language === 'es' ? 'DOBLE TITULACIÓN TÉCNICA (GRADOS 10° Y 11°)' : 'DUAL TECHNICAL CERTIFICATION (GRADES 10-11)',
       title: language === 'es'
         ? 'Técnico Laboral en Sistemas y Desarrollo de Software'
         : 'Labor Technician in Systems & Software Development',
       subtitle: language === 'es'
-        ? 'Gradúate como Bachiller Académico y Técnico Laboral SENA. Conexión directa con la industria tecnológica y laboral en Colombia sin costos adicionales.'
-        : 'Graduate with high school diploma and official SENA labor technician certification with real job opportunities.',
+        ? 'Gradúate como Bachiller Académico y Técnico Laboral Oficial. Conexión directa con la industria tecnológica y laboral en Colombia sin costos adicionales.'
+        : 'Graduate with high school diploma and official labor technician certification with real job opportunities.',
       ctaPrimary: language === 'es' ? 'Inscribirme a Media Técnica' : 'Register for Technical Track',
       ctaSecondary: language === 'es' ? 'Ver Pensum y Requisitos' : 'View Syllabus & Requirements',
       bgGradient: 'from-emerald-950 via-slate-900 to-teal-900',
-      tag: 'Convenio Oficial SENA • 35 Cupos'
+      tag: 'Convenio Oficial • 35 Cupos'
     },
     {
       id: 3,
@@ -125,10 +125,10 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
   const programs = [
     {
       id: 'tec-sistemas',
-      code: 'SENA-732101',
+      code: 'EDUMED-732101',
       title: language === 'es' ? 'Técnico en Sistemas y Programación de Software' : 'Technician in Systems & Software Development',
       category: 'media-tecnica',
-      level: language === 'es' ? 'Educación Media Técnica (Convenio SENA)' : 'Technical High School (SENA)',
+      level: language === 'es' ? 'Educación Media Técnica Oficial' : 'Technical High School',
       modality: language === 'es' ? 'Presencial' : 'On-campus',
       shift: language === 'es' ? 'Jornada Tarde (12:30 pm - 6:30 pm)' : 'Afternoon Shift',
       duration: language === 'es' ? '2 Años (Grados 10° y 11°)' : '2 Years (Grades 10 & 11)',
@@ -136,7 +136,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
       campusName: language === 'es' ? 'Sede Principal (Boston - Enciso)' : 'Main Campus',
       spots: 35,
       spotsTotal: 40,
-      badge: 'Articulación SENA',
+      badge: 'Media Técnica Oficial',
       badgeColor: 'emerald',
       description: language === 'es'
         ? 'Formación en mantenimiento de equipos de cómputo, redes de datos cableadas e inalámbricas, diseño web moderno y lógica de programación en Python y JavaScript.'
@@ -148,10 +148,10 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
     },
     {
       id: 'tec-contabilidad',
-      code: 'SENA-123112',
+      code: 'EDUMED-123112',
       title: language === 'es' ? 'Técnico en Contabilización de Operaciones Comerciales y Financieras' : 'Technician in Commercial & Financial Operations',
       category: 'media-tecnica',
-      level: language === 'es' ? 'Educación Media Técnica (Convenio SENA)' : 'Technical High School (SENA)',
+      level: language === 'es' ? 'Educación Media Técnica Oficial' : 'Technical High School',
       modality: language === 'es' ? 'Presencial' : 'On-campus',
       shift: language === 'es' ? 'Jornada Mañana (6:30 am - 12:30 pm)' : 'Morning Shift',
       duration: language === 'es' ? '2 Años (Grados 10° y 11°)' : '2 Years (Grades 10 & 11)',
@@ -159,7 +159,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
       campusName: language === 'es' ? 'Sede Principal' : 'Main Campus',
       spots: 28,
       spotsTotal: 35,
-      badge: 'Articulación SENA',
+      badge: 'Media Técnica Oficial',
       badgeColor: 'emerald',
       description: language === 'es'
         ? 'Desarrollo de competencias en registro de libros contables, liquidación de nómina electrónica, facturación e inventarios comerciales con software Siigo y herramientas ofimáticas avanzadas.'
@@ -241,7 +241,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
     {
       id: 'semillero-ingles',
       code: 'IEFB-EXT-04',
-      title: language === 'es' ? 'Semillero de Bilingüismo e Inglés Comunicativo (SENA - EduMed)' : 'Bilingualism & Communicative English Hub',
+      title: language === 'es' ? 'Semillero de Bilingüismo e Inglés Comunicativo (EduMed Digital)' : 'Bilingualism & Communicative English Hub',
       category: 'complementaria',
       level: language === 'es' ? 'Formación Complementaria Extracurricular' : 'Extracurricular Complementary',
       modality: language === 'es' ? 'Mixta (Presencial + Aula Virtual)' : 'Blended (On-campus + LMS)',
@@ -467,12 +467,11 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                   (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
                 }}
               />
-              {/* SENA / Technical alliance badge */}
               <span 
-                className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-emerald-600 text-white font-extrabold text-[8px] uppercase tracking-wider border border-white shadow-xs"
-                title="Articulación Técnica con el SENA"
+                className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-teal-600 text-white font-extrabold text-[8px] uppercase tracking-wider border border-white shadow-xs"
+                title="Plataforma Oficial EduMed Digital"
               >
-                SENA
+                OFICIAL
               </span>
             </div>
 
@@ -602,7 +601,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
       </header>
 
       {/* =========================================================================
-          3. HERO SECTION CON BANNER DINÁMICO (BETOWA SENA HERO)
+          3. HERO SECTION CON BANNER DINÁMICO (EDUMED HERO)
           ========================================================================= */}
       <section className="relative w-full overflow-hidden bg-slate-900 text-white">
         
@@ -729,8 +728,8 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                   </h2>
                   <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400">
                     {language === 'es' 
-                      ? 'Explora las opciones de matrícula oficial gratuita de la Institución Educativa Félix Henao Botero y articulación SENA'
-                      : 'Explore tuition-free enrollment at I.E. Félix Henao Botero & SENA technical tracks'}
+                      ? 'Explora las opciones de matrícula oficial gratuita de la Institución Educativa Félix Henao Botero'
+                      : 'Explore tuition-free enrollment at I.E. Félix Henao Botero'}
                   </p>
                 </div>
               </div>
@@ -757,7 +756,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder={language === 'es' ? 'Ej: Grado 10°, Sistemas SENA, Robótica, Primaria...' : 'E.g., Grade 10, Systems SENA, Robotics...'}
+                    placeholder={language === 'es' ? 'Ej: Grado 10°, Sistemas, Robótica, Primaria...' : 'E.g., Grade 10, Systems, Robotics...'}
                     className="w-full pl-9 pr-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   {searchQuery && (
@@ -784,7 +783,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                   className="w-full px-3 py-2.5 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
                 >
                   <option value="all">{language === 'es' ? 'Todos los niveles' : 'All Levels'}</option>
-                  <option value="media-tecnica">{language === 'es' ? 'Educación Media Técnica SENA' : 'Technical High School (SENA)'}</option>
+                  <option value="media-tecnica">{language === 'es' ? 'Educación Media Técnica Oficial' : 'Technical High School'}</option>
                   <option value="secundaria">{language === 'es' ? 'Básica Secundaria (6° a 9°)' : 'Middle School (6th - 9th)'}</option>
                   <option value="primaria">{language === 'es' ? 'Básica Primaria (1° a 5°)' : 'Elementary (1st - 5th)'}</option>
                   <option value="preescolar">{language === 'es' ? 'Nivel Inicial: Preescolar' : 'Preschool / Transition'}</option>
@@ -831,7 +830,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                 {language === 'es' ? 'Búsquedas Frecuentes:' : 'Popular Searches:'}
               </span>
               {[
-                { label: 'Técnico en Sistemas SENA', q: 'Sistemas', tab: 'media-tecnica' },
+                { label: 'Técnico en Sistemas', q: 'Sistemas', tab: 'media-tecnica' },
                 { label: 'Grado 10° Media Técnica', q: '10°', tab: 'media-tecnica' },
                 { label: 'Transición / Preescolar', q: 'Preescolar', tab: 'preescolar' },
                 { label: 'Robótica STEAM', q: 'Robótica', tab: 'secundaria' },
@@ -1053,7 +1052,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
       </section>
 
       {/* =========================================================================
-          6. NUESTRA OFERTA EDUCATIVA (PROGRAMAS ESTILO BETOWA SENA)
+          6. NUESTRA OFERTA EDUCATIVA (PROGRAMAS EDU MED DIGITAL)
           ========================================================================= */}
       <section id="oferta-educativa" className="py-12 sm:py-16 bg-white dark:bg-slate-900 border-y border-slate-200 dark:border-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1069,8 +1068,8 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
                 {language === 'es'
-                  ? 'Formación pública 100% gratuita desde Preescolar hasta Media Técnica con doble titulación en alianza con el SENA.'
-                  : 'Tuition-free public education from preschool to technical high school in partnership with SENA.'}
+                  ? 'Formación pública 100% gratuita desde Preescolar hasta Media Técnica con doble titulación oficial.'
+                  : 'Tuition-free public education from preschool to technical high school.'}
               </p>
             </div>
 
@@ -1084,7 +1083,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
           <div className="flex items-center gap-1.5 overflow-x-auto pb-3 mb-6 scrollbar-none">
             {[
               { id: 'all', label: language === 'es' ? 'Todos' : 'All', count: programs.length },
-              { id: 'media-tecnica', label: language === 'es' ? 'Media Técnica SENA' : 'Technical SENA', count: 2 },
+              { id: 'media-tecnica', label: language === 'es' ? 'Media Técnica Oficial' : 'Technical Programs', count: 2 },
               { id: 'secundaria', label: language === 'es' ? 'Secundaria (6° a 9°)' : 'Middle School', count: 1 },
               { id: 'primaria', label: language === 'es' ? 'Primaria (1° a 5°)' : 'Elementary', count: 1 },
               { id: 'preescolar', label: language === 'es' ? 'Preescolar / Transición' : 'Preschool', count: 1 },
@@ -1335,7 +1334,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
       </section>
 
       {/* =========================================================================
-          8. LA INSTITUCIÓN EN NÚMEROS (EL SENA / EDUMED EN CIFRAS)
+          8. LA INSTITUCIÓN EN NÚMEROS (EDUMED EN CIFRAS)
           ========================================================================= */}
       <section className="py-12 sm:py-14 bg-[#002f49] text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1380,7 +1379,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                 4
               </span>
               <span className="text-xs sm:text-sm font-bold text-slate-200 mt-1 block">
-                {language === 'es' ? 'Programas Técnicos SENA' : 'SENA Technical Programs'}
+                {language === 'es' ? 'Programas Técnicos Oficiales' : 'Official Technical Programs'}
               </span>
               <span className="text-[11px] text-slate-400 mt-0.5 block">
                 {language === 'es' ? 'Sistemas, Software y Negocios' : 'IT, Software & Business'}
@@ -1435,7 +1434,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
                 {language === 'es'
-                  ? 'Revisa los cupos disponibles por grado escolar y programas de articulación técnica SENA para grados 10° y 11°.'
+                  ? 'Revisa los cupos disponibles por grado escolar y programas de articulación técnica oficial para grados 10° y 11°.'
                   : 'Check available vacancies per grade and technical tracks.'}
               </p>
             </div>
@@ -1705,7 +1704,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
       )}
 
       {/* =========================================================================
-          12. PIE DE PÁGINA INSTITUCIONAL (BETOWA / SENA / MINEDUCACIÓN)
+          12. PIE DE PÁGINA INSTITUCIONAL (EDUMED / MINEDUCACIÓN)
           ========================================================================= */}
       <footer className="w-full bg-[#001e30] text-slate-300 border-t border-slate-800 pt-12 pb-8 text-xs">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1728,7 +1727,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                     I.E. Félix Henao Botero
                   </span>
                   <span className="text-[10px] text-teal-400 font-medium">
-                    EduMed Digital • Articulación SENA
+                    EduMed Digital • Plataforma Oficial
                   </span>
                 </div>
               </div>
@@ -1789,8 +1788,8 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
               </h4>
               <ul className="space-y-1.5 text-[11px]">
                 <li>
-                  <a href="https://betowa.sena.edu.co" target="_blank" rel="noreferrer" className="text-teal-400 hover:underline flex items-center gap-1">
-                    <span>Portal Betowa SENA Oficial</span>
+                  <a href="https://www.medellin.gov.co/educacion" target="_blank" rel="noreferrer" className="text-teal-400 hover:underline flex items-center gap-1">
+                    <span>Secretaría de Educación Medellín</span>
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </li>

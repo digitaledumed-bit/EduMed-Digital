@@ -52,7 +52,7 @@ export const BeneficiosView: React.FC = () => {
     },
     {
       icon: BookOpen,
-      title: language === 'es' ? 'Articulación Técnica con el SENA' : 'SENA Technical Certification',
+      title: language === 'es' ? 'Formación Técnica con Doble Titulación' : 'Dual Technical Certification',
       desc: language === 'es' 
         ? 'Doble titulación para estudiantes de 10° y 11° en áreas tecnológicas y comerciales con alta demanda laboral.' 
         : 'Dual-degree graduation for 10th and 11th graders in technological and commercial vocational fields.',

@@ -18,44 +18,31 @@ input, select, textarea, button {
   font-family: inherit;
 }
 
-@keyframes gentle-float {
-  0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  50% {
-    transform: translateY(-8px) rotate(0.8deg);
-  }
-}
-
-@keyframes subtle-bob {
+@keyframes subtle-float {
   0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-6px);
+    transform: translateY(-4px);
   }
 }
 
 @keyframes gentle-pulse-glow {
   0%, 100% {
-    opacity: 0.5;
+    opacity: 0.4;
     transform: scale(1);
   }
   50% {
-    opacity: 0.85;
-    transform: scale(1.05);
+    opacity: 0.7;
+    transform: scale(1.03);
   }
 }
 
-.animate-gentle-float {
-  animation: gentle-float 4.5s ease-in-out infinite;
-}
-
-.animate-subtle-bob {
-  animation: subtle-bob 3s ease-in-out infinite;
+.animate-subtle-float {
+  animation: subtle-float 6s ease-in-out infinite;
 }
 
 .animate-glow-pulse {
-  animation: gentle-pulse-glow 5s ease-in-out infinite;
+  animation: gentle-pulse-glow 6s ease-in-out infinite;
 }
 
