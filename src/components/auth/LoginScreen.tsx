@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useApp } from '../../context/AppContext';
 import { AuthCard } from '../public/AuthCard';
-import slideMatriculasImg from '../../assets/images/slide_matriculas_1790639400660.jpg';
-import slideInstitucionesImg from '../../assets/images/slide_instituciones_1790639410030.jpg';
-import slideProgramasImg from '../../assets/images/slide_programas_1790639419682.jpg';
-import slideFuturoImg from '../../assets/images/slide_futuro_1790639428330.jpg';
-import cardEdificioImg from '../../assets/images/card_edificio_1790639438814.jpg';
-import cardBirreteImg from '../../assets/images/card_birrete_1790639448073.jpg';
-import cardCarpetaImg from '../../assets/images/card_carpeta_1790639457052.jpg';
+import slideMatriculasImg from '../../assets/images/slide_matriculas_v2_1790639962382.jpg';
+import slideInstitucionesImg from '../../assets/images/slide_instituciones_v2_1790639972681.jpg';
+import slideProgramasImg from '../../assets/images/slide_programas_v2_1790639983509.jpg';
+import slideFuturoImg from '../../assets/images/slide_futuro_v2_1790639993315.jpg';
+import cardEdificioImg from '../../assets/images/card_edificio_v2_1790640004084.jpg';
+import cardBirreteImg from '../../assets/images/card_birrete_v2_1790640013891.jpg';
+import cardCarpetaImg from '../../assets/images/card_carpeta_v2_1790640025415.jpg';
 import { 
   Sun, 
   Moon, 
@@ -36,7 +36,10 @@ import {
   ShieldCheck,
   Award,
   Layers,
-  Check
+  Check,
+  Compass,
+  Laptop,
+  HeartHandshake
 } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -76,79 +79,107 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const authSectionRef = useRef<HTMLDivElement>(null);
   const opportunitiesRef = useRef<HTMLDivElement>(null);
 
-  // 4 Diapositivas exactas con ilustraciones digitales modernas, elegantes y luminosas (punto intermedio)
+  // 4 Diapositivas exactas con composición completa: Ilustración digital moderna + Título grande + Texto corto + Botón
   const heroSlides = [
     {
       id: 1,
-      badge: isEs ? 'ADMISIONES OFICIALES' : 'OFFICIAL ADMISSIONS',
+      badge: isEs ? 'ADMISIONES 2026' : '2026 ADMISSIONS',
       title: '¡Matrículas disponibles!',
       subtitle: isEs 
         ? 'Infórmate sobre las oportunidades de matrícula disponibles.'
-        : 'Learn about all available school enrollment opportunities.',
+        : 'Learn about all enrollment opportunities available.',
       ctaText: isEs ? 'Ver matrículas' : 'View enrollments',
       secondaryText: isEs ? 'Consultar cupo' : 'Check status',
       action: 'matriculas',
-      tag: isEs ? 'Cupos Gratuitos • SIMAT' : 'Free Tuition • SIMAT',
+      keyBenefits: [
+        isEs ? '100% Gratuito y Oficial' : '100% Tuition-Free',
+        isEs ? 'Conexión Directa SIMAT' : 'Direct SIMAT Records',
+        isEs ? 'Carnet Digital con QR' : 'Digital QR Student ID'
+      ],
       image: slideMatriculasImg,
-      alt: 'Ilustración digital moderna y elegante de estudiantes celebrando matrícula escolar',
-      themeGradient: 'from-emerald-950 via-teal-900 to-slate-950',
-      lightGlow: 'bg-emerald-400/20',
-      buttonBg: 'bg-emerald-400 hover:bg-emerald-300 text-slate-950 shadow-emerald-500/25',
-      badgeBorder: 'border-emerald-400/40 text-emerald-300 bg-emerald-950/60'
+      alt: 'Ilustración digital moderna de estudiantes celebrando matrícula escolar',
+      palette: {
+        glow: 'from-emerald-500/20 via-teal-500/10 to-transparent',
+        badge: 'bg-emerald-50 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700',
+        cta: 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/25',
+        cardBorder: 'border-emerald-200 dark:border-emerald-800/80',
+        pill: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800'
+      }
     },
     {
       id: 2,
-      badge: isEs ? 'SEDES EDUCATIVAS' : 'EDUCATIONAL CAMPUSES',
+      badge: isEs ? 'SEDES EDUCATIVAS' : 'OFFICIAL CAMPUSES',
       title: '¡Conoce nuevas instituciones!',
       subtitle: isEs 
         ? 'Explora instituciones y sus opciones de formación.'
-        : 'Explore institutions and discover their training options.',
+        : 'Explore institutions and discover their academic tracks.',
       ctaText: isEs ? 'Ver instituciones' : 'View institutions',
-      secondaryText: isEs ? 'Ver sedes' : 'View campuses',
+      secondaryText: isEs ? 'Nuestras sedes' : 'Our campuses',
       action: 'instituciones',
-      tag: isEs ? 'Sede Principal y Sede Infantil' : 'Main & Elementary Campuses',
+      keyBenefits: [
+        isEs ? 'Sede Principal (Enciso - Boston)' : 'Main Campus',
+        isEs ? 'Sede Infantil (La Libertad)' : 'Elementary Campus',
+        isEs ? 'Ambientes de Estudio Flexibles' : 'Modern Learning Spaces'
+      ],
       image: slideInstitucionesImg,
-      alt: 'Ilustración digital moderna y elegante de campus arquitectónico educativo',
-      themeGradient: 'from-blue-950 via-sky-900 to-slate-950',
-      lightGlow: 'bg-sky-400/20',
-      buttonBg: 'bg-sky-400 hover:bg-sky-300 text-slate-950 shadow-sky-500/25',
-      badgeBorder: 'border-sky-400/40 text-sky-300 bg-sky-950/60'
+      alt: 'Ilustración digital moderna de campus arquitectónico educativo',
+      palette: {
+        glow: 'from-blue-500/20 via-sky-500/10 to-transparent',
+        badge: 'bg-blue-50 text-blue-800 dark:bg-blue-950/80 dark:text-blue-300 border-blue-300 dark:border-blue-700',
+        cta: 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-600/25',
+        cardBorder: 'border-blue-200 dark:border-blue-800/80',
+        pill: 'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800'
+      }
     },
     {
       id: 3,
-      badge: isEs ? 'FORMACIÓN TÉCNICA OFICIAL' : 'OFFICIAL TECHNICAL TRACKS',
+      badge: isEs ? 'FORMACIÓN TÉCNICA OFICIAL' : 'TECHNICAL TRACKS',
       title: '¡Encuentra tu programa!',
       subtitle: isEs 
         ? 'Descubre programas según tus intereses.'
-        : 'Discover programs aligned with your educational interests.',
+        : 'Discover educational programs tailored to your interests.',
       ctaText: isEs ? 'Explorar programas' : 'Explore programs',
-      secondaryText: isEs ? 'Ver programas' : 'View programs',
+      secondaryText: isEs ? 'Ver grados' : 'View grades',
       action: 'programas',
-      tag: isEs ? 'Sistemas, Software y Contabilidad' : 'Software & Business Tracks',
+      keyBenefits: [
+        isEs ? 'Técnico en Sistemas y Software' : 'IT & Systems Track',
+        isEs ? 'Técnico en Contabilización' : 'Accounting & Finance Track',
+        isEs ? 'Doble Titulación en Grado 11°' : 'Dual Technical Degree'
+      ],
       image: slideProgramasImg,
-      alt: 'Ilustración digital moderna y elegante de estudiantes explorando programas y tecnología',
-      themeGradient: 'from-purple-950 via-indigo-900 to-slate-950',
-      lightGlow: 'bg-purple-400/20',
-      buttonBg: 'bg-purple-400 hover:bg-purple-300 text-slate-950 shadow-purple-500/25',
-      badgeBorder: 'border-purple-400/40 text-purple-300 bg-purple-950/60'
+      alt: 'Ilustración digital moderna de estudiantes explorando programas y tecnología',
+      palette: {
+        glow: 'from-purple-500/20 via-indigo-500/10 to-transparent',
+        badge: 'bg-purple-50 text-purple-800 dark:bg-purple-950/80 dark:text-purple-300 border-purple-300 dark:border-purple-700',
+        cta: 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-600/25',
+        cardBorder: 'border-purple-200 dark:border-purple-800/80',
+        pill: 'text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 border-purple-200 dark:border-purple-800'
+      }
     },
     {
       id: 4,
-      badge: isEs ? 'PROYECCIÓN Y FUTURO' : 'FUTURE & GROWTH',
+      badge: isEs ? 'TU FUTURO HOY' : 'YOUR FUTURE',
       title: '¡Construye tu futuro!',
       subtitle: isEs 
         ? 'Descubre nuevas oportunidades para estudiar.'
-        : 'Discover new opportunities to continue your studies.',
+        : 'Discover new opportunities to study and advance.',
       ctaText: isEs ? 'Comenzar ahora' : 'Get started',
       secondaryText: isEs ? 'Crear cuenta' : 'Sign up',
       action: 'register',
-      tag: isEs ? 'Plataforma EduMed Digital' : 'EduMed Digital Platform',
+      keyBenefits: [
+        isEs ? 'Inscripción Virtual Inmediata' : 'Instant Online Sign-Up',
+        isEs ? 'Sin Costos ni Intermediarios' : 'No Intermediaries',
+        isEs ? 'Acompañamiento Escolar Total' : 'Comprehensive Guidance'
+      ],
       image: slideFuturoImg,
-      alt: 'Ilustración digital moderna y elegante de estudiante proyectando su futuro hacia el éxito',
-      themeGradient: 'from-amber-950 via-orange-950 to-slate-950',
-      lightGlow: 'bg-amber-400/20',
-      buttonBg: 'bg-amber-400 hover:bg-amber-300 text-slate-950 shadow-amber-500/25',
-      badgeBorder: 'border-amber-400/40 text-amber-300 bg-amber-950/60'
+      alt: 'Ilustración digital moderna de estudiante proyectando su futuro hacia el éxito',
+      palette: {
+        glow: 'from-amber-500/20 via-orange-500/10 to-transparent',
+        badge: 'bg-amber-50 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border-amber-300 dark:border-amber-700',
+        cta: 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shadow-amber-500/25',
+        cardBorder: 'border-amber-200 dark:border-amber-800/80',
+        pill: 'text-amber-800 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/60 border-amber-200 dark:border-amber-800'
+      }
     }
   ];
 
@@ -413,7 +444,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               href="#beneficios-clave"
               className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors"
             >
-              {isEs ? 'Cómo Funciona' : 'How it works'}
+              {isEs ? 'Beneficios' : 'Benefits'}
             </a>
             <a 
               href="#portales"
@@ -486,129 +517,129 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </header>
 
       {/* =========================================================================
-          2. BANNER PRINCIPAL GRANDE Y ANCHO:
-             ILUSTRACIONES DIGITALES MODERNAS, LUMINOSAS Y ELEGANTES
-             (PUNTO INTERMEDIO: ATRACTIVO PARA JÓVENES Y ADULTOS, NO FOTOS, NO INFANTIL)
+          2. CARRUSEL PRINCIPAL: COMPOSICIÓN COMPLETA Y EQUILIBRADA
+             - ILUSTRACIÓN DIGITAL MODERNA (PUNTO MEDIO: NO FOTO, NO CARICATURA INFANTIL)
+             - TÍTULO GRANDE CON TIPOGRAFÍA ELEGANTE
+             - TEXTO CORTO CON ESPACIO SUFICIENTE
+             - BOTÓN VISIBLE Y DESTACADO
+             - DISEÑO AMPLIO, LIMPIO, ELEGANTE Y LUMINOSO
           ========================================================================= */}
       <section 
-        className="relative w-full overflow-hidden bg-slate-950 text-white min-h-[620px] sm:min-h-[680px] lg:min-h-[720px] xl:min-h-[760px] flex items-center select-none"
+        className="relative w-full overflow-hidden bg-gradient-to-b from-slate-100 via-slate-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 border-b border-slate-200/80 dark:border-slate-800/80 select-none py-6 sm:py-8 lg:py-12"
         onMouseEnter={() => setIsCarouselPaused(true)}
         onMouseLeave={() => setIsCarouselPaused(false)}
       >
-        {/* Diapositivas con transiciones suaves automáticas */}
-        {heroSlides.map((slide, index) => {
-          const isActive = index === currentSlide;
-          return (
-            <div
-              key={slide.id}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                isActive ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
-              }`}
-            >
-              {/* Fondo degradado amplio y ambiental de alta luminosidad */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${slide.themeGradient}`} />
-              
-              {/* Resplandor luminoso ambiental dinámico y sutil */}
-              <div className={`absolute top-1/4 right-1/4 w-[600px] h-[600px] ${slide.lightGlow} rounded-full blur-3xl pointer-events-none animate-glow-pulse`} />
-              <div className="absolute -bottom-16 -left-16 w-[450px] h-[450px] bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12">
+          
+          {/* Card principal del carrusel con marco luminoso y bordes redondeados modernos */}
+          <div className="relative min-h-[640px] sm:min-h-[600px] md:min-h-[560px] lg:min-h-[580px] xl:min-h-[600px] rounded-3xl bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-xl overflow-hidden flex items-center">
+            
+            {/* Diapositivas con transición suave de opacidad */}
+            {heroSlides.map((slide, index) => {
+              const isActive = index === currentSlide;
+              return (
+                <div
+                  key={slide.id}
+                  className={`absolute inset-0 p-5 sm:p-8 md:p-10 lg:p-12 xl:p-16 flex items-center transition-all duration-700 ease-in-out ${
+                    isActive ? 'opacity-100 scale-100 z-10 pointer-events-auto' : 'opacity-0 scale-98 z-0 pointer-events-none'
+                  }`}
+                >
+                  {/* Resplandor ambiental de color temático */}
+                  <div className={`absolute -right-10 -bottom-10 w-[500px] h-[500px] bg-gradient-to-br ${slide.palette.glow} rounded-full blur-3xl pointer-events-none`} />
+                  <div className="absolute left-10 top-10 w-72 h-72 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
 
-              {/* Contenedor amplio que ocupa casi todo el ancho de la pantalla */}
-              <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-8 lg:px-12 xl:px-16 py-12 sm:py-16 relative z-20 h-full flex flex-col justify-center">
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
-                  
-                  {/* Columna de Texto: TÍTULO + TEXTO CORTO + BOTÓN */}
-                  <div className="lg:col-span-7 xl:col-span-7 text-left space-y-4 sm:space-y-6">
+                  {/* Composición en Grid equilibrado: Texto amplio + Ilustración integrada */}
+                  <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 xl:gap-14 items-center">
                     
-                    {/* Badge de categoría de la diapositiva */}
-                    <div className="flex flex-wrap items-center gap-2.5">
-                      <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full border backdrop-blur-md text-xs font-extrabold uppercase tracking-wider shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 ${slide.badgeBorder}`}>
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>{slide.badge}</span>
+                    {/* Columna de Texto (60% del ancho en pantallas grandes): Espaciosa, elegante y clara */}
+                    <div className="lg:col-span-7 xl:col-span-7 space-y-3 sm:space-y-5 text-left">
+                      
+                      {/* Badge superior de categoría */}
+                      <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider shadow-2xs">
+                        <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                        <span className={slide.palette.badge}>{slide.badge}</span>
                       </div>
-                      <span className="text-xs px-3 py-1 rounded-full bg-white/10 text-slate-200 border border-white/15 hidden sm:inline-block font-semibold">
-                        {slide.tag}
-                      </span>
+
+                      {/* Título Grande y Elegante */}
+                      <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]">
+                        {slide.title}
+                      </h1>
+
+                      {/* Texto corto descriptivo con espacio generoso y alta legibilidad */}
+                      <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-xl">
+                        {slide.subtitle}
+                      </p>
+
+                      {/* Píldoras con puntos clave de valor educativo */}
+                      <div className="flex flex-wrap items-center gap-2 pt-0.5 sm:pt-1">
+                        {slide.keyBenefits.map((benefit, i) => (
+                          <div 
+                            key={i} 
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border ${slide.palette.pill}`}
+                          >
+                            <Check className="w-3.5 h-3.5 shrink-0" />
+                            <span>{benefit}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Fila de Botones: Botón principal visible y botón secundario */}
+                      <div className="pt-2 sm:pt-3 flex flex-wrap items-center gap-3 sm:gap-4">
+                        
+                        {/* Botón Principal Requerido */}
+                        <button
+                          type="button"
+                          onClick={() => handleSlideAction(slide.action)}
+                          className={`px-7 sm:px-9 py-3.5 sm:py-4 rounded-2xl font-bold text-sm sm:text-base shadow-lg transition-all flex items-center gap-2.5 cursor-pointer hover:scale-102 active:scale-95 group ${slide.palette.cta}`}
+                        >
+                          <span>{slide.ctaText}</span>
+                          <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1.5 transition-transform" />
+                        </button>
+
+                        {/* Botón Secundario complementario */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (slide.action === 'register') {
+                              handleOpenAuthModal('login');
+                            } else {
+                              scrollToOpportunities();
+                            }
+                          }}
+                          className="px-5 sm:px-7 py-3.5 sm:py-4 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-base border border-slate-200 dark:border-slate-700 transition-all cursor-pointer active:scale-95"
+                        >
+                          <span>{slide.secondaryText}</span>
+                        </button>
+
+                      </div>
+
                     </div>
 
-                    {/* Título grande y visible */}
-                    <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-white tracking-tight leading-[1.08] drop-shadow-lg animate-in fade-in slide-in-from-bottom-3 duration-700">
-                      {slide.title}
-                    </h1>
-
-                    {/* Texto Corto directamente sobre el banner */}
-                    <p className="text-lg sm:text-2xl text-slate-100 font-medium leading-relaxed max-w-2xl drop-shadow animate-in fade-in slide-in-from-bottom-4 duration-700">
-                      “{slide.subtitle}”
-                    </p>
-
-                    {/* Botón de acción principal visible dentro del banner */}
-                    <div className="pt-2 sm:pt-4 flex flex-wrap items-center gap-4 animate-in fade-in slide-in-from-bottom-5 duration-700">
+                    {/* Columna de Ilustración (40% del ancho): Parte integral del diseño del carrusel */}
+                    <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center">
                       
-                      {/* Botón Principal */}
-                      <button
-                        type="button"
-                        onClick={() => handleSlideAction(slide.action)}
-                        className={`px-8 sm:px-10 py-4 rounded-2xl font-black text-base sm:text-lg shadow-xl transition-all flex items-center gap-3 cursor-pointer active:scale-95 group ${slide.buttonBg}`}
-                      >
-                        <span>{slide.ctaText}</span>
-                        <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-                      </button>
+                      <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 dark:border-slate-700/90 bg-slate-50 dark:bg-slate-800 group animate-subtle-float">
+                        
+                        {/* Ilustración digital moderna: estética equilibrada, bonita y profesional */}
+                        <img 
+                          src={slide.image} 
+                          alt={slide.alt}
+                          className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
+                        />
 
-                      {/* Botón Secundario complementario */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (slide.action === 'register') {
-                            handleOpenAuthModal('login');
-                          } else {
-                            scrollToOpportunities();
-                          }
-                        }}
-                        className="px-6 sm:px-8 py-4 rounded-2xl bg-white/15 hover:bg-white/25 text-white font-bold text-base sm:text-lg border border-white/25 backdrop-blur-md transition-all cursor-pointer active:scale-95"
-                      >
-                        <span>{slide.secondaryText}</span>
-                      </button>
+                        {/* Degradado inferior con etiqueta institucional sutil */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
 
-                    </div>
-
-                    {/* Garantías institucionales de EduMed Digital */}
-                    <div className="pt-3 flex flex-wrap items-center gap-5 text-xs sm:text-sm text-slate-200 font-medium">
-                      <span className="flex items-center gap-2">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>Educación Oficial Gratuita</span>
-                      </span>
-                      <span className="flex items-center gap-2">
-                        <Building2 className="w-4 h-4 text-teal-300" />
-                        <span>I.E. Félix Henao Botero • Medellín</span>
-                      </span>
-                    </div>
-
-                  </div>
-
-                  {/* Columna Derecha: Ilustración digital moderna, luminosa y elegante */}
-                  <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center relative">
-                    
-                    {/* Tarjeta de personajes/escena con animación flotante sutil y marco luminoso */}
-                    <div className="relative w-full max-w-lg xl:max-w-xl aspect-[16/11] rounded-3xl overflow-hidden border-2 border-white/25 shadow-2xl bg-slate-900/40 backdrop-blur-sm group animate-subtle-float">
-                      
-                      {/* Imagen digital moderna */}
-                      <img 
-                        src={slide.image} 
-                        alt={slide.alt} 
-                        className="w-full h-full object-cover object-center transform transition-transform duration-1000 group-hover:scale-[1.02]"
-                      />
-
-                      {/* Brillo reflectante suave sobre el contenedor */}
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/75 via-transparent to-white/10 pointer-events-none" />
-
-                      {/* Etiqueta flotante inferior elegante */}
-                      <div className="absolute bottom-3 left-3 right-3 p-3 rounded-2xl bg-slate-950/85 backdrop-blur-md border border-white/15 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-teal-400 animate-ping" />
-                          <span className="text-xs font-bold text-white tracking-wide">{slide.title}</span>
+                        <div className="absolute bottom-3 left-3 right-3 p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-md flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse" />
+                            <span className="text-xs font-bold text-slate-900 dark:text-white">EduMed Digital</span>
+                          </div>
+                          <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400">
+                            {slide.badge}
+                          </span>
                         </div>
-                        <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-md bg-white/20 text-white uppercase tracking-wider">
-                          EduMed Digital
-                        </span>
+
                       </div>
 
                     </div>
@@ -616,90 +647,90 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                   </div>
 
                 </div>
-              </div>
+              );
+            })}
 
-            </div>
-          );
-        })}
+            {/* Flechas de navegación integradas dentro del banner */}
+            <button
+              type="button"
+              onClick={handlePrevSlide}
+              className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+              aria-label={isEs ? 'Diapositiva anterior' : 'Previous slide'}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
 
-        {/* Flechas de navegación lateral del carrusel */}
-        <button
-          type="button"
-          onClick={handlePrevSlide}
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
-          aria-label={isEs ? 'Diapositiva anterior' : 'Previous slide'}
-        >
-          <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
+            <button
+              type="button"
+              onClick={handleNextSlide}
+              className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-30 p-2.5 sm:p-3 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95"
+              aria-label={isEs ? 'Siguiente diapositiva' : 'Next slide'}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
 
-        <button
-          type="button"
-          onClick={handleNextSlide}
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 p-3 sm:p-4 rounded-full bg-slate-900/60 hover:bg-slate-900/90 text-white border border-white/20 backdrop-blur-md transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-lg"
-          aria-label={isEs ? 'Siguiente diapositiva' : 'Next slide'}
-        >
-          <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
-        </button>
+            {/* Indicadores inferiores elegantes con barra de progreso interactiva */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 px-4 py-2 rounded-full border border-slate-200/90 dark:border-slate-700/90 shadow-md backdrop-blur-md">
+              {heroSlides.map((slide, idx) => {
+                const isActive = idx === currentSlide;
+                return (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    onClick={() => {
+                      setSlideProgress(0);
+                      setCurrentSlide(idx);
+                    }}
+                    className={`relative h-2 rounded-full overflow-hidden transition-all cursor-pointer flex items-center ${
+                      isActive ? 'w-10 sm:w-12 bg-slate-200 dark:bg-slate-700' : 'w-2.5 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'
+                    }`}
+                    title={`Diapositiva ${idx + 1}: ${slide.title}`}
+                  >
+                    {isActive && (
+                      <span 
+                        className="absolute inset-y-0 left-0 bg-teal-600 dark:bg-teal-400 rounded-full transition-all duration-75"
+                        style={{ width: `${slideProgress}%` }}
+                      />
+                    )}
+                  </button>
+                );
+              })}
 
-        {/* Indicadores inferiores con barra de progreso interactiva */}
-        <div className="absolute bottom-5 sm:bottom-7 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2.5 sm:gap-3 bg-slate-950/85 px-5 sm:px-6 py-2.5 rounded-full border border-white/15 backdrop-blur-md shadow-xl">
-          {heroSlides.map((slide, idx) => {
-            const isActive = idx === currentSlide;
-            return (
+              <span className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-1" />
+
+              {/* Botón Pausa / Reproducir */}
               <button
-                key={slide.id}
                 type="button"
-                onClick={() => {
-                  setSlideProgress(0);
-                  setCurrentSlide(idx);
-                }}
-                className={`relative h-2.5 sm:h-3 rounded-full overflow-hidden transition-all cursor-pointer flex items-center ${
-                  isActive ? 'w-12 sm:w-16 bg-white/20' : 'w-3 sm:w-4 bg-white/30 hover:bg-white/60'
-                }`}
-                title={`Diapositiva ${idx + 1}: ${slide.title}`}
+                onClick={() => setIsCarouselPaused(!isCarouselPaused)}
+                className="p-1 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                title={isCarouselPaused ? (isEs ? 'Reanudar carrusel' : 'Play') : (isEs ? 'Pausar carrusel' : 'Pause')}
               >
-                {isActive && (
-                  <span 
-                    className="absolute inset-y-0 left-0 bg-teal-400 rounded-full transition-all duration-75"
-                    style={{ width: `${slideProgress}%` }}
-                  />
-                )}
+                {isCarouselPaused ? <Play className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" /> : <Pause className="w-3.5 h-3.5" />}
               </button>
-            );
-          })}
+            </div>
 
-          <span className="w-px h-4 bg-white/20 ml-1.5 mr-1" />
+          </div>
 
-          {/* Botón Pausa / Reproducir */}
-          <button
-            type="button"
-            onClick={() => setIsCarouselPaused(!isCarouselPaused)}
-            className="p-1 rounded text-slate-300 hover:text-white transition-colors cursor-pointer"
-            title={isCarouselPaused ? (isEs ? 'Reanudar carrusel' : 'Play') : (isEs ? 'Pausar carrusel' : 'Pause')}
-          >
-            {isCarouselPaused ? <Play className="w-3.5 h-3.5 text-amber-300" /> : <Pause className="w-3.5 h-3.5" />}
-          </button>
         </div>
-
       </section>
 
       {/* =========================================================================
           3. SECCIÓN: "Todo lo que necesitas para encontrar tu próxima oportunidad"
-             3 TARJETAS MEJORADAS CON ILUSTRACIONES ELEGANTES:
+             3 TARJETAS COMPLETAS CON ILUSTRACIONES ELEGANTES:
              - EDIFICIO EDUCATIVO (Instituciones)
              - BIRRETE DECORADO (Programas)
-             - CARPETA DE INSCRIPCIÓN (Matrículas)
-             CON EFECTO DE MOVIMIENTO Y BRILLO AL TOCAR O PASAR EL CURSOR
+             - CARPETA DE MATRÍCULA (Matrículas)
+             CON EFECTOS DE MOVIMIENTO Y BRILLO SUTIL AL INTERACTUAR
           ========================================================================= */}
       <section 
         id="oportunidades" 
         ref={opportunitiesRef} 
-        className="py-16 sm:py-24 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors"
+        className="py-16 sm:py-24 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 transition-colors"
       >
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Encabezado limpio y moderno */}
-          <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-18">
+          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
             <span className="text-xs font-extrabold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-2">
               {isEs ? 'EXPLORA Y TRANSFORMA TU FORMACIÓN' : 'EXPLORE YOUR EDUCATION'}
             </span>
@@ -713,7 +744,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             </p>
           </div>
 
-          {/* Grid de las 3 Tarjetas visuales con edificio educativo, birrete decorado y carpeta de inscripción */}
+          {/* Grid de las 3 Tarjetas visuales con edificio educativo, birrete decorado y carpeta de matrícula */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
             {opportunityCards.map((card) => {
               const IconComponent = card.icon;
@@ -724,14 +755,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                   className={`group relative p-7 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border ${card.borderColor} shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-2 text-left overflow-hidden`}
                 >
                   {/* Destello de brillo diagonal al pasar el cursor o tocar */}
-                  <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/25 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 card-shine-effect z-20" />
+                  <div className="absolute inset-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none opacity-0 group-hover:opacity-100 card-shine-effect z-20" />
 
                   {/* Resplandor superior sutil */}
                   <div className={`absolute inset-0 bg-gradient-to-b ${card.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none`} />
 
                   <div className="relative z-10">
                     
-                    {/* Contenedor de la ilustración elegante */}
+                    {/* Contenedor de la ilustración elegante (Edificio / Birrete / Carpeta) */}
                     <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-6 border border-slate-200/80 dark:border-slate-700/80 shadow-xs bg-slate-100 dark:bg-slate-800 group-hover:shadow-md transition-shadow">
                       <img 
                         src={card.illustration} 
@@ -779,92 +810,88 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </section>
 
       {/* =========================================================================
-          4. ELEMENTOS VISUALES EDUCATIVOS ADICIONALES:
-             - CIFRAS DE IMPACTO Y COBERTURA OFICIAL
-             - CÓMO FUNCIONA EL PROCESO EN 4 PASOS CLAROS
+          4. SECCIÓN DE BENEFICIOS EDUCATIVOS Y CIFRAS DE COBERTURA
+             (NO DEJA LA PÁGINA VACÍA, ENRIQUECE EL RECORRIDO DEL USUARIO)
           ========================================================================= */}
-      <section id="beneficios-clave" className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 transition-colors">
+      <section id="beneficios-clave" className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-950 border-b border-slate-200/90 dark:border-slate-800 transition-colors">
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Cifras de Impacto Institucional EduMed */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-16 sm:mb-20">
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center">
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center hover:-translate-y-1 transition-transform">
               <span className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400">2</span>
               <h4 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">Sedes Oficiales</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Principal e Infantil</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sede Principal e Infantil</p>
             </div>
 
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center">
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center hover:-translate-y-1 transition-transform">
               <span className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400">1.450+</span>
               <h4 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">Estudiantes</h4>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Matriculados en SIMAT</p>
             </div>
 
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center">
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center hover:-translate-y-1 transition-transform">
               <span className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400">100%</span>
               <h4 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">Gratuidad Oficial</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sin intermediarios</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sin costos de matrícula</p>
             </div>
 
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center">
+            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs text-center hover:-translate-y-1 transition-transform">
               <span className="text-3xl sm:text-4xl font-black text-teal-600 dark:text-teal-400">24/7</span>
               <h4 className="mt-1 text-sm font-bold text-slate-900 dark:text-white">Gestión Virtual</h4>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Trámites y consultas</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Trámites y certificados</p>
             </div>
           </div>
 
-          {/* Cómo Funciona: Ruta en 4 pasos visuales para jóvenes y familias */}
-          <div className="max-w-5xl mx-auto text-center">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-2">
-              {isEs ? 'PROCESO SENCILLO Y PROTEGIDO' : 'SIMPLE & SECURE PROCESS'}
-            </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-              {isEs ? '¿Cómo iniciar tu formación en EduMed Digital?' : 'How to Get Started on EduMed Digital?'}
-            </h2>
-            <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-              {isEs 
-                ? 'Un camino ágil, moderno y transparente diseñado para jóvenes y adultos que buscan oportunidades de estudio oficiales.'
-                : 'A modern, agile, and transparent pathway for students and families seeking official education.'}
-            </p>
+          {/* 4 Pilares Institucionales de EduMed Digital */}
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center max-w-2xl mx-auto mb-10">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-2">
+                {isEs ? 'NUESTRO COMPROMISO FORMATIVO' : 'OUR COMMITMENT'}
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+                {isEs ? '¿Por qué elegir EduMed Digital?' : 'Why Choose EduMed Digital?'}
+              </h3>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-10 text-left">
-              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs relative">
-                <span className="w-9 h-9 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-black text-sm flex items-center justify-center mb-4">
-                  1
-                </span>
-                <h4 className="font-bold text-base text-slate-900 dark:text-white">Explora Cupos</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Conoce las sedes disponibles y consulta los programas de formación para tu grado escolar.
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">Educación Oficial</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Institución pública avalada por la Secretaría de Educación de Medellín y registrada en SIMAT.
                 </p>
               </div>
 
-              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs relative">
-                <span className="w-9 h-9 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-black text-sm flex items-center justify-center mb-4">
-                  2
-                </span>
-                <h4 className="font-bold text-base text-slate-900 dark:text-white">Crea tu Cuenta</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Regístrate como estudiante o acudiente con tu código de validación institucional protegido.
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 flex items-center justify-center">
+                  <Laptop className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">Tecnología y STEAM</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Aulas interactivas, conectividad de alta velocidad y formación orientada a habilidades del siglo XXI.
                 </p>
               </div>
 
-              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs relative">
-                <span className="w-9 h-9 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-black text-sm flex items-center justify-center mb-4">
-                  3
-                </span>
-                <h4 className="font-bold text-base text-slate-900 dark:text-white">Carga Documentos</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Sube el documento de identidad y registros de salud en formato digital de forma confidencial.
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 flex items-center justify-center">
+                  <Award className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">Doble Titulación</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Gradúate con título de bachiller académico y certificación técnica oficial para el mundo laboral.
                 </p>
               </div>
 
-              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs relative">
-                <span className="w-9 h-9 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-black text-sm flex items-center justify-center mb-4">
-                  4
-                </span>
-                <h4 className="font-bold text-base text-slate-900 dark:text-white">Carnet Digital</h4>
-                <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 leading-relaxed">
-                  Obtén tu estado de matrícula SIMAT confirmado y tu carnet estudiantil con código QR activo.
+              <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xs space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center">
+                  <HeartHandshake className="w-6 h-6" />
+                </div>
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">Bienestar Estudiantil</h4>
+                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Programa de Alimentación Escolar (PAE), seguro estudiantil 24/7 y orientación psicosocial integral.
                 </p>
               </div>
             </div>
@@ -880,7 +907,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       <section 
         id="portales" 
         ref={authSectionRef} 
-        className="py-16 sm:py-20 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 transition-colors"
+        className="py-16 sm:py-20 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 transition-colors"
       >
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
@@ -966,7 +993,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       {/* =========================================================================
           6. CONSULTA RÁPIDA DE ESTADO DE CUPO CON DOCUMENTO
           ========================================================================= */}
-      <section id="consulta-cupo" className="py-14 sm:py-16 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
+      <section id="consulta-cupo" className="py-14 sm:py-16 bg-slate-50 dark:bg-slate-950 border-b border-slate-200/90 dark:border-slate-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="bg-gradient-to-br from-slate-900 via-teal-950 to-slate-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl border border-teal-500/20 text-left">
