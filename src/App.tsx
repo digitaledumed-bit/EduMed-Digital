@@ -3,7 +3,6 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Navbar } from './components/layout/Navbar';
 import { AdminSidebar } from './components/layout/AdminSidebar';
 import { LoginScreen } from './components/auth/LoginScreen';
-import { WelcomeSplash } from './components/common/WelcomeSplash';
 import { LandingPage } from './components/public/LandingPage';
 import { EnrollmentWizard } from './components/public/EnrollmentWizard';
 import { StatusLookup } from './components/public/StatusLookup';
@@ -36,32 +35,10 @@ const MainAppContent: React.FC = () => {
     isStudentEnrollmentCompleted,
     resetStudentEnrollment
   } = useApp();
-  const [splashFinished, setSplashFinished] = useState<boolean>(() => {
-    return sessionStorage.getItem('edumed_welcome_splash_seen') === 'true';
-  });
-  const [forceSplash, setForceSplash] = useState<boolean>(false);
 
   // Protect platform: content can only be seen after logging in
   if (!currentUser) {
-    return (
-      <>
-        <WelcomeSplash 
-          customLogoUrl={customLogoUrl} 
-          forceShow={forceSplash}
-          onComplete={() => {
-            setSplashFinished(true);
-            setForceSplash(false);
-          }} 
-        />
-        <div 
-          className={`transition-all duration-700 ease-out transform-gpu ${
-            splashFinished && !forceSplash ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2.5'
-          }`}
-        >
-          <LoginScreen onReplaySplash={() => setForceSplash(true)} />
-        </div>
-      </>
-    );
+    return <LoginScreen />;
   }
 
   // Check mandatory enrollment status for students
@@ -73,23 +50,9 @@ const MainAppContent: React.FC = () => {
   const isUnauthorizedAdminTab = currentUser.role !== 'admin' && adminOnlyTabs.includes(activeTab);
 
   return (
-    <>
-      <WelcomeSplash 
-        customLogoUrl={customLogoUrl} 
-        forceShow={forceSplash}
-        onComplete={() => {
-          setSplashFinished(true);
-          setForceSplash(false);
-        }} 
-      />
-
-      <div 
-        className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-all duration-700 ease-out transform-gpu ${
-          splashFinished && !forceSplash ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2.5'
-        }`}
-      >
-        {/* Top Navigation Bar */}
-        <Navbar />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
+      {/* Top Navigation Bar */}
+      <Navbar />
 
         {/* Main Content Area */}
         {activeRole === 'public' ? (
@@ -191,15 +154,6 @@ const MainAppContent: React.FC = () => {
               <span>Medellín, Antioquia</span>
               <span>•</span>
               <span>© {new Date().getFullYear()}</span>
-              <span>•</span>
-              <button
-                type="button"
-                onClick={() => setForceSplash(true)}
-                className="hover:text-teal-600 dark:hover:text-teal-400 transition-colors cursor-pointer text-[11px]"
-                title="Reproducir animación de bienvenida"
-              >
-                Animación EduMed
-              </button>
             </div>
           </div>
         </footer>
@@ -211,7 +165,6 @@ const MainAppContent: React.FC = () => {
         />
 
       </div>
-    </>
   );
 };
 

@@ -3,6 +3,9 @@ import { useApp } from '../../context/AppContext';
 import { AuthCard } from '../public/AuthCard';
 import slideMatriculasImg from '../../assets/images/slide_matriculas_v2_1790639962382.jpg';
 import slideInstitucionesImg from '../../assets/images/slide_instituciones_v2_1790639972681.jpg';
+import cardEdificioImg from '../../assets/images/card_edificio_v2_1790640004084.jpg';
+import cardBirreteImg from '../../assets/images/card_birrete_v2_1790640013891.jpg';
+import cardCarpetaImg from '../../assets/images/card_carpeta_v2_1790640025415.jpg';
 import { 
   Sun, 
   Moon, 
@@ -15,8 +18,6 @@ import {
   Mail,
   MapPin,
   ArrowRight,
-  LogIn,
-  UserPlus,
   Building2,
   ChevronRight,
   ChevronLeft,
@@ -31,11 +32,12 @@ import {
   HelpCircle,
   FileCheck2,
   Scale,
-  QrCode,
   BellRing,
   Lock,
   Smartphone,
-  MessageSquare
+  MessageSquare,
+  BookOpen,
+  FileText
 } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -53,15 +55,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
   const isEs = language === 'es';
 
-  // Modal de autenticación interactivo (permite abrir login/registro desde el header)
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
-
   // Modales legales y de contacto del pie de página
   const [isContactModalOpen, setIsContactModalOpen] = useState(false);
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+
+  // Modal para ver detalles de Oportunidades (Instituciones, Programas, Matrículas)
+  const [selectedOpportunityCard, setSelectedOpportunityCard] = useState<string | null>(null);
 
   // Estado del formulario de contacto
   const [contactForm, setContactForm] = useState({
@@ -75,16 +76,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
   const [contactSubmitted, setContactSubmitted] = useState(false);
   const [contactTicketId, setContactTicketId] = useState('');
 
-  // Carrusel automático del Banner Principal (Únicamente 2 diapositivas)
+  // Carrusel automático del Banner Principal (2 diapositivas)
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isCarouselPaused, setIsCarouselPaused] = useState(false);
   const [slideProgress, setSlideProgress] = useState(0);
 
+  const heroSectionRef = useRef<HTMLDivElement>(null);
+  const opportunitiesRef = useRef<HTMLDivElement>(null);
   const authSectionRef = useRef<HTMLDivElement>(null);
   const benefitsSectionRef = useRef<HTMLDivElement>(null);
   const sedesSectionRef = useRef<HTMLDivElement>(null);
 
-  // 2 Diapositivas exactas solicitadas: Matrículas e Instituciones
+  // Bloqueo de scroll en fondo cuando hay un modal abierto para que aparezca centrado en el viewport actual
+  useEffect(() => {
+    const isAnyModalOpen = isContactModalOpen || isPrivacyModalOpen || isTermsModalOpen || isLegalModalOpen || !!selectedOpportunityCard;
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isContactModalOpen, isPrivacyModalOpen, isTermsModalOpen, isLegalModalOpen, selectedOpportunityCard]);
+
+  // 2 Diapositivas exactas del Slider: Matrículas e Instituciones
   const heroSlides = [
     {
       id: 1,
@@ -94,12 +110,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
         ? 'Infórmate sobre las oportunidades de matrícula disponibles.'
         : 'Learn about all enrollment opportunities available.',
       ctaText: isEs ? 'Ver matrículas' : 'View enrollments',
-      secondaryText: isEs ? 'Crear cuenta' : 'Create account',
+      secondaryText: isEs ? 'Ir a Portales' : 'Go to Portals',
       action: 'matriculas',
       keyBenefits: [
         isEs ? '100% Gratuito y Oficial' : '100% Tuition-Free',
         isEs ? 'Conexión Directa SIMAT' : 'Direct SIMAT Records',
-        isEs ? 'Carnet Digital con QR' : 'Digital QR Student ID'
+        isEs ? 'Gestión Virtual 24/7' : '24/7 Online Management'
       ],
       image: slideMatriculasImg,
       alt: 'Ilustración digital moderna de estudiantes en proceso de matrícula escolar',
@@ -172,29 +188,31 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
   };
 
-  const scrollToAuthSection = (mode: 'login' | 'register') => {
-    setAuthModalMode(mode);
-    authSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToHero = () => {
+    heroSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const scrollToSedesSection = () => {
-    sedesSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToOpportunities = () => {
+    opportunitiesRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const scrollToAuthSection = () => {
+    authSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const scrollToBenefitsSection = () => {
     benefitsSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const handleOpenAuthModal = (mode: 'login' | 'register') => {
-    setAuthModalMode(mode);
-    setIsAuthModalOpen(true);
+  const scrollToSedesSection = () => {
+    sedesSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleSlideAction = (action: string) => {
     if (action === 'matriculas') {
-      scrollToAuthSection('register');
+      scrollToOpportunities();
     } else if (action === 'instituciones') {
-      scrollToSedesSection();
+      scrollToOpportunities();
     }
   };
 
@@ -218,7 +236,90 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     setIsContactModalOpen(false);
   };
 
-  // Beneficios de Usar la Plataforma EduMed Digital
+  // 3 Tarjetas en el apartado de Oportunidades
+  const opportunityCards = [
+    {
+      id: 'instituciones',
+      emoji: '🎓',
+      icon: Building2,
+      illustration: cardEdificioImg,
+      illustrationAlt: 'Ilustración digital moderna de edificio educativo institucional',
+      title: isEs ? 'Instituciones' : 'Campuses',
+      description: isEs 
+        ? 'Encuentra instituciones educativas y conoce su oferta.'
+        : 'Explore our educational institutions and academic tracks.',
+      details: {
+        headline: isEs ? 'I.E. Félix Henao Botero - Medellín' : 'I.E. Félix Henao Botero School',
+        summary: isEs
+          ? 'Institución Educativa Oficial de carácter público en la Comuna 8 de Medellín, comprometida con la excelencia, la inclusión social y la formación integral.'
+          : 'Official public school in Medellín providing inclusive education from early childhood to high school technical tracks.',
+        campuses: [
+          { name: isEs ? 'Sede Principal (Enciso - Boston)' : 'Main Campus', address: 'Calle 52 # 18-40, Comuna 8', grades: isEs ? 'Secundaria y Media Técnica (6° a 11°)' : 'Grades 6-11' },
+          { name: isEs ? 'Sede Infantil La Libertad' : 'La Libertad Elementary', address: 'Carrera 22 # 54-15, Medellín', grades: isEs ? 'Preescolar y Primaria (Transición a 5°)' : 'Preschool & Elementary' }
+        ],
+        codeDane: '105001002345',
+        alliance: isEs ? 'Formación Técnica Oficial con Doble Titulación' : 'Official Dual Technical Certification'
+      },
+      gradient: 'from-emerald-500/15 via-teal-500/5 to-transparent',
+      borderColor: 'border-teal-200 dark:border-teal-900/60 hover:border-teal-500',
+      badgeColor: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
+    },
+    {
+      id: 'programas',
+      emoji: '📚',
+      icon: BookOpen,
+      illustration: cardBirreteImg,
+      illustrationAlt: 'Ilustración digital moderna de birrete decorado con libros',
+      title: isEs ? 'Programas' : 'Programs',
+      description: isEs 
+        ? 'Explora diferentes programas de formación.'
+        : 'Explore different training programs.',
+      details: {
+        headline: isEs ? 'Oferta de Formación Académica y Técnica' : 'Academic & Technical Programs',
+        summary: isEs
+          ? 'Formación integral desde primera infancia hasta bachilleres técnicos con doble titulación oficial sin costo.'
+          : 'Complete academic tracks from preschool to high school with official dual technical certification.',
+        items: [
+          { name: isEs ? 'Técnico en Sistemas y Software' : 'IT & Systems Technician', duration: '2 Años (10° y 11°)', badge: isEs ? 'Oficial' : 'Official' },
+          { name: isEs ? 'Técnico en Contabilización y Finanzas' : 'Accounting & Finance', duration: '2 Años (10° y 11°)', badge: isEs ? 'Oficial' : 'Official' },
+          { name: isEs ? 'Básica Secundaria con Énfasis STEAM' : 'Middle School STEAM', duration: 'Grados 6° a 9°', badge: isEs ? 'Oficial' : 'Official' },
+          { name: isEs ? 'Primaria Integral y Grado Transición' : 'Elementary & Transition', duration: 'Grados Preescolar a 5°', badge: isEs ? 'PAE Gratuito' : 'Meals PAE' }
+        ]
+      },
+      gradient: 'from-blue-500/15 via-cyan-500/5 to-transparent',
+      borderColor: 'border-blue-200 dark:border-blue-900/60 hover:border-blue-500',
+      badgeColor: 'bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border-blue-200 dark:border-blue-800'
+    },
+    {
+      id: 'matriculas',
+      emoji: '📝',
+      icon: FileText,
+      illustration: cardCarpetaImg,
+      illustrationAlt: 'Ilustración digital moderna de carpeta de inscripción con sello de verificación',
+      title: isEs ? 'Matrículas' : 'Enrollments',
+      description: isEs 
+        ? 'Consulta qué oportunidades de matrícula están disponibles.'
+        : 'Check what enrollment vacancies and admissions are open.',
+      details: {
+        headline: isEs ? 'Convocatoria Oficial de Matrícula 2026' : 'Official 2026 Admissions',
+        summary: isEs
+          ? 'El proceso de matrícula en EduMed Digital es 100% virtual, seguro y validado en el sistema oficial SIMAT de la Secretaría de Educación.'
+          : 'Online enrollment process connected directly to Medellín official SIMAT educational records.',
+        status: isEs ? 'Inscripciones Abiertas • Sin costo ni intermediarios' : 'Admissions Open • 100% Free Tuition',
+        steps: [
+          isEs ? '1. Diligenciamiento de formulario digital en Portales' : '1. Fill online registration form in Portals',
+          isEs ? '2. Validación de código para acudientes (ACUD-2026)' : '2. Guardian validation code check',
+          isEs ? '3. Carga de documentos de identidad y salud' : '3. ID & health records upload',
+          isEs ? '4. Confirmación de cupo y carnet oficial' : '4. Spot allocation & student registration'
+        ]
+      },
+      gradient: 'from-amber-500/15 via-orange-500/5 to-transparent',
+      borderColor: 'border-amber-200 dark:border-amber-900/60 hover:border-amber-500',
+      badgeColor: 'bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border-amber-200 dark:border-amber-800'
+    }
+  ];
+
+  // Beneficios de Usar la Plataforma EduMed Digital (SIN el cuadro sobre carnet digital)
   const platformBenefits = [
     {
       icon: Laptop,
@@ -226,17 +327,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       desc: isEs 
         ? 'Realiza solicitudes de cupo, diligenciamiento de formularios y radicado escolar desde cualquier lugar, sin filas ni desplazamientos a secretaría.'
         : 'Complete spot applications, registration forms, and school procedures from anywhere without lines.',
-      tag: isEs ? 'Sin filas' : 'Paperless',
-      color: 'teal'
-    },
-    {
-      icon: QrCode,
-      title: isEs ? 'Carnet Estudiantil Digital con QR' : 'Digital Student ID with QR Code',
-      desc: isEs 
-        ? 'Identificación oficial del estudiante en el celular con código QR institucional para validación de matrícula, biblioteca y acceso escolar.'
-        : 'Official student identification on smartphone with dynamic QR verification.',
-      tag: isEs ? 'Acceso rápido' : 'Instant QR',
-      color: 'emerald'
+      tag: isEs ? 'Sin filas' : 'Paperless'
     },
     {
       icon: BellRing,
@@ -244,17 +335,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       desc: isEs 
         ? 'Familias y acudientes siempre informados sobre circulares oficiales, alertas de novedades y seguimiento académico de sus hijos.'
         : 'Guardians and families stay updated with immediate circulars, academic notices, and notices.',
-      tag: isEs ? 'Para familias' : 'For families',
-      color: 'amber'
+      tag: isEs ? 'Para familias' : 'For families'
     },
     {
       icon: Lock,
       title: isEs ? 'Seguridad y Privacidad Institucional' : 'Data Privacy & Security',
       desc: isEs 
-        ? 'Información escolar protegida bajo la Ley 1581 de 2012, con validación de acudientes por código seguro y perfiles de acceso restringido.'
+        ? 'Información escolar protegida bajo la Ley 1581 de 2012, con validación de acudientes por código institucional y perfiles de acceso protegido.'
         : 'Protected student records complying with data privacy laws and encrypted guardian validation.',
-      tag: isEs ? 'Datos protegidos' : 'Secure',
-      color: 'blue'
+      tag: isEs ? 'Datos protegidos' : 'Secure'
     },
     {
       icon: Smartphone,
@@ -262,8 +351,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       desc: isEs 
         ? 'Disponible permanentemente desde computadores, tabletas y teléfonos inteligentes con interfaz moderna, rápida y adaptable.'
         : 'Available anytime across desktops, tablets, and smartphones with an intuitive design.',
-      tag: isEs ? 'Disponible 24/7' : '24/7 Always on',
-      color: 'purple'
+      tag: isEs ? 'Disponible 24/7' : '24/7 Always on'
     },
     {
       icon: MessageSquare,
@@ -271,8 +359,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       desc: isEs 
         ? 'Atención a la comunidad mediante mesa de ayuda y correo oficial digitaledumed@gmail.com para resolver dudas técnicas o académicas.'
         : 'Dedicated helpdesk and direct official communication via digitaledumed@gmail.com.',
-      tag: isEs ? 'Acompañamiento' : 'Assisted',
-      color: 'rose'
+      tag: isEs ? 'Acompañamiento' : 'Assisted'
     }
   ];
 
@@ -280,8 +367,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
     <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 transition-colors duration-200">
       
       {/* =========================================================================
-          1. HEADER INSTITUCIONAL OFICIAL (MANTENIENDO LOGO, NOMBRE Y ENCABEZADO)
-             CON BOTONES EXACTOS: "Iniciar sesión" Y "Crear cuenta"
+          1. HEADER INSTITUCIONAL OFICIAL
+             - CONSERVA LOGO Y NOMBRE
+             - MENÚ DE SECCIONES: Inicio, Oportunidades, Portales, Beneficios, Sedes y Contacto
+             - SIN LOS BOTONES DE "INICIAR SESIÓN" Y "CREAR CUENTA" (QUITADOS)
           ========================================================================= */}
       <header className="w-full border-b border-slate-200/90 dark:border-slate-800/90 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md sticky top-0 z-40 shadow-xs">
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8 py-3 flex items-center justify-between gap-4">
@@ -327,62 +416,48 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             </div>
           </div>
 
-          {/* Center Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+          {/* Center Navigation Links: Oportunidades, Portales, Beneficios, Sedes */}
+          <nav className="flex items-center gap-1 sm:gap-1.5 md:gap-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
             <button 
               type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-teal-700 dark:text-teal-400 font-bold transition-colors cursor-pointer"
+              onClick={scrollToHero}
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-teal-700 dark:text-teal-400 font-bold transition-colors cursor-pointer"
             >
               {isEs ? 'Inicio' : 'Home'}
             </button>
             <button
               type="button"
-              onClick={() => scrollToAuthSection('login')}
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              onClick={scrollToOpportunities}
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
-              {isEs ? 'Portales y Acceso' : 'Portals & Access'}
+              {isEs ? 'Oportunidades' : 'Opportunities'}
+            </button>
+            <button
+              type="button"
+              onClick={scrollToAuthSection}
+              className="px-2.5 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              {isEs ? 'Portales' : 'Portals'}
             </button>
             <button
               type="button"
               onClick={scrollToBenefitsSection}
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="hidden md:inline-flex px-2.5 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
-              {isEs ? 'Beneficios de la Plataforma' : 'Platform Benefits'}
+              {isEs ? 'Beneficios' : 'Benefits'}
             </button>
             <button
               type="button"
               onClick={scrollToSedesSection}
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+              className="hidden sm:inline-flex px-2.5 sm:px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
             >
-              {isEs ? 'Sedes y Contacto' : 'Campuses & Contact'}
+              {isEs ? 'Sedes y Contacto' : 'Campuses'}
             </button>
           </nav>
 
-          {/* Action Buttons: "Iniciar sesión" y "Crear cuenta" */}
+          {/* Selector de Tema e Idioma (Sin botones de Iniciar sesión ni Crear cuenta) */}
           <div className="flex items-center gap-2">
             
-            {/* Botón Iniciar sesión */}
-            <button
-              type="button"
-              onClick={() => scrollToAuthSection('login')}
-              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-[#002f49] hover:bg-[#001e30] text-white text-xs sm:text-sm font-bold shadow-sm transition-all cursor-pointer active:scale-98"
-            >
-              <LogIn className="w-3.5 h-3.5 text-amber-300" />
-              <span>{isEs ? 'Iniciar sesión' : 'Sign In'}</span>
-            </button>
-
-            {/* Botón Crear cuenta */}
-            <button
-              type="button"
-              onClick={() => scrollToAuthSection('register')}
-              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl border border-teal-600/70 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/60 text-xs sm:text-sm font-bold transition-all cursor-pointer"
-            >
-              <UserPlus className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-              <span className="hidden sm:inline">{isEs ? 'Crear cuenta' : 'Create account'}</span>
-              <span className="sm:hidden">{isEs ? 'Crear' : 'Join'}</span>
-            </button>
-
             {/* Theme Toggle */}
             <button
               type="button"
@@ -410,21 +485,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </header>
 
       {/* =========================================================================
-          2. CARRUSEL PRINCIPAL (SLIDER)
-             ÚNICAMENTE LAS 2 DIAPOSITIVAS: "Matrículas disponibles" e "Instituciones"
-             (Se eliminaron las de "Encuentra tu programa" y "Construye tu futuro")
+          2. APARTADO: INICIO (CARRUSEL PRINCIPAL / SLIDER DE 2 IMÁGENES)
           ========================================================================= */}
       <section 
+        id="inicio"
+        ref={heroSectionRef}
         className="relative w-full overflow-hidden bg-gradient-to-b from-slate-100 via-slate-50 to-white dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 border-b border-slate-200/80 dark:border-slate-800/80 select-none py-6 sm:py-8 lg:py-10"
         onMouseEnter={() => setIsCarouselPaused(true)}
         onMouseLeave={() => setIsCarouselPaused(false)}
       >
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-10 xl:px-12">
           
-          {/* Card principal del carrusel con marco luminoso y bordes redondeados modernos */}
-          <div className="relative min-h-[600px] sm:min-h-[560px] md:min-h-[520px] lg:min-h-[540px] xl:min-h-[560px] rounded-3xl bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-xl overflow-hidden flex items-center">
+          <div className="relative min-h-[580px] sm:min-h-[540px] md:min-h-[500px] lg:min-h-[520px] xl:min-h-[540px] rounded-3xl bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-xl overflow-hidden flex items-center">
             
-            {/* Diapositivas con transición suave de opacidad */}
+            {/* Diapositivas con transición suave */}
             {heroSlides.map((slide, index) => {
               const isActive = index === currentSlide;
               return (
@@ -434,33 +508,29 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     isActive ? 'opacity-100 scale-100 z-10 pointer-events-auto' : 'opacity-0 scale-98 z-0 pointer-events-none'
                   }`}
                 >
-                  {/* Resplandor ambiental de color temático */}
+                  {/* Resplandor ambiental */}
                   <div className={`absolute -right-10 -bottom-10 w-[500px] h-[500px] bg-gradient-to-br ${slide.palette.glow} rounded-full blur-3xl pointer-events-none`} />
                   <div className="absolute left-10 top-10 w-72 h-72 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
 
-                  {/* Composición en Grid equilibrado: Texto amplio + Ilustración integrada */}
+                  {/* Grid equilibrado: Texto + Ilustración */}
                   <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-10 xl:gap-14 items-center">
                     
-                    {/* Columna de Texto: Espaciosa, elegante y clara */}
+                    {/* Columna de Texto */}
                     <div className="lg:col-span-7 xl:col-span-7 space-y-3 sm:space-y-5 text-left">
                       
-                      {/* Badge superior de categoría */}
                       <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider shadow-2xs">
                         <Sparkles className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                         <span className={slide.palette.badge}>{slide.badge}</span>
                       </div>
 
-                      {/* Título Grande y Elegante */}
                       <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.12]">
                         {slide.title}
                       </h1>
 
-                      {/* Texto corto descriptivo con espacio generoso y alta legibilidad */}
                       <p className="text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-xl">
                         {slide.subtitle}
                       </p>
 
-                      {/* Píldoras con puntos clave de valor educativo */}
                       <div className="flex flex-wrap items-center gap-2 pt-0.5 sm:pt-1">
                         {slide.keyBenefits.map((benefit, i) => (
                           <div 
@@ -473,10 +543,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                         ))}
                       </div>
 
-                      {/* Fila de Botones: Botón principal visible y botón secundario */}
                       <div className="pt-2 sm:pt-3 flex flex-wrap items-center gap-3 sm:gap-4">
-                        
-                        {/* Botón Principal Requerido */}
                         <button
                           type="button"
                           onClick={() => handleSlideAction(slide.action)}
@@ -486,12 +553,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                           <ArrowRight className="w-4.5 h-4.5 group-hover:translate-x-1.5 transition-transform" />
                         </button>
 
-                        {/* Botón Secundario complementario */}
                         <button
                           type="button"
                           onClick={() => {
                             if (slide.action === 'matriculas') {
-                              scrollToAuthSection('register');
+                              scrollToAuthSection();
                             } else {
                               scrollToSedesSection();
                             }
@@ -500,25 +566,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                         >
                           <span>{slide.secondaryText}</span>
                         </button>
-
                       </div>
 
                     </div>
 
-                    {/* Columna de Ilustración: Parte integral del diseño del carrusel */}
+                    {/* Columna de Ilustración */}
                     <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center">
-                      
                       <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-lg aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 dark:border-slate-700/90 bg-slate-50 dark:bg-slate-800 group animate-subtle-float">
-                        
                         <img 
                           src={slide.image} 
                           alt={slide.alt}
                           className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
                         />
-
-                        {/* Degradado inferior con etiqueta institucional sutil */}
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
-
                         <div className="absolute bottom-3 left-3 right-3 p-2.5 sm:p-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-md flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse" />
@@ -528,9 +588,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                             {slide.badge}
                           </span>
                         </div>
-
                       </div>
-
                     </div>
 
                   </div>
@@ -539,7 +597,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               );
             })}
 
-            {/* Flechas de navegación integradas dentro del banner */}
+            {/* Flechas de navegación */}
             <button
               type="button"
               onClick={handlePrevSlide}
@@ -558,7 +616,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               <ChevronRight className="w-5 h-5" />
             </button>
 
-            {/* Indicadores inferiores elegantes con barra de progreso interactiva */}
+            {/* Barra de progreso interactiva */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 px-4 py-2 rounded-full border border-slate-200/90 dark:border-slate-700/90 shadow-md backdrop-blur-md">
               {heroSlides.map((slide, idx) => {
                 const isActive = idx === currentSlide;
@@ -587,7 +645,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
               <span className="w-px h-3.5 bg-slate-200 dark:bg-slate-700 mx-1" />
 
-              {/* Botón Pausa / Reproducir */}
               <button
                 type="button"
                 onClick={() => setIsCarouselPaused(!isCarouselPaused)}
@@ -604,13 +661,85 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </section>
 
       {/* =========================================================================
-          3. COLOCAR DIRECTAMENTE DEBAJO DEL SLIDER:
-             SECCIÓN DE INICIAR SESIÓN O REGISTRARSE (PORTALES + AUTHCARD)
+          3. APARTADO: OPORTUNIDADES
+             (SECCIÓN EN SU INTERFAZ DEDICADA, NO RETIRADA: Instituciones, Programas, Matrículas)
+          ========================================================================= */}
+      <section 
+        id="oportunidades" 
+        ref={opportunitiesRef} 
+        className="py-16 sm:py-20 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 transition-colors"
+      >
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
+          
+          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-2">
+              {isEs ? 'FORMACIÓN Y OFERTA ACADÉMICA' : 'ACADEMIC PATHWAYS'}
+            </span>
+            <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
+              {isEs ? 'Oportunidades Educativas EduMed' : 'Educational Opportunities'}
+            </h2>
+            <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
+              {isEs
+                ? 'Conoce nuestras instituciones oficiales, explora programas de formación técnica y consulta las opciones de matrícula disponibles en la I.E. Félix Henao Botero.'
+                : 'Discover our official campuses, explore technical programs, and check open admissions.'}
+            </p>
+          </div>
+
+          {/* Grid de las 3 Tarjetas en el apartado de Oportunidades */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto">
+            {opportunityCards.map((card) => {
+              const IconComponent = card.icon;
+              return (
+                <div
+                  key={card.id}
+                  onClick={() => setSelectedOpportunityCard(card.id)}
+                  className={`group relative p-6 sm:p-7 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border ${card.borderColor} shadow-sm hover:shadow-2xl transition-all duration-300 flex flex-col justify-between cursor-pointer hover:-translate-y-2 text-left overflow-hidden`}
+                >
+                  <div className="relative z-10">
+                    <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden mb-5 border border-slate-200/80 dark:border-slate-700/80 shadow-xs bg-slate-100 dark:bg-slate-800 group-hover:shadow-md transition-shadow">
+                      <img 
+                        src={card.illustration} 
+                        alt={card.illustrationAlt}
+                        className="w-full h-full object-cover object-center transform transition-transform duration-500 group-hover:scale-105"
+                      />
+                      <div className="absolute top-3 left-3 w-10 h-10 rounded-xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-white/40 dark:border-slate-700/60 shadow-xs flex items-center justify-center text-xl group-hover:scale-110 transition-transform">
+                        <span>{card.emoji}</span>
+                      </div>
+                      <div className="absolute top-3 right-3 p-2 rounded-xl bg-slate-950/70 text-white backdrop-blur-md border border-white/20 shadow-xs">
+                        <IconComponent className="w-4 h-4 text-teal-300" />
+                      </div>
+                    </div>
+
+                    <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                      {card.title}
+                    </h3>
+
+                    <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
+                      {card.description}
+                    </p>
+                  </div>
+
+                  <div className="relative z-10 mt-6 pt-4 border-t border-slate-200/70 dark:border-slate-700/60 flex items-center justify-between text-xs font-bold text-teal-700 dark:text-teal-400">
+                    <span className="group-hover:underline">{isEs ? 'Ver detalles de la oferta' : 'View details'}</span>
+                    <div className="w-8 h-8 rounded-full bg-teal-50 dark:bg-teal-950/80 text-teal-700 dark:text-teal-300 flex items-center justify-center group-hover:translate-x-1.5 group-hover:bg-teal-600 group-hover:text-white transition-all shadow-xs">
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
+      </section>
+
+      {/* =========================================================================
+          4. APARTADO: PORTALES (INICIAR SESIÓN Y REGISTRARSE)
           ========================================================================= */}
       <section 
         id="portales" 
         ref={authSectionRef} 
-        className="py-14 sm:py-20 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 transition-colors"
+        className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-950 border-b border-slate-200/90 dark:border-slate-800 transition-colors"
       >
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
@@ -630,13 +759,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
               <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
                 {isEs
-                  ? 'Accede a tu cuenta institucional en EduMed Digital. Estudiantes, acudientes y directivos cuentan con portales personalizados. Si eres acudiente, recuerda tener a la mano tu código institucional asignado (código oficial ACUD-2026 o número de documento registrado) para completar tu vinculación.'
-                  : 'Access your official EduMed Digital account. Students, guardians, and school staff access tailored dashboards.'}
+                  ? 'Accede a tu cuenta institucional en EduMed Digital. Si eres acudiente, recuerda que puedes usar el código oficial asignado ACUD-2026 o tu número de documento de identidad para completar tu registro protegido.'
+                  : 'Access your official EduMed Digital account. Guardians can use code ACUD-2026 or their document number to register.'}
               </p>
 
-              {/* Roles visuales interactivos */}
+              {/* Roles visuales de portales */}
               <div className="space-y-3 pt-2">
-                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-400 transition-colors">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-400 transition-colors">
                   <div className="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
                     <GraduationCap className="w-5 h-5" />
                   </div>
@@ -645,12 +774,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                       {isEs ? 'Portal del Estudiante' : 'Student Portal'}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                      {isEs ? 'Carnet escolar con código QR, materias, horario de clases, observador y seguimiento formativo.' : 'Digital QR card, school schedule, and grade reports.'}
+                      {isEs ? 'Carnet escolar oficial, notas periódicas, horario de clases y observador digital.' : 'Digital QR card, school schedule, and grade reports.'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-amber-400 transition-colors">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-amber-400 transition-colors">
                   <div className="w-11 h-11 rounded-xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
                     <Users className="w-5 h-5" />
                   </div>
@@ -659,12 +788,12 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                       {isEs ? 'Portal Familias y Acudientes' : 'Guardians Portal'}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                      {isEs ? 'Registro protegido con código de validación, seguimiento académico directo, circulares y acompañamiento escolar.' : 'Validated registration, attendance, and administrative notices.'}
+                      {isEs ? 'Registro protegido con código ACUD-2026, seguimiento académico directo y circulares escolares.' : 'Validated registration, attendance, and administrative notices.'}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-400 transition-colors">
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-400 transition-colors">
                   <div className="w-11 h-11 rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center shrink-0">
                     <Building2 className="w-5 h-5" />
                   </div>
@@ -673,7 +802,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                       {isEs ? 'Portal Directivo y Administrativo' : 'Administrative Portal'}
                     </h4>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
-                      {isEs ? 'Auditoría SIMAT, validación documental, control de cupos escolares y gestión académica centralizada.' : 'SIMAT audits, document approval, and school records.'}
+                      {isEs ? 'Auditoría SIMAT, validación documental, control de cupos y expedición de certificados.' : 'SIMAT audits, document approval, and school records.'}
                     </p>
                   </div>
                 </div>
@@ -681,7 +810,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
             </div>
 
-            {/* Tarjeta de Autenticación limpia con pestañas de Ingreso y Registro */}
+            {/* AuthCard interactiva para Iniciar sesión o Registrarse */}
             <div className="lg:col-span-6 w-full max-w-md mx-auto">
               <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-2 sm:p-3">
                 <AuthCard defaultMode="login" />
@@ -694,45 +823,45 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </section>
 
       {/* =========================================================================
-          4. SECCIÓN: "¿POR QUÉ ELEGIR EDUMED DIGITAL?"
-             EDITADA PARA ENFOCARSE EN LOS BENEFICIOS CONCRETOS DE USAR LA PLATAFORMA
+          5. APARTADO: BENEFICIOS ("¿POR QUÉ ELEGIR EDUMED DIGITAL?")
+             (SIN EL CUADRO SOBRE CARNET DIGITAL)
           ========================================================================= */}
       <section 
         id="beneficios" 
         ref={benefitsSectionRef}
-        className="py-16 sm:py-24 bg-slate-50 dark:bg-slate-950 border-b border-slate-200/90 dark:border-slate-800 transition-colors"
+        className="py-16 sm:py-24 bg-white dark:bg-slate-900 border-b border-slate-200/90 dark:border-slate-800 transition-colors"
       >
         <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-3xl mx-auto mb-14 sm:mb-16">
             <span className="text-xs font-extrabold uppercase tracking-wider text-teal-600 dark:text-teal-400 block mb-2">
-              {isEs ? 'INNOVACIÓN Y GESTIÓN ESCOLAR' : 'SCHOOL INNOVATION'}
+              {isEs ? 'VENTAJAS DE LA PLATAFORMA' : 'PLATFORM ADVANTAGES'}
             </span>
             <h2 className="text-2xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight">
               {isEs ? '¿Por qué elegir EduMed Digital?' : 'Why Choose EduMed Digital?'}
             </h2>
             <p className="mt-4 text-sm sm:text-base text-slate-600 dark:text-slate-400 font-normal leading-relaxed">
               {isEs
-                ? 'Conoce los beneficios que ofrece nuestra plataforma para facilitar trámites, conectar a las familias y modernizar la experiencia educativa en la I.E. Félix Henao Botero.'
+                ? 'Conoce los beneficios que ofrece nuestra plataforma para agilizar trámites, conectar a las familias y transformar la gestión escolar de la I.E. Félix Henao Botero.'
                 : 'Discover the key benefits our platform brings to simplify procedures, connect families, and modernize education.'}
             </p>
           </div>
 
-          {/* Grid de beneficios de usar la plataforma */}
+          {/* Grid de 5 beneficios (Sin carnet digital) */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 max-w-6xl mx-auto text-left">
             {platformBenefits.map((benefit, idx) => {
               const IconComponent = benefit.icon;
               return (
                 <div 
                   key={idx}
-                  className="p-7 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
+                  className="p-7 rounded-3xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/90 dark:border-slate-800 shadow-sm hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between"
                 >
                   <div>
                     <div className="flex items-center justify-between mb-5">
                       <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center">
                         <IconComponent className="w-6 h-6" />
                       </div>
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                         {benefit.tag}
                       </span>
                     </div>
@@ -746,59 +875,26 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     </p>
                   </div>
 
-                  <div className="pt-5 mt-5 border-t border-slate-100 dark:border-slate-800 flex items-center gap-1.5 text-xs font-bold text-teal-600 dark:text-teal-400">
+                  <div className="pt-5 mt-5 border-t border-slate-200/70 dark:border-slate-800 flex items-center gap-1.5 text-xs font-bold text-teal-600 dark:text-teal-400">
                     <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
-                    <span>{isEs ? 'Ventaja oficial incluida' : 'Official feature included'}</span>
+                    <span>{isEs ? 'Funcionalidad oficial incluida' : 'Official feature included'}</span>
                   </div>
                 </div>
               );
             })}
           </div>
 
-          {/* Call to action de registro bajo los beneficios */}
-          <div className="mt-14 max-w-4xl mx-auto p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-teal-900 to-slate-900 text-white shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
-            <div className="space-y-1">
-              <h3 className="text-xl sm:text-2xl font-black text-white">
-                {isEs ? '¿Listo para aprovechar tu portal escolar?' : 'Ready to use your school portal?'}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-300">
-                {isEs ? 'Crea tu cuenta institucional o inicia sesión en pocos segundos.' : 'Sign in or create your institutional account in seconds.'}
-              </p>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                type="button"
-                onClick={() => scrollToAuthSection('register')}
-                className="px-5 py-3 rounded-xl bg-teal-500 hover:bg-teal-400 text-slate-950 font-bold text-xs sm:text-sm transition-all shadow-md cursor-pointer"
-              >
-                {isEs ? 'Crear Cuenta' : 'Register'}
-              </button>
-              <button
-                type="button"
-                onClick={() => scrollToAuthSection('login')}
-                className="px-5 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm transition-all border border-white/20 cursor-pointer"
-              >
-                {isEs ? 'Iniciar Sesión' : 'Sign In'}
-              </button>
-            </div>
-          </div>
-
         </div>
       </section>
 
       {/* =========================================================================
-          5. PIE DE PÁGINA INSTITUCIONAL LIMPIO, MODERNO Y ESTÁNDAR
-             - UBICACIONES DE LAS SEDES ESCRITAS CORRECTAMENTE
-             - ORGANIZADO CON INFORMACIÓN HABITUAL DE PÁGINAS WEB
-             - SIN ENLACES OFICIALES (ELIMINADO)
-             - VENTANAS EMERGENTES (MODALES) DE:
-               * CONTACTO Y SOPORTE (CON CORREO digitaledumed@gmail.com)
-               * POLÍTICA DE PRIVACIDAD
-               * TÉRMINOS Y CONDICIONES
-               * AVISO LEGAL INSTITUCIONAL
+          6. APARTADO: SEDES Y CONTACTO (PIE DE PÁGINA INSTITUCIONAL)
+             - SEDES ESCRITAS CORRECTAMENTE
+             - INFORMACIÓN ESTÁNDAR DE PIE DE PÁGINA
+             - VENTANAS EMERGENTES APARECEN DIRECTAMENTE EN EL VIEWPORT ACTUAL
           ========================================================================= */}
       <footer 
-        id="contacto" 
+        id="sedes" 
         ref={sedesSectionRef}
         className="w-full bg-[#001e30] text-slate-300 border-t border-slate-800 pt-14 pb-8 text-xs text-left"
       >
@@ -898,7 +994,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                 <li>
                   <button
                     type="button"
-                    onClick={() => setIsPrivacyModalOpen(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsPrivacyModalOpen(true);
+                    }}
                     className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
@@ -908,7 +1007,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                 <li>
                   <button
                     type="button"
-                    onClick={() => setIsTermsModalOpen(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsTermsModalOpen(true);
+                    }}
                     className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <FileCheck2 className="w-3.5 h-3.5 text-teal-400" />
@@ -918,11 +1020,24 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                 <li>
                   <button
                     type="button"
-                    onClick={() => setIsLegalModalOpen(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsLegalModalOpen(true);
+                    }}
                     className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 cursor-pointer"
                   >
                     <Scale className="w-3.5 h-3.5 text-teal-400" />
                     <span>{isEs ? 'Aviso Legal e Identificación Oficial' : 'Legal Notice'}</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={scrollToOpportunities}
+                    className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 cursor-pointer"
+                  >
+                    <BookOpen className="w-3.5 h-3.5 text-teal-400" />
+                    <span>{isEs ? 'Oferta y Oportunidades Educativas' : 'Educational Pathways'}</span>
                   </button>
                 </li>
                 <li>
@@ -935,20 +1050,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     <span>{isEs ? 'Beneficios de la Plataforma' : 'Platform Benefits'}</span>
                   </button>
                 </li>
-                <li>
-                  <button
-                    type="button"
-                    onClick={() => scrollToAuthSection('register')}
-                    className="text-slate-400 hover:text-teal-400 transition-colors flex items-center gap-2 cursor-pointer"
-                  >
-                    <UserPlus className="w-3.5 h-3.5 text-teal-400" />
-                    <span>{isEs ? 'Registro de Acudientes y Familias' : 'Guardian Registration'}</span>
-                  </button>
-                </li>
               </ul>
             </div>
 
-            {/* Col 4: Atención, Contacto y Soporte Técnico (Ventana Emergente) */}
+            {/* Col 4: Atención, Contacto y Soporte Técnico (Ventana Emergente Directa) */}
             <div className="space-y-3">
               <h4 className="font-bold text-white uppercase tracking-wider text-xs mb-3 flex items-center gap-1.5">
                 <HelpCircle className="w-4 h-4 text-teal-400" />
@@ -957,7 +1062,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               
               <p className="text-[11px] text-slate-400 leading-relaxed">
                 {isEs 
-                  ? '¿Tienes dudas sobre tu matrícula, acceso o uso de EduMed Digital? Escríbenos o abre nuestra ventana de contacto directo.'
+                  ? '¿Tienes dudas sobre matrícula, código de acudiente o uso de EduMed Digital? Escríbenos o abre nuestra ventana de contacto.'
                   : 'Questions about registration, access, or technical issues? Contact our support team.'}
               </p>
 
@@ -977,7 +1082,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               {/* Botón para abrir Ventana Emergente de Contacto con Soporte */}
               <button
                 type="button"
-                onClick={() => setIsContactModalOpen(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsContactModalOpen(true);
+                }}
                 className="w-full mt-3 px-4 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -995,7 +1103,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             <div className="flex items-center gap-3">
               <button 
                 type="button" 
-                onClick={() => setIsPrivacyModalOpen(true)} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsPrivacyModalOpen(true);
+                }} 
                 className="hover:text-teal-400 transition-colors cursor-pointer"
               >
                 {isEs ? 'Privacidad' : 'Privacy'}
@@ -1003,7 +1114,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               <span>·</span>
               <button 
                 type="button" 
-                onClick={() => setIsTermsModalOpen(true)} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsTermsModalOpen(true);
+                }} 
                 className="hover:text-teal-400 transition-colors cursor-pointer"
               >
                 {isEs ? 'Términos' : 'Terms'}
@@ -1011,7 +1125,10 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               <span>·</span>
               <button 
                 type="button" 
-                onClick={() => setIsLegalModalOpen(true)} 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsLegalModalOpen(true);
+                }} 
                 className="hover:text-teal-400 transition-colors cursor-pointer"
               >
                 {isEs ? 'Aviso Legal' : 'Legal'}
@@ -1019,23 +1136,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               <span>·</span>
               <button 
                 type="button" 
-                onClick={() => setIsContactModalOpen(true)} 
-                className="hover:text-teal-400 transition-colors cursor-pointer font-bold text-teal-500"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsContactModalOpen(true);
+                }} 
+                className="hover:text-teal-400 transition-colors cursor-pointer font-bold text-teal-400"
               >
                 digitaledumed@gmail.com
               </button>
-              {onReplaySplash && (
-                <>
-                  <span>·</span>
-                  <button
-                    type="button"
-                    onClick={onReplaySplash}
-                    className="hover:text-teal-400 text-slate-400 transition-colors cursor-pointer"
-                  >
-                    Intro
-                  </button>
-                </>
-              )}
             </div>
           </div>
 
@@ -1043,8 +1151,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       </footer>
 
       {/* =========================================================================
-          VENTANA EMERGENTE 1: FORMULARIO DE CONTACTO Y SOPORTE TÉCNICO
-          (Incluye correo digitaledumed@gmail.com, campos necesarios y respuesta)
+          MODAL 1: FORMULARIO DE CONTACTO Y SOPORTE TÉCNICO
+          (Centrado directamente en el viewport actual m-auto)
           ========================================================================= */}
       {isContactModalOpen && (
         <div 
@@ -1053,7 +1161,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             if (e.target === e.currentTarget) resetContactForm();
           }}
         >
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left my-8">
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left m-auto">
             <button
               type="button"
               onClick={resetContactForm}
@@ -1077,7 +1185,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     : `We have received your message with ticket `}
                   <strong className="text-teal-600 dark:text-teal-400 font-mono">{contactTicketId}</strong>.
                   {isEs 
-                    ? ` Nuestro equipo de soporte técnico responderá a tu correo electrónico a la mayor brevedad posible. También puedes escribirnos directamente a `
+                    ? ` Nuestro equipo responderá a tu correo a la mayor brevedad. También puedes escribirnos a `
                     : ` Our team will respond shortly. You can also write to `}
                   <strong className="text-slate-900 dark:text-white">digitaledumed@gmail.com</strong>.
                 </p>
@@ -1107,7 +1215,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
 
                 <p className="text-xs text-slate-600 dark:text-slate-400 mb-5 leading-relaxed">
                   {isEs 
-                    ? 'Diligencia el formulario a continuación para comunicarte con el equipo de soporte de la plataforma de la I.E. Félix Henao Botero.'
+                    ? 'Diligencia el formulario para comunicarte directamente con el equipo de soporte de la I.E. Félix Henao Botero.'
                     : 'Fill out this form to get in touch with our EduMed Digital support team.'}
                 </p>
 
@@ -1199,7 +1307,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                     <textarea 
                       required
                       rows={3}
-                      placeholder={isEs ? 'Describe brevemente tu consulta o el inconveniente presentado...' : 'Describe your request...'}
+                      placeholder={isEs ? 'Describe brevemente tu consulta...' : 'Describe your request...'}
                       value={contactForm.message}
                       onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                       className="w-full px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
@@ -1226,7 +1334,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       )}
 
       {/* =========================================================================
-          VENTANA EMERGENTE 2: POLÍTICA DE PRIVACIDAD Y TRATAMIENTO DE DATOS
+          MODAL 2: POLÍTICA DE PRIVACIDAD
           ========================================================================= */}
       {isPrivacyModalOpen && (
         <div 
@@ -1235,7 +1343,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             if (e.target === e.currentTarget) setIsPrivacyModalOpen(false);
           }}
         >
-          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left my-8 max-h-[85vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left m-auto max-h-[85vh] overflow-y-auto">
             <button
               type="button"
               onClick={() => setIsPrivacyModalOpen(false)}
@@ -1265,37 +1373,25 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
                   1. Marco Legal y Compromiso Institucional
                 </h4>
                 <p>
-                  La <strong>Institución Educativa Félix Henao Botero</strong> de Medellín, en su calidad de entidad educativa oficial adscrita a la Secretaría de Educación de Medellín, garantiza la debida protección, privacidad y seguridad de los datos personales suministrados a través de la plataforma <strong>EduMed Digital</strong>, en estricto cumplimiento de la <em>Ley Estatutaria 1581 de 2012</em> y el <em>Decreto 1377 de 2013</em> de la República de Colombia.
+                  La <strong>Institución Educativa Félix Henao Botero</strong> de Medellín garantiza la debida protección, privacidad y seguridad de los datos personales suministrados a través de <strong>EduMed Digital</strong>, en estricto cumplimiento de la Ley 1581 de 2012 y el Decreto 1377 de 2013 de Colombia.
                 </p>
               </section>
 
               <section>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  2. Datos Personales de Niños, Niñas y Adolescentes
+                  2. Datos de Menores de Edad
                 </h4>
                 <p>
-                  El tratamiento de datos personales de menores de edad responde prioritariamente al respeto de sus derechos fundamentales y al exclusivo desarrollo de actividades académicas, registro en el Sistema Integrado de Matrícula (SIMAT), expedición de carnets digitales escolares y comunicación pedagógica con acudientes legalmente autorizados.
+                  El tratamiento de datos personales de menores responde al interés superior del estudiante, con fines formativos, registro SIMAT y comunicación con acudientes autorizados.
                 </p>
               </section>
 
               <section>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  3. Finalidades del Tratamiento
-                </h4>
-                <ul className="list-disc pl-5 space-y-1">
-                  <li>Gestionar procesos de admisión, preinscripción y matrícula escolar oficial.</li>
-                  <li>Generación y validación del carnet escolar digital con código QR institucional.</li>
-                  <li>Envío de circulares, citaciones académicas y notificaciones a familias y acudientes.</li>
-                  <li>Auditoría, archivo y reporte obligatorio a los sistemas del Ministerio de Educación Nacional.</li>
-                </ul>
-              </section>
-
-              <section>
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  4. Canales de Ejercicio de Derechos (Habeas Data)
+                  3. Contacto y Consultas
                 </h4>
                 <p>
-                  Los titulares o sus representantes legales pueden solicitar la consulta, actualización o rectificación de su información a través del correo oficial: <strong className="text-teal-600 dark:text-teal-400">digitaledumed@gmail.com</strong> o de forma presencial en la secretaría académica de la Sede Principal.
+                  Para ejercer sus derechos de Habeas Data, puede escribir al correo oficial: <strong className="text-teal-600 dark:text-teal-400">digitaledumed@gmail.com</strong>.
                 </p>
               </section>
             </div>
@@ -1314,7 +1410,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       )}
 
       {/* =========================================================================
-          VENTANA EMERGENTE 3: TÉRMINOS Y CONDICIONES DE USO
+          MODAL 3: TÉRMINOS Y CONDICIONES
           ========================================================================= */}
       {isTermsModalOpen && (
         <div 
@@ -1323,7 +1419,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             if (e.target === e.currentTarget) setIsTermsModalOpen(false);
           }}
         >
-          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left my-8 max-h-[85vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left m-auto max-h-[85vh] overflow-y-auto">
             <button
               type="button"
               onClick={() => setIsTermsModalOpen(false)}
@@ -1350,37 +1446,19 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             <div className="space-y-4 text-xs text-slate-600 dark:text-slate-300 leading-relaxed border-t border-slate-100 dark:border-slate-800 pt-4">
               <section>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  1. Objeto del Servicio
+                  1. Uso Institucional y Pedagógico
                 </h4>
                 <p>
-                  <strong>EduMed Digital</strong> es el entorno virtual oficial de gestión pedagógica y administrativa de la I.E. Félix Henao Botero, destinado a estudiantes matriculados, acudientes y personal docente/directivo. Su uso es estrictamente educativo e institucional.
+                  <strong>EduMed Digital</strong> es el entorno virtual oficial de gestión de la I.E. Félix Henao Botero. Su uso está reservado a la comunidad escolar vinculada.
                 </p>
               </section>
 
               <section>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  2. Responsabilidad de Credenciales y Códigos de Acceso
+                  2. Responsabilidad de Credenciales
                 </h4>
                 <p>
-                  Cada usuario es responsable del uso personal e intransferible de su usuario y contraseña. Los códigos de validación asignados a los acudientes deben mantenerse bajo reserva para evitar accesos no autorizados a la información escolar del menor.
-                </p>
-              </section>
-
-              <section>
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  3. Uso del Carnet Escolar Digital
-                </h4>
-                <p>
-                  El carnet digital con código QR generado en la plataforma es un documento institucional personal de identificación escolar. Cualquier alteración, suplantación o mal uso acarreará las medidas previstas en el Manual de Convivencia Escolar.
-                </p>
-              </section>
-
-              <section>
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  4. Disponibilidad y Soporte Técnico
-                </h4>
-                <p>
-                  La institución propende por el funcionamiento continuo de la plataforma. Para reportar incidencias o bloqueos de cuenta, la comunidad dispone del correo institucional de soporte: <strong className="text-blue-600 dark:text-blue-400">digitaledumed@gmail.com</strong>.
+                  Las claves y códigos de validación asignados a acudientes y estudiantes son personales e intransferibles. Cualquier duda técnica puede canalizarse a <strong className="text-blue-600 dark:text-blue-400">digitaledumed@gmail.com</strong>.
                 </p>
               </section>
             </div>
@@ -1399,7 +1477,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       )}
 
       {/* =========================================================================
-          VENTANA EMERGENTE 4: AVISO LEGAL E IDENTIFICACIÓN OFICIAL
+          MODAL 4: AVISO LEGAL INSTITUCIONAL
           ========================================================================= */}
       {isLegalModalOpen && (
         <div 
@@ -1408,7 +1486,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
             if (e.target === e.currentTarget) setIsLegalModalOpen(false);
           }}
         >
-          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left my-8 max-h-[85vh] overflow-y-auto">
+          <div className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left m-auto max-h-[85vh] overflow-y-auto">
             <button
               type="button"
               onClick={() => setIsLegalModalOpen(false)}
@@ -1436,30 +1514,20 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1">
                 <div><strong>Razón Social:</strong> Institución Educativa Félix Henao Botero</div>
                 <div><strong>Naturaleza:</strong> Oficial, Pública, Mixta, Calendario A</div>
-                <div><strong>Entidad Territorial Certificada:</strong> Alcaldía de Medellín - Secretaría de Educación</div>
+                <div><strong>Municipio:</strong> Medellín, Antioquia (Secretaría de Educación)</div>
                 <div><strong>Código DANE:</strong> 105001002345</div>
                 <div><strong>NIT:</strong> 890980123-1</div>
                 <div><strong>Código ICFES:</strong> 014522</div>
-                <div><strong>Comuna:</strong> Comuna 8 (Villa Hermosa / Enciso / Boston)</div>
               </div>
 
               <section>
                 <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  Ubicación de Sedes Oficiales
+                  Sedes Oficiales
                 </h4>
                 <ul className="list-disc pl-5 space-y-1">
-                  <li><strong>Sede Principal:</strong> Calle 52 # 18-40, Barrio Enciso - Boston, Medellín, Antioquia.</li>
-                  <li><strong>Sede Infantil:</strong> Carrera 22 # 54-15, Barrio La Libertad, Medellín, Antioquia.</li>
+                  <li><strong>Sede Principal:</strong> Calle 52 # 18-40, Barrio Enciso - Boston, Comuna 8, Medellín.</li>
+                  <li><strong>Sede Infantil:</strong> Carrera 22 # 54-15, Barrio La Libertad, Comuna 8, Medellín.</li>
                 </ul>
-              </section>
-
-              <section>
-                <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
-                  Atención al Ciudadano y Canales Digitales
-                </h4>
-                <p>
-                  Para trámites formales, certificados, peticiones o soporte digital de la plataforma, los canales habilitados son: Conmutador telefónico (604) 284 56 78 y correo de soporte: <strong className="text-amber-600 dark:text-amber-400">digitaledumed@gmail.com</strong>.
-                </p>
               </section>
             </div>
 
@@ -1477,30 +1545,120 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onReplaySplash }) => {
       )}
 
       {/* =========================================================================
-          VENTANA EMERGENTE 5: ACCESO RÁPIDO DESDE EL HEADER (SI SE ABRE DESDE BOTÓN)
+          MODAL 5: DETALLE DE OPORTUNIDADES (Instituciones, Programas, Matrículas)
           ========================================================================= */}
-      {isAuthModalOpen && (
+      {selectedOpportunityCard && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto animate-in fade-in"
           onClick={(e) => {
-            if (e.target === e.currentTarget) setIsAuthModalOpen(false);
+            if (e.target === e.currentTarget) setSelectedOpportunityCard(null);
           }}
         >
-          <div className="relative w-full max-w-md my-8 animate-in zoom-in-95 duration-200">
-            <button
-              type="button"
-              onClick={() => setIsAuthModalOpen(false)}
-              className="absolute top-4 right-4 z-20 p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 cursor-pointer shadow-sm"
-              title={isEs ? 'Cerrar ventana' : 'Close modal'}
-            >
-              <X className="w-5 h-5" />
-            </button>
+          {(() => {
+            const card = opportunityCards.find(c => c.id === selectedOpportunityCard);
+            if (!card) return null;
+            return (
+              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 max-w-lg w-full relative shadow-2xl text-left m-auto">
+                <button
+                  type="button"
+                  onClick={() => setSelectedOpportunityCard(null)}
+                  className="absolute top-4 right-4 p-2 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 cursor-pointer"
+                  title={isEs ? 'Cerrar ventana' : 'Close'}
+                >
+                  <X className="w-5 h-5" />
+                </button>
 
-            <AuthCard 
-              defaultMode={authModalMode}
-              onSuccess={() => setIsAuthModalOpen(false)}
-            />
-          </div>
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-3xl">{card.emoji}</span>
+                  <div>
+                    <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                      {card.title}
+                    </h3>
+                    <span className="text-xs text-teal-600 dark:text-teal-400 font-bold">
+                      {card.details.headline}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                  {card.details.summary}
+                </p>
+
+                {card.id === 'instituciones' && card.details.campuses && (
+                  <div className="space-y-2.5 my-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      {isEs ? 'Sedes Oficiales:' : 'Campuses:'}
+                    </h4>
+                    {card.details.campuses.map((camp, i) => (
+                      <div key={i} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
+                        <strong className="text-slate-900 dark:text-white block">{camp.name}</strong>
+                        <span className="text-slate-500 dark:text-slate-400 block">{camp.address}</span>
+                        <span className="text-teal-600 dark:text-teal-400 font-semibold block mt-0.5">{camp.grades}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {card.id === 'programas' && card.details.items && (
+                  <div className="space-y-2.5 my-4">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                      {isEs ? 'Programas Destacados:' : 'Featured Programs:'}
+                    </h4>
+                    {card.details.items.map((item, i) => (
+                      <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
+                        <div>
+                          <strong className="text-slate-900 dark:text-white block">{item.name}</strong>
+                          <span className="text-slate-500 dark:text-slate-400">{item.duration}</span>
+                        </div>
+                        <span className="px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-bold border border-teal-200 dark:border-teal-800 text-[10px]">
+                          {item.badge}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {card.id === 'matriculas' && card.details.steps && (
+                  <div className="space-y-2.5 my-4">
+                    <span className="inline-block px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold text-xs border border-amber-200 dark:border-amber-800 mb-2">
+                      {card.details.status}
+                    </span>
+                    <div className="space-y-2">
+                      {card.details.steps.map((st, i) => (
+                        <div key={i} className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-700 dark:text-slate-300">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>{st}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-6 flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedOpportunityCard(null);
+                      scrollToAuthSection();
+                    }}
+                    className="flex-1 py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>{isEs ? 'Ir a Portales' : 'Go to Portals'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedOpportunityCard(null)}
+                    className="py-3 px-4 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold cursor-pointer"
+                  >
+                    {isEs ? 'Cerrar' : 'Close'}
+                  </button>
+                </div>
+
+              </div>
+            );
+          })()}
         </div>
       )}
 
