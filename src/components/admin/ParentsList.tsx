@@ -46,6 +46,33 @@ export const ParentsList: React.FC = () => {
         </div>
       </div>
 
+      {/* Institutional Validation Codes Banner */}
+      <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 p-4 rounded-2xl text-xs text-amber-900 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+        <div className="space-y-0.5">
+          <span className="font-bold flex items-center gap-1.5 text-amber-950 dark:text-amber-100">
+            <UserCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+            {language === 'es' ? 'Códigos de Validación para Registro de Acudientes' : 'Guardian Validation Codes for Registration'}
+          </span>
+          <p className="text-[11px] text-amber-800/90 dark:text-amber-300">
+            {language === 'es'
+              ? 'Cuando un padre o acudiente se registra en la plataforma, puede usar el código institucional oficial '
+              : 'When a guardian creates an account, they can use the official institutional code '}
+            <code className="font-mono font-bold bg-amber-200/80 dark:bg-amber-900 px-1 py-0.5 rounded text-amber-950 dark:text-amber-100">ACUD-2026</code>
+            {language === 'es'
+              ? ' o su número de documento de identidad registrado en esta base de datos institucional.'
+              : ' or their document number listed in this database.'}
+          </p>
+        </div>
+        <div className="shrink-0 flex items-center gap-1.5">
+          <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 tracking-wider">
+            {language === 'es' ? 'Código Oficial:' : 'Official Code:'}
+          </span>
+          <span className="px-2.5 py-1 rounded-lg bg-amber-200 dark:bg-amber-900 font-mono font-black text-amber-950 dark:text-amber-100 text-xs border border-amber-300 dark:border-amber-700">
+            ACUD-2026
+          </span>
+        </div>
+      </div>
+
       {/* Search Bar */}
       <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs flex items-center gap-4">
         <div className="relative flex-1">
