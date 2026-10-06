@@ -130,61 +130,61 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
 
     if (step === 1) {
       if (!formData.docNumber.trim() || formData.docNumber.trim().length < 5) {
-        newErrors.docNumber = 'El número de documento debe tener al menos 5 dígitos.';
+        newErrors.docNumber = language === 'es' ? 'El número de documento debe tener al menos 5 dígitos.' : 'Document number must have at least 5 digits.';
       }
       if (!formData.firstNames.trim() || formData.firstNames.trim().length < 2) {
-        newErrors.firstNames = 'Ingrese los nombres del estudiante.';
+        newErrors.firstNames = language === 'es' ? 'Ingrese los nombres del estudiante.' : 'Please enter student first names.';
       }
       if (!formData.lastNames.trim() || formData.lastNames.trim().length < 2) {
-        newErrors.lastNames = 'Ingrese los apellidos del estudiante.';
+        newErrors.lastNames = language === 'es' ? 'Ingrese los apellidos del estudiante.' : 'Please enter student last names.';
       }
       if (!formData.birthDate) {
-        newErrors.birthDate = 'Seleccione la fecha de nacimiento.';
+        newErrors.birthDate = language === 'es' ? 'Seleccione la fecha de nacimiento.' : 'Please select date of birth.';
       }
     } else if (step === 2) {
       if (!formData.phone.trim() || formData.phone.replace(/\D/g, '').length < 7) {
-        newErrors.phone = 'Ingrese un número de teléfono válido (mínimo 7 dígitos).';
+        newErrors.phone = language === 'es' ? 'Ingrese un número de teléfono válido (mínimo 7 dígitos).' : 'Please enter a valid phone number (min 7 digits).';
       }
       if (!formData.email.trim() || !formData.email.includes('@')) {
-        newErrors.email = 'Ingrese un correo electrónico válido.';
+        newErrors.email = language === 'es' ? 'Ingrese un correo electrónico válido.' : 'Please enter a valid email address.';
       }
       if (!formData.address.trim()) {
-        newErrors.address = 'Ingrese la dirección de residencia.';
+        newErrors.address = language === 'es' ? 'Ingrese la dirección de residencia.' : 'Please enter residential address.';
       }
       if (!formData.neighborhood.trim()) {
-        newErrors.neighborhood = 'Ingrese el barrio de residencia.';
+        newErrors.neighborhood = language === 'es' ? 'Ingrese el barrio de residencia.' : 'Please enter neighborhood.';
       }
     } else if (step === 3) {
       if (!formData.previousSchool.trim()) {
-        newErrors.previousSchool = 'Ingrese el colegio o institución de procedencia.';
+        newErrors.previousSchool = language === 'es' ? 'Ingrese el colegio o institución de procedencia.' : 'Please enter previous school.';
       }
       if (!formData.eps.trim()) {
-        newErrors.eps = 'Ingrese el nombre de su EPS.';
+        newErrors.eps = language === 'es' ? 'Ingrese el nombre de su EPS.' : 'Please enter health insurance (EPS).';
       }
     } else if (step === 4) {
       if (!formData.guardianFullName.trim() || formData.guardianFullName.trim().length < 3) {
-        newErrors.guardianFullName = 'Ingrese el nombre completo del acudiente.';
+        newErrors.guardianFullName = language === 'es' ? 'Ingrese el nombre completo del acudiente.' : 'Please enter guardian full name.';
       }
       if (!formData.guardianDocNumber.trim() || formData.guardianDocNumber.trim().length < 5) {
-        newErrors.guardianDocNumber = 'Ingrese el documento de identidad del acudiente.';
+        newErrors.guardianDocNumber = language === 'es' ? 'Ingrese el documento de identidad del acudiente.' : 'Please enter guardian document number.';
       }
       if (!formData.guardianPhone.trim() || formData.guardianPhone.replace(/\D/g, '').length < 7) {
-        newErrors.guardianPhone = 'Ingrese el teléfono de contacto del acudiente.';
+        newErrors.guardianPhone = language === 'es' ? 'Ingrese el teléfono de contacto del acudiente.' : 'Please enter guardian phone number.';
       }
     } else if (step === 5) {
       const missing = docs.filter(d => d.required && !d.uploaded);
       if (missing.length > 0) {
-        newErrors.documents = `Falta adjuntar: ${missing.map(m => m.name).join(', ')}`;
+        newErrors.documents = language === 'es' ? `Falta adjuntar: ${missing.map(m => m.name).join(', ')}` : `Missing documents: ${missing.map(m => m.name).join(', ')}`;
       }
     } else if (step === 6) {
       if (!formData.swornOathAccepted) {
-        newErrors.swornOathAccepted = 'Debe aceptar la declaración juramentada de veracidad de datos.';
+        newErrors.swornOathAccepted = language === 'es' ? 'Debe aceptar la declaración juramentada de veracidad de datos.' : 'You must accept the sworn declaration of truth.';
       }
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setTopBannerError('⚠️ Por favor completa todos los campos requeridos con información válida para avanzar.');
+      setTopBannerError(language === 'es' ? '⚠️ Por favor completa todos los campos requeridos con información válida para avanzar.' : '⚠️ Please complete all required fields with valid information to proceed.');
       return false;
     }
 

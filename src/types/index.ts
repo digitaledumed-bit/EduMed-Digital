@@ -117,8 +117,11 @@ export interface AuthUser {
 export interface AppNotification {
   id: string;
   title: string;
+  titleEn?: string;
   message: string;
+  messageEn?: string;
   date: string;
+  dateEn?: string;
   read: boolean;
   targetRoles: ('admin' | 'guardian' | 'student' | 'public')[];
   targetDocNumber?: string;

@@ -7,15 +7,34 @@
    ========================================================================== */
 
 :root, html {
-  font-size: 16px;
-  line-height: 1.5;
+  font-size: 17.5px;
+  line-height: 1.65;
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-/* Mejora de legibilidad en inputs y botones */
+@media (min-width: 1024px) {
+  :root, html {
+    font-size: 18px;
+  }
+}
+
+body {
+  font-size: 1.05rem;
+  line-height: 1.65;
+  color: inherit;
+}
+
+/* Tipografía amplia, cómoda y accesible en controles de formulario */
 input, select, textarea, button {
   font-family: inherit;
+  font-size: 1rem;
+}
+
+/* Títulos con proporciones óptimas y legibilidad */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
 }
 
 @keyframes subtle-float {

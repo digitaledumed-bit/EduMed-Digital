@@ -92,21 +92,23 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
     setTimeout(() => setFeedback(null), 4500);
   };
 
+  const isEs = language === 'es';
+
   const subjects = [
-    { id: 'mat', name: 'Matemáticas y Geometría', teacher: 'Lic. Claudia Restrepo', score: 4.8, period: 'Periodo 1', status: 'Superior' },
-    { id: 'esp', name: 'Lengua Castellana y Literatura', teacher: 'Prof. Gabriel Arango', score: 4.5, period: 'Periodo 1', status: 'Alto' },
-    { id: 'cie', name: 'Ciencias Naturales y Química', teacher: 'Dra. Patricia Botero', score: 4.7, period: 'Periodo 1', status: 'Superior' },
-    { id: 'soc', name: 'Ciencias Sociales e Historia', teacher: 'Lic. Fernando Zapata', score: 4.2, period: 'Periodo 1', status: 'Alto' },
-    { id: 'ing', name: 'Inglés Comunicativo B1', teacher: 'Prof. Diana Henao', score: 4.9, period: 'Periodo 1', status: 'Superior' },
-    { id: 'tec', name: 'Tecnología e Informática', teacher: 'Ing. Carlos Medina', score: 5.0, period: 'Periodo 1', status: 'Superior' }
+    { id: 'mat', name: isEs ? 'Matemáticas y Geometría' : 'Mathematics & Geometry', teacher: 'Lic. Claudia Restrepo', score: 4.8, period: isEs ? 'Periodo 1' : 'Term 1', status: isEs ? 'Superior' : 'Top' },
+    { id: 'esp', name: isEs ? 'Lengua Castellana y Literatura' : 'Spanish Language & Literature', teacher: 'Prof. Gabriel Arango', score: 4.5, period: isEs ? 'Periodo 1' : 'Term 1', status: isEs ? 'Alto' : 'High' },
+    { id: 'cie', name: isEs ? 'Ciencias Naturales y Química' : 'Natural Sciences & Chemistry', teacher: 'Dra. Patricia Botero', score: 4.7, period: isEs ? 'Periodo 1' : 'Term 1', status: isEs ? 'Superior' : 'Top' },
+    { id: 'soc', name: isEs ? 'Ciencias Sociales e Historia' : 'Social Studies & History', teacher: 'Lic. Fernando Zapata', score: 4.2, period: isEs ? 'Periodo 1' : 'Term 1', status: isEs ? 'Alto' : 'High' },
+    { id: 'ing', name: isEs ? 'Inglés Comunicativo B1' : 'Communicative English B1', teacher: 'Prof. Diana Henao', score: 4.9, period: isEs ? 'Periodo 1' : 'Term 1', status: isEs ? 'Superior' : 'Top' },
+    { id: 'tec', name: isEs ? 'Tecnología e Informática' : 'Technology & Computer Science', teacher: 'Ing. Carlos Medina', score: 5.0, period: isEs ? 'Periodo 1' : 'Term 1', status: isEs ? 'Superior' : 'Top' }
   ];
 
   const scheduleDays = [
-    { day: 'Lunes', items: ['Matemáticas (6:30 - 8:30)', 'Lengua Castellana (8:30 - 10:00)', 'Descanso (10:00 - 10:30)', 'Química (10:30 - 12:30)'] },
-    { day: 'Martes', items: ['Inglés (6:30 - 8:30)', 'Ciencias Sociales (8:30 - 10:00)', 'Descanso (10:00 - 10:30)', 'Informática (10:30 - 12:30)'] },
-    { day: 'Miércoles', items: ['Educación Física (6:30 - 8:30)', 'Matemáticas (8:30 - 10:00)', 'Descanso (10:00 - 10:30)', 'Física (10:30 - 12:30)'] },
-    { day: 'Jueves', items: ['Filosofía (6:30 - 8:30)', 'Lengua Castellana (8:30 - 10:00)', 'Descanso (10:00 - 10:30)', 'Biología (10:30 - 12:30)'] },
-    { day: 'Viernes', items: ['Ética y Valores (6:30 - 8:30)', 'Artes (8:30 - 10:00)', 'Descanso (10:00 - 10:30)', 'Dirección de Grupo (10:30 - 12:30)'] }
+    { day: isEs ? 'Lunes' : 'Monday', items: [isEs ? 'Matemáticas (6:30 - 8:30)' : 'Math (6:30 - 8:30)', isEs ? 'Lengua Castellana (8:30 - 10:00)' : 'Spanish (8:30 - 10:00)', isEs ? 'Descanso (10:00 - 10:30)' : 'Break (10:00 - 10:30)', isEs ? 'Química (10:30 - 12:30)' : 'Chemistry (10:30 - 12:30)'] },
+    { day: isEs ? 'Martes' : 'Tuesday', items: [isEs ? 'Inglés (6:30 - 8:30)' : 'English (6:30 - 8:30)', isEs ? 'Ciencias Sociales (8:30 - 10:00)' : 'Social Studies (8:30 - 10:00)', isEs ? 'Descanso (10:00 - 10:30)' : 'Break (10:00 - 10:30)', isEs ? 'Informática (10:30 - 12:30)' : 'Computer Science (10:30 - 12:30)'] },
+    { day: isEs ? 'Miércoles' : 'Wednesday', items: [isEs ? 'Educación Física (6:30 - 8:30)' : 'P.E. (6:30 - 8:30)', isEs ? 'Matemáticas (8:30 - 10:00)' : 'Math (8:30 - 10:00)', isEs ? 'Descanso (10:00 - 10:30)' : 'Break (10:00 - 10:30)', isEs ? 'Física (10:30 - 12:30)' : 'Physics (10:30 - 12:30)'] },
+    { day: isEs ? 'Jueves' : 'Thursday', items: [isEs ? 'Filosofía (6:30 - 8:30)' : 'Philosophy (6:30 - 8:30)', isEs ? 'Lengua Castellana (8:30 - 10:00)' : 'Spanish (8:30 - 10:00)', isEs ? 'Descanso (10:00 - 10:30)' : 'Break (10:00 - 10:30)', isEs ? 'Biología (10:30 - 12:30)' : 'Biology (10:30 - 12:30)'] },
+    { day: isEs ? 'Viernes' : 'Friday', items: [isEs ? 'Ética y Valores (6:30 - 8:30)' : 'Ethics (6:30 - 8:30)', isEs ? 'Artes (8:30 - 10:00)' : 'Arts (8:30 - 10:00)', isEs ? 'Descanso (10:00 - 10:30)' : 'Break (10:00 - 10:30)', isEs ? 'Dirección de Grupo (10:30 - 12:30)' : 'Homeroom (10:30 - 12:30)'] }
   ];
 
   return (
@@ -180,22 +182,22 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1.5">
                 <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-xs font-black uppercase tracking-wider">
                   <User className="w-3.5 h-3.5" />
-                  Estudiante
+                  {isEs ? 'Estudiante' : 'Student'}
                 </span>
                 
                 {hasCustomPhoto ? (
                   <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
-                    📷 Foto personalizada
+                    {isEs ? '📷 Foto personalizada' : '📷 Custom photo'}
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-800 flex items-center gap-1">
-                    🎨 Avatar oficial ({isMale ? 'Masculino' : isFemale ? 'Femenino' : 'Neutro'})
+                    {isEs ? `🎨 Avatar oficial (${isMale ? 'Masculino' : isFemale ? 'Femenino' : 'Neutro'})` : `🎨 Official avatar (${isMale ? 'Male' : isFemale ? 'Female' : 'Neutral'})`}
                   </span>
                 )}
 
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5" />
-                  Matrícula 100%
+                  {isEs ? 'Matrícula 100%' : 'Enrolled 100%'}
                 </span>
               </div>
 
@@ -205,7 +207,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               </h1>
 
               <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                {student.documentType} {student.documentNumber} • Grado <strong className="text-slate-800 dark:text-slate-200">{student.grade}</strong> • Jornada {student.shift}
+                {student.documentType} {student.documentNumber} • {isEs ? 'Grado' : 'Grade'} <strong className="text-slate-800 dark:text-slate-200">{student.grade}</strong> • {isEs ? 'Jornada' : 'Shift'} {student.shift}
               </p>
 
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-2 text-xs text-slate-500 dark:text-slate-400">
@@ -218,7 +220,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                   {student.neighborhood}
                 </span>
                 <span className="font-semibold text-teal-700 dark:text-teal-300">
-                  {isMale ? '♂ Sexo: Masculino (Hombre)' : isFemale ? '♀ Sexo: Femenino (Mujer)' : '🎓 Sexo: No registrado (Neutro)'}
+                  {isMale ? (isEs ? '♂ Sexo: Masculino (Hombre)' : '♂ Gender: Male') : isFemale ? (isEs ? '♀ Sexo: Femenino (Mujer)' : '♀ Gender: Female') : (isEs ? '🎓 Sexo: Neutro' : '🎓 Gender: Neutral')}
                 </span>
               </div>
             </div>
@@ -235,7 +237,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               className="px-4 py-2.5 rounded-2xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
             >
               <Camera className="w-4 h-4" />
-              <span>Cambiar foto de perfil</span>
+              <span>{isEs ? 'Cambiar foto de perfil' : 'Change profile photo'}</span>
             </button>
 
             {/* 2. Botón "Restaurar avatar predeterminado" */}
@@ -244,10 +246,10 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               id="student-dashboard-btn-restore-avatar"
               onClick={handleRestoreDefault}
               className="px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-              title="Elimina la fotografía personalizada y vuelve a mostrar automáticamente el avatar correspondiente al sexo registrado"
+              title={isEs ? "Elimina la fotografía personalizada y vuelve a mostrar automáticamente el avatar correspondiente al sexo registrado" : "Removes custom photo and restores default avatar"}
             >
               <RotateCcw className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              <span>Restaurar avatar predeterminado</span>
+              <span>{isEs ? 'Restaurar avatar predeterminado' : 'Restore default avatar'}</span>
             </button>
 
             {/* 3. Botón "Editar perfil" */}
@@ -258,7 +260,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               className="px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <Edit3 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              <span>Editar perfil</span>
+              <span>{isEs ? 'Editar perfil' : 'Edit profile'}</span>
             </button>
 
             {/* Reset / Test Enrollment Gate Button for Demonstration */}
@@ -267,10 +269,10 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                 type="button"
                 onClick={onResetEnrollmentForTest}
                 className="px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                title="Simula que la matrícula no ha sido completada para verificar la pantalla de 6 pasos obligatorios"
+                title={isEs ? "Simula que la matrícula no ha sido completada para verificar la pantalla de 6 pasos obligatorios" : "Simulate incomplete enrollment"}
               >
                 <RefreshCw className="w-3 h-3 text-amber-600" />
-                <span>Simular matrícula incompleta</span>
+                <span>{isEs ? 'Simular matrícula incompleta' : 'Simulate incomplete enrollment'}</span>
               </button>
             )}
           </div>
@@ -282,53 +284,53 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Estado Matrícula</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{isEs ? 'Estado Matrícula' : 'Enrollment Status'}</span>
             <span className="w-8 h-8 rounded-xl bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center font-bold">
               ✓
             </span>
           </div>
           <div className="mt-2">
-            <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400">Activa 100%</span>
-            <p className="text-[11px] text-slate-400 mt-0.5">Vigente año escolar 2025</p>
+            <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400">{isEs ? 'Activa 100%' : 'Active 100%'}</span>
+            <p className="text-[11px] text-slate-400 mt-0.5">{isEs ? 'Vigente año escolar 2025' : 'Valid school year 2025'}</p>
           </div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Promedio General</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{isEs ? 'Promedio General' : 'GPA / Average'}</span>
             <span className="w-8 h-8 rounded-xl bg-teal-50 dark:bg-teal-950 text-teal-600 flex items-center justify-center font-bold">
               ★
             </span>
           </div>
           <div className="mt-2">
             <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">4.7 / 5.0</span>
-            <p className="text-[11px] text-teal-600 dark:text-teal-400 mt-0.5 font-bold">Desempeño Superior</p>
+            <p className="text-[11px] text-teal-600 dark:text-teal-400 mt-0.5 font-bold">{isEs ? 'Desempeño Superior' : 'Top Performance'}</p>
           </div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Asistencia a Clases</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{isEs ? 'Asistencia a Clases' : 'Class Attendance'}</span>
             <span className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950 text-blue-600 flex items-center justify-center font-bold">
               %
             </span>
           </div>
           <div className="mt-2">
             <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">98.4%</span>
-            <p className="text-[11px] text-slate-400 mt-0.5">Excelente cumplimiento</p>
+            <p className="text-[11px] text-slate-400 mt-0.5">{isEs ? 'Excelente cumplimiento' : 'Excellent compliance'}</p>
           </div>
         </div>
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Documentos</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{isEs ? 'Documentos' : 'Documents'}</span>
             <span className="w-8 h-8 rounded-xl bg-purple-50 dark:bg-purple-950 text-purple-600 flex items-center justify-center font-bold">
               🗂
             </span>
           </div>
           <div className="mt-2">
-            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">4 de 4</span>
-            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-bold">Aprobados por secretaría</p>
+            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">{isEs ? '4 de 4' : '4 of 4'}</span>
+            <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-bold">{isEs ? 'Aprobados por secretaría' : 'Approved by office'}</p>
           </div>
         </div>
       </div>
@@ -345,7 +347,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
           }`}
         >
           <Award className="w-4 h-4" />
-          <span>Mis Asignaturas y Calificaciones</span>
+          <span>{isEs ? 'Mis Asignaturas y Calificaciones' : 'My Subjects & Grades'}</span>
         </button>
 
         <button
@@ -358,7 +360,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
           }`}
         >
           <Clock className="w-4 h-4" />
-          <span>Horario de Clases</span>
+          <span>{isEs ? 'Horario de Clases' : 'Class Schedule'}</span>
         </button>
 
         <button
@@ -371,7 +373,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
           }`}
         >
           <FileText className="w-4 h-4" />
-          <span>Documentos y Matrícula</span>
+          <span>{isEs ? 'Documentos y Matrícula' : 'Documents & Enrollment'}</span>
         </button>
 
         <button
@@ -384,7 +386,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>Acudiente Vinculado</span>
+          <span>{isEs ? 'Acudiente Vinculado' : 'Linked Guardian'}</span>
         </button>
       </div>
 
@@ -478,45 +480,45 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <div>
               <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                Comprobante Oficial y Documentos de Matrícula
+                {isEs ? 'Comprobante Oficial y Documentos de Matrícula' : 'Official Receipt & Enrollment Documents'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Radicado institucional oficial generado para el año lectivo 2025
+                {isEs ? 'Radicado institucional oficial generado para el año lectivo 2025' : 'Official institutional docket generated for academic year 2025'}
               </p>
             </div>
 
             <button
               type="button"
-              onClick={() => alert(`Comprobante de matrícula institucional para ${studentName} (Radicado #MAT-2025-4821) listo para imprimir.`)}
+              onClick={() => alert(isEs ? `Comprobante de matrícula institucional para ${studentName} (Radicado #MAT-2025-4821) listo para imprimir.` : `Official enrollment receipt for ${studentName} (Docket #MAT-2025-4821) ready to print.`)}
               className="px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Imprimir Certificado de Matrícula</span>
+              <span>{isEs ? 'Imprimir Certificado de Matrícula' : 'Print Enrollment Certificate'}</span>
             </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
             <div className="p-4 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800">
               <span className="text-[11px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider block">
-                Código de Radicado Oficial
+                {isEs ? 'Código de Radicado Oficial' : 'Official Docket Code'}
               </span>
               <span className="text-xl font-black text-slate-900 dark:text-white font-mono mt-1 block">
                 #MAT-2025-4821
               </span>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                Registrado en SIMAT - Secretaría de Educación de Medellín
+                {isEs ? 'Registrado en SIMAT - Secretaría de Educación de Medellín' : 'Registered in SIMAT - Medellín Education Secretariat'}
               </p>
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
               <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                Póliza Estudiantil Institucional
+                {isEs ? 'Póliza Estudiantil Institucional' : 'Student Insurance Policy'}
               </span>
               <span className="text-base font-bold text-slate-900 dark:text-white mt-1 block">
-                Seguros del Estado • Póliza No. 9028-2025
+                {isEs ? 'Seguros del Estado • Póliza No. 9028-2025' : 'State Insurance • Policy No. 9028-2025'}
               </span>
               <p className="text-xs text-slate-500 mt-1">
-                Cobertura médica accidentes escolares 24/7
+                {isEs ? 'Cobertura médica accidentes escolares 24/7' : '24/7 student accident medical coverage'}
               </p>
             </div>
           </div>
@@ -528,10 +530,10 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
         <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs">
           <div className="mb-4">
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-              Acudiente Principal Vinculado
+              {isEs ? 'Acudiente Principal Vinculado' : 'Primary Linked Guardian'}
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Persona responsable ante la institución educativa para citaciones y seguimiento.
+              {isEs ? 'Persona responsable ante la institución educativa para citaciones y seguimiento.' : 'Person responsible for school meetings, communications, and academic tracking.'}
             </p>
           </div>
 
@@ -542,16 +544,16 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
 
             <div className="space-y-1 text-center sm:text-left flex-1">
               <span className="text-xs font-bold text-teal-700 dark:text-teal-400 uppercase tracking-wider">
-                Padre / Acudiente Principal
+                {isEs ? 'Padre / Acudiente Principal' : 'Parent / Primary Guardian'}
               </span>
               <h4 className="text-lg font-black text-slate-900 dark:text-white">
                 Carlos Eduardo Ramírez
               </h4>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                CC 1.034.567.890 • Teléfono: 300 123 4567 • carlos.ramirez@email.com
+                CC 1.034.567.890 • {isEs ? 'Teléfono' : 'Phone'}: 300 123 4567 • carlos.ramirez@email.com
               </p>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Dirección: Calle 45 # 12-34, Boston (Convive con el estudiante)
+                {isEs ? 'Dirección: Calle 45 # 12-34, Boston (Convive con el estudiante)' : 'Address: Calle 45 # 12-34, Boston (Lives with student)'}
               </p>
             </div>
           </div>

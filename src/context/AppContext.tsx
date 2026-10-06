@@ -165,8 +165,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-adm-1',
       title: 'Nuevas Solicitudes de Matrícula',
+      titleEn: 'New Enrollment Applications',
       message: 'Hay 5 solicitudes de matrícula pendientes por validación documental y asignación en SIMAT.',
+      messageEn: 'There are 5 pending enrollment applications awaiting document review and SIMAT quota allocation.',
       date: 'Hace 15 min',
+      dateEn: '15 min ago',
       read: false,
       targetRoles: ['admin'],
       category: 'administrative'
@@ -174,8 +177,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-adm-2',
       title: 'Documentos Pendientes de Aprobación',
+      titleEn: 'Documents Awaiting Approval',
       message: 'Se cargaron certificados del SISBEN y certificados médicos para revisión por secretaría académica.',
+      messageEn: 'SISBEN certificates and medical records were submitted for review by the academic secretary.',
       date: 'Hace 1 hora',
+      dateEn: '1 hour ago',
       read: false,
       targetRoles: ['admin'],
       category: 'document'
@@ -183,8 +189,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-adm-3',
       title: 'Comité Directivo y de Convivencia',
+      titleEn: 'Leadership & Student Affairs Committee',
       message: 'Convocatoria a reunión de coordinación institucional y secretaría académica el próximo viernes en rectoría.',
+      messageEn: 'Invitation to the institutional leadership and academic coordination meeting this Friday in the principal’s office.',
       date: 'Hace 3 horas',
+      dateEn: '3 hours ago',
       read: false,
       targetRoles: ['admin'],
       category: 'academic'
@@ -192,8 +201,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-adm-4',
       title: 'Cierre de Auditoría SIMAT 2025',
+      titleEn: 'SIMAT 2025 Audit Closing Notice',
       message: 'Recordatorio oficial: Plazo de consolidación de cupos escolares ante Secretaría de Educación de Medellín.',
+      messageEn: 'Official reminder: Deadline for consolidating school quotas with the Medellín Education Secretariat.',
       date: 'Ayer',
+      dateEn: 'Yesterday',
       read: true,
       targetRoles: ['admin'],
       category: 'administrative'
@@ -203,8 +215,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-grd-1',
       title: 'Estado de Matrícula en Revisión',
+      titleEn: 'Enrollment Status Under Review',
       message: 'La documentación de matrícula de su acudido(a) está siendo verificada satisfactoriamente por Secretaría.',
+      messageEn: 'Your student’s admission documents are currently being verified by the school admissions office.',
       date: 'Hace 20 min',
+      dateEn: '20 min ago',
       read: false,
       targetRoles: ['guardian'],
       category: 'enrollment'
@@ -212,8 +227,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-grd-2',
       title: 'Asamblea General de Padres de Familia',
+      titleEn: 'General Parents & Guardians Assembly',
       message: 'Convocatoria a la primera asamblea de acudientes del año lectivo en la sede principal a las 7:00 AM.',
+      messageEn: 'Invitation to the first general guardians assembly of the school year at the main campus at 7:00 AM.',
       date: 'Hace 2 horas',
+      dateEn: '2 hours ago',
       read: false,
       targetRoles: ['guardian'],
       category: 'general'
@@ -221,8 +239,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-grd-3',
       title: 'Programa de Alimentación Escolar (PAE)',
+      titleEn: 'School Nutrition Program (PAE)',
       message: 'Habilitada la actualización de datos para el complemento nutricional escolar de su acudido.',
+      messageEn: 'Information update is now open for your student’s school nutritional meal supplement.',
       date: 'Ayer',
+      dateEn: 'Yesterday',
       read: false,
       targetRoles: ['guardian'],
       category: 'general'
@@ -230,8 +251,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-grd-4',
       title: 'Póliza de Accidentes Escolares',
+      titleEn: 'Student Accident Insurance Policy',
       message: 'Se ha confirmado la cobertura médica escolar institucional para el presente periodo académico.',
+      messageEn: 'Institutional medical accident coverage has been verified and active for the current academic period.',
       date: 'Hace 2 días',
+      dateEn: '2 days ago',
       read: true,
       targetRoles: ['guardian'],
       category: 'document'
@@ -241,8 +265,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-std-1',
       title: 'Carnet Digital Estudiantil Habilitado',
+      titleEn: 'Official Digital Student ID Ready',
       message: 'Tu carnet escolar con código QR ya está generado. Puedes presentarlo desde tu perfil institucional.',
+      messageEn: 'Your school digital badge with QR code is generated. You can access it anytime from your profile.',
       date: 'Hace 30 min',
+      dateEn: '30 min ago',
       read: false,
       targetRoles: ['student'],
       category: 'academic'
@@ -250,8 +277,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-std-2',
       title: 'Horario y Asignación de Grupo',
+      titleEn: 'Schedule & Classroom Assignment',
       message: 'Tu salón y directores de área para el periodo 2025 ya están disponibles en tu expediente escolar.',
+      messageEn: 'Your classroom and subject teachers for the 2025 school year are now available in your portal.',
       date: 'Hace 2 horas',
+      dateEn: '2 hours ago',
       read: false,
       targetRoles: ['student'],
       category: 'academic'
@@ -259,8 +289,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-std-3',
       title: 'Inscripción Personería y Contraloría',
+      titleEn: 'Student Council & Ombudsman Sign-up',
       message: 'Abierta la convocatoria democrática para representantes al gobierno estudiantil de la institución.',
+      messageEn: 'Nominations are open for student government representatives and class leaders.',
       date: 'Ayer',
+      dateEn: 'Yesterday',
       read: false,
       targetRoles: ['student'],
       category: 'general'
@@ -268,8 +301,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-std-4',
       title: 'Matrícula Académica Legalizada',
+      titleEn: 'Official Academic Enrollment Legalized',
       message: 'Tu matrícula para el ciclo escolar ha sido registrada a satisfacción en los libros del colegio.',
+      messageEn: 'Your academic registration for this school year has been officially formalized in school records.',
       date: 'Hace 3 días',
+      dateEn: '3 days ago',
       read: true,
       targetRoles: ['student'],
       category: 'enrollment'
@@ -279,8 +315,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     {
       id: 'notif-gen-1',
       title: 'Calendario Escolar y Recesos 2025',
+      titleEn: '2025 School Calendar & Holidays',
       message: 'Publicado el cronograma oficial de semanas pedagógicas, evaluaciones institucionales y actos cívicos.',
+      messageEn: 'The official schedule of pedagogical weeks, term exams, and civic assemblies is now published.',
       date: 'Esta semana',
+      dateEn: 'This week',
       read: false,
       targetRoles: ['admin', 'guardian', 'student', 'public'],
       category: 'general'
@@ -289,7 +328,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [notifications, setNotifications] = useState<AppNotification[]>(() => {
     const saved = localStorage.getItem('edumed_notifications');
-    return saved ? JSON.parse(saved) : initialNotifications;
+    if (!saved) return initialNotifications;
+    try {
+      const parsed: AppNotification[] = JSON.parse(saved);
+      // Merge with initialNotifications to ensure bilingual fields are present
+      return parsed.map((item) => {
+        const found = initialNotifications.find((i) => i.id === item.id);
+        if (found) {
+          return {
+            ...item,
+            titleEn: item.titleEn || found.titleEn,
+            messageEn: item.messageEn || found.messageEn,
+            dateEn: item.dateEn || found.dateEn
+          };
+        }
+        return item;
+      });
+    } catch {
+      return initialNotifications;
+    }
   });
 
   useEffect(() => {

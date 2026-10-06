@@ -620,7 +620,7 @@ export const StatusLookup: React.FC = () => {
                     {downloadedToast && (
                       <div className="mt-4 p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-xs font-semibold text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
                         <span>{language === 'es' ? '✓ Comprobante oficial de matrícula generado y listo para impresión.' : '✓ Official enrollment receipt generated and ready.'}</span>
-                        <button onClick={() => setDownloadedToast(false)} className="text-emerald-700 dark:text-emerald-300 underline font-bold text-[11px] ml-2">Cerrar</button>
+                        <button onClick={() => setDownloadedToast(false)} className="text-emerald-700 dark:text-emerald-300 underline font-bold text-xs ml-2 cursor-pointer">{language === 'es' ? 'Cerrar' : 'Close'}</button>
                       </div>
                     )}
 

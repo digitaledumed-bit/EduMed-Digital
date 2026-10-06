@@ -81,16 +81,16 @@ export const Navbar: React.FC = () => {
                 }}
               />
             </div>
-            <span className="text-[10px] sm:text-xs font-semibold tracking-tight text-slate-600 dark:text-slate-300 mt-1 leading-none">
-              edumed <span className="text-teal-600 dark:text-teal-400 font-bold">digital</span>
+            <span className="text-xs sm:text-sm font-bold tracking-tight text-slate-700 dark:text-slate-300 mt-1 leading-none">
+              edumed <span className="text-teal-600 dark:text-teal-400 font-extrabold">digital</span>
             </span>
           </div>
 
           <div className="hidden lg:block text-left ml-4 mr-auto">
-            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+            <span className="text-sm font-bold text-slate-800 dark:text-slate-200 block">
               Institución Educativa Félix Henao Botero
             </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
               Medellín, Colombia • DANE 105001002345
             </span>
           </div>
@@ -319,25 +319,25 @@ export const Navbar: React.FC = () => {
                       </div>
                     ) : (
                       notifications.map((notif) => (
-                        <div key={notif.id} className="p-3 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors">
-                          <div className="flex items-start gap-2.5">
-                            <div className="w-2 h-2 rounded-full bg-teal-500 mt-1.5 shrink-0" />
+                        <div key={notif.id} className="p-3.5 hover:bg-slate-50 dark:hover:bg-slate-750 transition-colors">
+                          <div className="flex items-start gap-3">
+                            <div className="w-2.5 h-2.5 rounded-full bg-teal-500 mt-1.5 shrink-0" />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between gap-1">
-                                <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
-                                  {notif.title}
+                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100 truncate">
+                                  {language === 'es' ? notif.title : (notif.titleEn || notif.title)}
                                 </p>
                                 {notif.category && (
-                                  <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 font-bold shrink-0">
+                                  <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-bold shrink-0">
                                     {notif.category}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                                {notif.message}
+                              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">
+                                {language === 'es' ? notif.message : (notif.messageEn || notif.message)}
                               </p>
-                              <span className="text-[10px] text-slate-400 mt-1 block">
-                                {notif.date}
+                              <span className="text-xs text-slate-400 mt-1.5 block">
+                                {language === 'es' ? notif.date : (notif.dateEn || notif.date)}
                               </span>
                             </div>
                           </div>
@@ -380,11 +380,11 @@ export const Navbar: React.FC = () => {
                       className="text-left cursor-pointer"
                       title="Ver expediente del estudiante"
                     >
-                      <p className="text-xs font-black text-slate-900 dark:text-white leading-tight truncate max-w-[130px]">
+                      <p className="text-sm font-black text-slate-900 dark:text-white leading-tight truncate max-w-[140px]">
                         {currentUser.name}
                       </p>
-                      <span className="text-[10px] font-bold text-teal-700 dark:text-teal-400 block leading-tight">
-                        {isMaleGender(currentUser.gender) ? '♂ Estudiante (Hombre)' : isFemaleGender(currentUser.gender) ? '♀ Estudiante (Mujer)' : '🎓 Estudiante (Neutro)'}
+                      <span className="text-xs font-bold text-teal-700 dark:text-teal-400 block leading-tight">
+                        {isMaleGender(currentUser.gender) ? (language === 'es' ? '♂ Estudiante (Hombre)' : '♂ Student (Male)') : isFemaleGender(currentUser.gender) ? (language === 'es' ? '♀ Estudiante (Mujer)' : '♀ Student (Female)') : (language === 'es' ? '🎓 Estudiante (Neutro)' : '🎓 Student (Neutral)')}
                       </span>
                     </div>
 
@@ -392,10 +392,10 @@ export const Navbar: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowAvatarModal(true)}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold px-2 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-teal-100 dark:hover:bg-slate-600 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-slate-600 transition-colors cursor-pointer shadow-2xs"
+                      className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-teal-100 dark:hover:bg-slate-600 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-slate-600 transition-colors cursor-pointer shadow-2xs"
                       title={language === 'es' ? 'Cambiar foto de avatar' : 'Change avatar photo'}
                     >
-                      <Camera className="w-3 h-3 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <Camera className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
                       <span className="hidden sm:inline">{language === 'es' ? 'Cambiar foto' : 'Change'}</span>
                     </button>
                   </div>
@@ -409,15 +409,15 @@ export const Navbar: React.FC = () => {
                     }}
                     className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors"
                   >
-                    <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-[10px] font-bold">
+                    <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold">
                       {currentUser.name.charAt(0)}
                     </div>
                     <div className="text-left">
                       <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[120px]">
                         {currentUser.name}
                       </p>
-                      <span className="text-[9px] font-semibold text-teal-600 dark:text-teal-400 capitalize">
-                        {currentUser.role === 'admin' ? (language === 'es' ? 'Directivo / Administrativo' : 'Administrative Staff') : 'Acudiente'}
+                      <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 capitalize">
+                        {currentUser.role === 'admin' ? (language === 'es' ? 'Directivo / Administrativo' : 'Administrative Staff') : (language === 'es' ? 'Acudiente' : 'Guardian')}
                       </span>
                     </div>
                   </div>
@@ -426,7 +426,7 @@ export const Navbar: React.FC = () => {
                 <button
                   id="nav-logout-btn"
                   onClick={logout}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
                   title={language === 'es' ? 'Cerrar Sesión' : 'Log Out'}
                 >
                   <LogOut className="w-3.5 h-3.5 text-rose-500" />
@@ -444,9 +444,9 @@ export const Navbar: React.FC = () => {
                       setActiveTab('home');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="inline-flex items-center px-3.5 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer"
+                    className="inline-flex items-center px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-sm font-bold shadow-xs transition-all cursor-pointer"
                   >
-                    <span>Iniciar Sesión</span>
+                    <span>{language === 'es' ? 'Iniciar Sesión' : 'Sign In'}</span>
                   </button>
                 </div>
               )
