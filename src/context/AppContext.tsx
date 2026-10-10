@@ -1018,6 +1018,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
 
     if (userData.role === 'guardian') {
+      const docClean = (userData.documentNumber || '').trim();
+      const docType = docClean.includes(' ') ? docClean.split(' ')[0].toUpperCase() : '';
+      if (docType && docType !== 'CC' && docType !== 'CE') {
+        return {
+          success: false,
+          message: language === 'es'
+            ? 'Para acudientes, el tipo de documento debe ser C.C. (Cédula de Ciudadanía) o C.E. (Cédula de Extranjería).'
+            : 'For guardians, document type must be C.C. or C.E.'
+        };
+      }
       const gCode = (userData.guardianValidationCode || '').trim();
       if (!gCode) {
         return {
@@ -1095,6 +1105,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         guardians: []
       };
       setStudents(prev => [newStudentEntry, ...prev]);
+    }
+
+    if (userData.role === 'guardian') {
+      const docClean = (userData.documentNumber || '').trim();
+      const docType = docClean.includes(' ') ? docClean.split(' ')[0].toUpperCase() : 'CC';
+      const docNum = docClean.includes(' ') ? docClean.split(' ')[1] : docClean;
+
+      const newGuardianEntry: Guardian = {
+        id: newUser.id,
+        documentType: docType,
+        documentNumber: docNum,
+        fullName: userData.name.trim(),
+        relationship: 'Padre / Acudiente',
+        phone: userData.phone || '+57 300 123 4567',
+        email: cleanEmail,
+        address: 'Calle 50 # 40-20, Medellín',
+        associatedStudents: []
+      };
+      setGuardians(prev => [newGuardianEntry, ...prev]);
+
+      const savedGuardians: Guardian[] = JSON.parse(localStorage.getItem('edumed_guardians') || '[]');
+      savedGuardians.push(newGuardianEntry);
+      localStorage.setItem('edumed_guardians', JSON.stringify(savedGuardians));
     }
 
     setCurrentUser(newUser);

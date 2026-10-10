@@ -105,6 +105,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [guardianValidationCode, setGuardianValidationCode] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(true);
 
+  // Restringir tipo de documento para rol Acudiente a C.C. o C.E.
+  React.useEffect(() => {
+    if (regRole === 'guardian' && regDocType !== 'CC' && regDocType !== 'CE') {
+      setRegDocType('CC');
+    }
+  }, [regRole, regDocType]);
+
   // Dedicated Staff Register form state (Docente / Personal Administrativo)
   const [staffName, setStaffName] = useState('');
   const [staffRoleType, setStaffRoleType] = useState<'docente' | 'administrativo'>('docente');
@@ -262,6 +269,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     if (regRole === 'guardian') {
+      if (!regDocType || (regDocType !== 'CC' && regDocType !== 'CE')) {
+        newErrors.docNumber = language === 'es'
+          ? 'Para acudientes, el tipo de documento debe ser C.C. (Cédula de Ciudadanía) o C.E. (Cédula de Extranjería).'
+          : 'For guardians, document type must be C.C. or C.E.';
+      }
       const cleanGCode = guardianValidationCode.trim();
       if (!cleanGCode) {
         newErrors.guardianCode = language === 'es' 
@@ -1197,7 +1209,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   id="reg-role-select"
                   value={regRole}
                   onChange={(e) => {
-                    setRegRole(e.target.value as 'guardian' | 'student');
+                    const selectedRole = e.target.value as 'guardian' | 'student';
+                    setRegRole(selectedRole);
+                    if (selectedRole === 'guardian' && regDocType !== 'CC' && regDocType !== 'CE') {
+                      setRegDocType('CC');
+                    }
                     if (regFieldErrors.role) setRegFieldErrors(prev => ({ ...prev, role: undefined }));
                   }}
                   className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 cursor-pointer transition-all ${
@@ -1269,18 +1285,28 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                     htmlFor="reg-doctype-select"
                     className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
                   >
-                    Tipo
+                    Tipo *
                   </label>
                   <select
                     id="reg-doctype-select"
+                    required
                     value={regDocType}
                     onChange={(e) => setRegDocType(e.target.value)}
-                    className="w-full px-2 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="w-full px-2 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
                   >
-                    <option value="CC">C.C.</option>
-                    <option value="TI">T.I.</option>
-                    <option value="CE">C.E.</option>
-                    <option value="RC">Reg. Civil</option>
+                    {regRole === 'guardian' ? (
+                      <>
+                        <option value="CC">{language === 'es' ? 'C.C. – Cédula de Ciudadanía' : 'C.C. – Citizenship Card'}</option>
+                        <option value="CE">{language === 'es' ? 'C.E. – Cédula de Extranjería' : 'C.E. – Foreigner ID'}</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="CC">C.C.</option>
+                        <option value="TI">T.I.</option>
+                        <option value="CE">C.E.</option>
+                        <option value="RC">Reg. Civil</option>
+                      </>
+                    )}
                   </select>
                 </div>
 
