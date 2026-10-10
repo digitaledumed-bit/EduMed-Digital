@@ -172,6 +172,10 @@ export const EnrollmentWizard: React.FC = () => {
 
     if (step === 1) {
       // Validate Step 1: Guardian
+      if (!formData.guardianDocType || (formData.guardianDocType !== 'CC' && formData.guardianDocType !== 'CE')) {
+        newErrors.guardianDocType = language === 'es' ? 'El tipo de documento debe ser C.C. o C.E.' : 'Document type must be C.C. or C.E.';
+      }
+
       if (!formData.guardianDocNumber.trim()) {
         newErrors.guardianDocNumber = language === 'es' ? 'Ingrese el número de documento del acudiente.' : 'Document number is required.';
       } else if (formData.guardianDocNumber.trim().length < 5) {
@@ -570,12 +574,10 @@ export const EnrollmentWizard: React.FC = () => {
                           name="guardianDocType"
                           value={formData.guardianDocType}
                           onChange={handleInputChange}
-                          className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
+                          className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none cursor-pointer"
                         >
-                          <option value="CC">Cédula de Ciudadanía (CC)</option>
-                          <option value="CE">Cédula de Extranjería (CE)</option>
-                          <option value="PAS">Pasaporte (PAS)</option>
-                          <option value="PEP">Permiso Especial de Permanencia (PEP)</option>
+                          <option value="CC">{language === 'es' ? 'C.C. (Cédula de Ciudadanía)' : 'C.C. (Citizenship Card)'}</option>
+                          <option value="CE">{language === 'es' ? 'C.E. (Cédula de Extranjería)' : 'C.E. (Foreigner ID)'}</option>
                         </select>
                       </div>
 

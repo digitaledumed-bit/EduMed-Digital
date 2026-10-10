@@ -1296,8 +1296,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   >
                     {regRole === 'guardian' ? (
                       <>
-                        <option value="CC">{language === 'es' ? 'C.C. – Cédula de Ciudadanía' : 'C.C. – Citizenship Card'}</option>
-                        <option value="CE">{language === 'es' ? 'C.E. – Cédula de Extranjería' : 'C.E. – Foreigner ID'}</option>
+                        <option value="CC">{language === 'es' ? 'C.C. (Cédula de Ciudadanía)' : 'C.C. (Citizenship Card)'}</option>
+                        <option value="CE">{language === 'es' ? 'C.E. (Cédula de Extranjería)' : 'C.E. (Foreigner ID)'}</option>
                       </>
                     ) : (
                       <>

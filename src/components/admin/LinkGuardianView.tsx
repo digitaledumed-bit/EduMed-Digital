@@ -242,9 +242,8 @@ export const LinkGuardianView: React.FC = () => {
                   onChange={(e) => setNewGuardian({ ...newGuardian, docType: e.target.value })}
                   className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
                 >
-                  <option value="CC">CC</option>
-                  <option value="CE">CE</option>
-                  <option value="PAS">PAS</option>
+                  <option value="CC">{language === 'es' ? 'C.C. (Cédula de Ciudadanía)' : 'C.C. (Citizenship Card)'}</option>
+                  <option value="CE">{language === 'es' ? 'C.E. (Cédula de Extranjería)' : 'C.E. (Foreigner ID)'}</option>
                 </select>
               </div>
 
