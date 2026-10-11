@@ -1476,8 +1476,8 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
                 {language === 'es'
-                  ? 'Recibe tu confirmación por correo y SMS con el número oficial de matrícula asignado por secretaría académica.'
-                  : 'Get your official enrollment confirmation number via SMS & email.'}
+                  ? 'Recibe tu confirmación oficial por correo electrónico con el número de matrícula asignado por secretaría académica.'
+                  : 'Get your official enrollment confirmation number via email.'}
               </p>
             </div>
 

@@ -81,7 +81,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       setMode(defaultMode);
     }
   }, [defaultMode]);
-  
+
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
@@ -131,12 +131,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   // Recovery form state
   const [recoveryStep, setRecoveryStep] = useState<'request' | 'verify' | 'new-password'>('request');
   const [recoveryEmail, setRecoveryEmail] = useState('');
-  const [recoveryPhoneMasked, setRecoveryPhoneMasked] = useState('');
   const [recoveryCodeInput, setRecoveryCodeInput] = useState('');
   const [recoveryNewPassword, setRecoveryNewPassword] = useState('');
   const [recoveryConfirmPassword, setRecoveryConfirmPassword] = useState('');
   const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
-  const [simulatedSmsBanner, setSimulatedSmsBanner] = useState<{ code: string; phone: string; name: string } | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // Status & validation messages
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -178,6 +177,46 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     newPassword?: string;
     confirmPassword?: string;
   }>({});
+
+  // Countdown timer for resend email
+  React.useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [resendCooldown]);
+
+  // Direct reset link via URL query parameters
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tokenParam = params.get('reset_token');
+    const emailParam = params.get('email');
+
+    if (tokenParam && emailParam) {
+      setMode('forgot-password');
+      setRecoveryEmail(emailParam);
+      setRecoveryCodeInput(tokenParam);
+      setIsLoading(true);
+
+      verifyPasswordResetCode(emailParam, tokenParam).then((res) => {
+        setIsLoading(false);
+        if (res.success) {
+          setRecoveryStep('new-password');
+          setSuccessMsg(language === 'es' 
+            ? 'Enlace de verificación validado con éxito. Ingresa tu nueva contraseña.' 
+            : 'Verification link validated successfully. Enter your new password.');
+        } else {
+          setRecoveryStep('request');
+          setErrorMsg(res.message || (language === 'es' 
+            ? 'El enlace de recuperación es inválido o ha expirado. Por favor solicita uno nuevo.' 
+            : 'The recovery link is invalid or expired. Please request a new one.'));
+        }
+      });
+
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
 
   const clearAllErrors = () => {
     setErrorMsg(null);
@@ -264,8 +303,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
     if (!regPhone.trim()) {
       newErrors.phone = language === 'es' 
-        ? 'Por favor ingrese su número de celular. Es requerido para recuperar la cuenta por SMS.' 
-        : 'Please enter your mobile phone number.';
+        ? 'Por favor ingrese su número de teléfono o celular de contacto.' 
+        : 'Please enter your contact phone number.';
     }
 
     if (regRole === 'guardian') {
@@ -441,7 +480,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }, 450);
   };
 
-  const handleRequestRecoveryCode = (e?: React.FormEvent) => {
+  const handleRequestRecoveryCode = async (e?: React.FormEvent) => {
     if (e && e.preventDefault) e.preventDefault();
     clearAllErrors();
 
@@ -451,51 +490,52 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await requestPasswordResetCode(recoveryEmail);
       setIsLoading(false);
-      const res = requestPasswordResetCode(recoveryEmail);
       if (!res.success) {
-        setRecoveryFieldErrors({ email: res.message || (language === 'es' ? 'No fue posible enviar el código.' : 'Could not send code.') });
+        setRecoveryFieldErrors({ email: res.message || (language === 'es' ? 'No fue posible procesar la solicitud.' : 'Could not process request.') });
       } else {
-        setRecoveryPhoneMasked(res.maskedPhone || '+57 300 *** **89');
-        setSimulatedSmsBanner({
-          code: res.code || '123456',
-          phone: res.maskedPhone || '+57 300 *** **89',
-          name: res.name || 'Usuario'
-        });
         setRecoveryStep('verify');
+        setResendCooldown(45);
         setSuccessMsg(res.message || (language === 'es' 
-          ? `¡Código enviado al celular ${res.maskedPhone}!`
-          : `Code sent to phone ${res.maskedPhone}!`));
+          ? 'Hemos enviado un código de verificación y un enlace a tu correo electrónico.' 
+          : 'We have sent a verification code and link to your email.'));
       }
-    }, 450);
+    } catch {
+      setIsLoading(false);
+      setErrorMsg(language === 'es' ? 'Error al enviar el correo de recuperación.' : 'Error sending recovery email.');
+    }
   };
 
-  const handleVerifyRecoveryCode = (e: React.FormEvent) => {
+  const handleVerifyRecoveryCode = async (e: React.FormEvent) => {
     e.preventDefault();
     clearAllErrors();
 
     if (!recoveryCodeInput.trim()) {
-      setRecoveryFieldErrors({ code: language === 'es' ? 'Por favor ingrese el código recibido.' : 'Please enter the code received.' });
+      setRecoveryFieldErrors({ code: language === 'es' ? 'Por favor ingrese el código recibido en su correo electrónico.' : 'Please enter the code received in your email.' });
       return;
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await verifyPasswordResetCode(recoveryEmail, recoveryCodeInput);
       setIsLoading(false);
-      const res = verifyPasswordResetCode(recoveryEmail, recoveryCodeInput);
       if (!res.success) {
-        setRecoveryFieldErrors({ code: res.message || (language === 'es' ? 'Código de seguridad incorrecto.' : 'Invalid code.') });
+        setRecoveryFieldErrors({ code: res.message || (language === 'es' ? 'Código de verificación incorrecto.' : 'Invalid code.') });
       } else {
         setRecoveryStep('new-password');
         setSuccessMsg(language === 'es' 
           ? 'Código verificado con éxito. Ingresa tu nueva contraseña.' 
           : 'Code verified successfully. Enter your new password.');
       }
-    }, 400);
+    } catch {
+      setIsLoading(false);
+      setErrorMsg(language === 'es' ? 'Error al verificar el código.' : 'Error verifying code.');
+    }
   };
 
-  const handleSetNewPassword = (e: React.FormEvent) => {
+  const handleSetNewPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     clearAllErrors();
 
@@ -513,15 +553,15 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const res = await resetPasswordWithCode(recoveryEmail, recoveryCodeInput, recoveryNewPassword);
       setIsLoading(false);
-      const res = resetPasswordWithCode(recoveryEmail, recoveryCodeInput, recoveryNewPassword);
       if (!res.success) {
         setErrorMsg(res.message || (language === 'es' ? 'Error al actualizar contraseña.' : 'Error resetting password.'));
       } else {
-        setSuccessMsg(language === 'es' 
+        setSuccessMsg(res.message || (language === 'es' 
           ? '¡Tu contraseña ha sido restablecida exitosamente! Ya puedes iniciar sesión con tu nueva contraseña.' 
-          : 'Password reset successfully! You can now log in with your new password.');
+          : 'Password reset successfully! You can now log in with your new password.'));
         setMode('login');
         setLoginIdentifier(recoveryEmail);
         setLoginPassword(recoveryNewPassword);
@@ -529,9 +569,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         setRecoveryCodeInput('');
         setRecoveryNewPassword('');
         setRecoveryConfirmPassword('');
-        setSimulatedSmsBanner(null);
       }
-    }, 450);
+    } catch {
+      setIsLoading(false);
+      setErrorMsg(language === 'es' ? 'Error al actualizar contraseña.' : 'Error resetting password.');
+    }
   };
 
   // If user is currently logged in, show active session banner with logout option
@@ -877,7 +919,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
         </form>
       ) : mode === 'forgot-password' ? (
-        /* TAB 3: RECUPERACIÓN DE CONTRASEÑA POR CÓDIGO SMS AL CELULAR */
+        /* TAB 3: RECUPERACIÓN DE CONTRASEÑA POR CORREO ELECTRÓNICO */
         <div className="mt-5 space-y-4 text-left">
           
           {/* Header & Back Button */}
@@ -895,13 +937,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({
               <span>{language === 'es' ? 'Volver a Iniciar Sesión' : 'Back to Log In'}</span>
             </button>
 
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-              <Smartphone className="w-3 h-3" />
-              <span>{language === 'es' ? 'Recuperación por Celular' : 'SMS Recovery'}</span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+              <Mail className="w-3 h-3" />
+              <span>{language === 'es' ? 'Recuperación por Correo' : 'Email Recovery'}</span>
             </span>
           </div>
 
-          {/* STEP 1: SOLICITAR CÓDIGO */}
+          {/* STEP 1: SOLICITAR CÓDIGO POR CORREO */}
           {recoveryStep === 'request' && (
             <form onSubmit={handleRequestRecoveryCode} className="space-y-4">
               <div className="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60">
@@ -911,8 +953,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 </h4>
                 <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
                   {language === 'es'
-                    ? 'Ingresa el correo personal o institucional con el que creaste tu cuenta. Enviaremos un código de seguridad de 6 dígitos al número de celular que registraste al crear la cuenta.'
-                    : 'Enter the email you registered with. We will send a 6-digit verification code to the phone number configured during account registration.'}
+                    ? 'Ingresa el correo electrónico con el que registraste tu cuenta. Te enviaremos un código de seguridad de 6 dígitos y un enlace seguro para restablecer tu contraseña.'
+                    : 'Enter the email address you registered with. We will send you a 6-digit verification code and a secure link to reset your password.'}
                 </p>
               </div>
 
@@ -952,64 +994,47 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 ) : (
                   <>
-                    <Smartphone className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Enviar Código al Celular por SMS' : 'Send Code to Mobile Phone'}</span>
+                    <Mail className="w-4 h-4" />
+                    <span>{language === 'es' ? 'Enviar Código y Enlace de Recuperación' : 'Send Verification Code & Link'}</span>
                   </>
                 )}
               </button>
             </form>
           )}
 
-          {/* STEP 2: VERIFICAR CÓDIGO */}
+          {/* STEP 2: VERIFICAR CÓDIGO RECIBIDO POR CORREO */}
           {recoveryStep === 'verify' && (
             <form onSubmit={handleVerifyRecoveryCode} className="space-y-4">
               
-              {/* Simulated Phone SMS Received Notification Card */}
-              {simulatedSmsBanner && (
-                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 border-2 border-emerald-300 dark:border-emerald-700 shadow-sm animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 dark:text-emerald-300">
-                      <MessageSquare className="w-3.5 h-3.5" />
-                      <span>{language === 'es' ? 'Mensaje SMS Recibido en tu Celular' : 'SMS Message Received on Phone'}</span>
-                    </span>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-200 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-200">
-                      {simulatedSmsBanner.phone}
-                    </span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800 text-xs">
-                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed font-sans">
-                      «<strong>EduMed Digital</strong>: Hola <em>{simulatedSmsBanner.name}</em>, tu código de verificación para recuperar tu cuenta es:{' '}
-                      <span className="inline-block px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-200 font-mono font-black text-base rounded-md border border-emerald-300 dark:border-emerald-700 tracking-wider">
-                        {simulatedSmsBanner.code}
-                      </span>
-                      . Válido por 15 minutos.»
+              <div className="p-3.5 rounded-2xl bg-teal-50/80 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/80 shadow-xs">
+                <div className="flex items-start gap-2.5">
+                  <Mail className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                  <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <p className="font-semibold text-teal-950 dark:text-teal-200 mb-0.5">
+                      {language === 'es' ? 'Instrucciones enviadas por correo electrónico' : 'Instructions sent via email'}
+                    </p>
+                    <p>
+                      {language === 'es' ? 'Hemos enviado un correo a ' : 'We sent an email to '}
+                      <strong className="text-slate-900 dark:text-white font-mono">{recoveryEmail}</strong>.
+                      {language === 'es'
+                        ? ' Revisa tu bandeja de entrada o spam e ingresa el código de 6 dígitos recibido a continuación (válido por 15 minutos).'
+                        : ' Please check your inbox or spam folder and enter the 6-digit code below (valid for 15 minutes).'}
                     </p>
                   </div>
-                  <div className="mt-2.5 flex items-center justify-between">
-                    <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                      {language === 'es' ? 'Simulador de SMS móvil activo' : 'Live mobile SMS simulation'}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setRecoveryCodeInput(simulatedSmsBanner.code)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs cursor-pointer transition-colors"
-                    >
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>{language === 'es' ? 'Auto-completar código' : 'Auto-fill code'}</span>
-                    </button>
-                  </div>
                 </div>
-              )}
+              </div>
 
               <div className="space-y-1">
                 <label htmlFor="recovery-code-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'es' ? 'Código de Seguridad recibido por SMS:' : 'Security Code received via SMS:'}
+                  {language === 'es' ? 'Código de Verificación (6 dígitos recibido por correo):' : 'Verification Code (6 digits received via email):'}
                 </label>
                 <input
                   id="recovery-code-input"
                   type="text"
                   maxLength={6}
                   required
+                  autoFocus
+                  placeholder="------"
                   value={recoveryCodeInput}
                   onChange={(e) => {
                     setRecoveryCodeInput(e.target.value.replace(/\D/g, ''));
@@ -1026,7 +1051,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
               <button
                 type="submit"
-                disabled={isLoading || recoveryCodeInput.length < 5}
+                disabled={isLoading || recoveryCodeInput.length < 6}
                 className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
               >
                 {isLoading ? (
@@ -1042,11 +1067,16 @@ export const AuthCard: React.FC<AuthCardProps> = ({
               <div className="flex items-center justify-between text-xs pt-1">
                 <button
                   type="button"
+                  disabled={resendCooldown > 0 || isLoading}
                   onClick={() => handleRequestRecoveryCode()}
-                  className="text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 font-medium cursor-pointer"
+                  className="text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 font-medium cursor-pointer disabled:opacity-50 disabled:no-underline"
                 >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>{language === 'es' ? 'Reenviar código por SMS' : 'Resend code via SMS'}</span>
+                  <RotateCcw className={`w-3.5 h-3.5 ${resendCooldown > 0 ? 'animate-spin' : ''}`} />
+                  <span>
+                    {resendCooldown > 0 
+                      ? (language === 'es' ? `Reenviar en ${resendCooldown}s` : `Resend in ${resendCooldown}s`)
+                      : (language === 'es' ? 'Reenviar código por correo' : 'Resend code via email')}
+                  </span>
                 </button>
 
                 <button
@@ -1296,8 +1326,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   >
                     {regRole === 'guardian' ? (
                       <>
-                        <option value="CC">{language === 'es' ? 'C.C. (Cédula de Ciudadanía)' : 'C.C. (Citizenship Card)'}</option>
-                        <option value="CE">{language === 'es' ? 'C.E. (Cédula de Extranjería)' : 'C.E. (Foreigner ID)'}</option>
+                        <option value="CC">{language === 'es' ? 'C.C. – Cédula de Ciudadanía' : 'C.C. – Citizenship Card'}</option>
+                        <option value="CE">{language === 'es' ? 'C.E. – Cédula de Extranjería' : 'C.E. – Foreigner ID'}</option>
                       </>
                     ) : (
                       <>
@@ -1357,7 +1387,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                     autoCorrect="off"
                     spellCheck={false}
                     required
-                    placeholder={language === 'es' ? 'Ej: ACUD-2026 o su número de documento' : 'Ex: ACUD-2026 or ID number'}
+                    placeholder={language === 'es' ? 'Código de validación institucional' : 'Institutional validation code'}
                     value={guardianValidationCode}
                     onChange={(e) => {
                       setGuardianValidationCode(e.target.value);
@@ -1371,41 +1401,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   />
                   <FieldError message={regFieldErrors.guardianCode} />
                   
-                  <div className="text-[11px] text-amber-900 dark:text-amber-300 space-y-1 pt-1">
+                  <div className="text-[11px] text-amber-900 dark:text-amber-300 pt-1">
                     <p className="leading-tight">
-                      {language === 'es' ? (
-                        <>
-                          <strong>¿Dónde veo este código?</strong> Puedes usar el código oficial asignado{' '}
-                          <code className="px-1 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900 font-mono font-bold text-amber-950 dark:text-amber-100">
-                            ACUD-2026
-                          </code>
-                          , o ingresar tu <strong>número de documento de identidad</strong> / radicado de matrícula registrado en la institución.
-                        </>
-                      ) : (
-                        <>
-                          <strong>Where is this code?</strong> Use official code{' '}
-                          <code className="px-1 py-0.5 rounded bg-amber-200/70 dark:bg-amber-900 font-mono font-bold text-amber-950 dark:text-amber-100">
-                            ACUD-2026
-                          </code>
-                          , or your registered ID document number.
-                        </>
-                      )}
+                      {language === 'es'
+                        ? 'Ingresa el código asignado por la institución o tu número de documento registrado en el expediente escolar.'
+                        : 'Enter the code assigned by the institution or your registered ID document number.'}
                     </p>
-                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                      <span className="text-[10px] text-slate-600 dark:text-slate-400">
-                        {language === 'es' ? 'Autocompletar código:' : 'Auto-fill:'}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setGuardianValidationCode('ACUD-2026');
-                          if (regFieldErrors.guardianCode) setRegFieldErrors(prev => ({ ...prev, guardianCode: undefined }));
-                        }}
-                        className="px-2 py-0.5 rounded-lg bg-amber-200/80 hover:bg-amber-300 dark:bg-amber-900 dark:hover:bg-amber-800 text-amber-950 dark:text-amber-100 font-bold text-[10px] transition-colors cursor-pointer border border-amber-300 dark:border-amber-700"
-                      >
-                        ACUD-2026
-                      </button>
-                    </div>
                   </div>
                 </div>
               )}
