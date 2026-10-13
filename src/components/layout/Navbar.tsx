@@ -38,7 +38,8 @@ export const Navbar: React.FC = () => {
     unreadCount,
     currentUser,
     logout,
-    customLogoUrl
+    customLogoUrl,
+    isModuleEnabled
   } = useApp();
 
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
@@ -213,10 +214,23 @@ export const Navbar: React.FC = () => {
                 >
                   {t.nav.documents}
                 </button>
+
+                <button
+                  id="nav-link-portal-config"
+                  onClick={() => setActiveTab('portal-config')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'portal-config'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                  title={language === 'es' ? 'Configuración de Portales por Rol' : 'Portal Configuration'}
+                >
+                  {language === 'es' ? 'Portales' : 'Portals'}
+                </button>
               </>
             )}
 
-            {/* Guardian Portal Quick Links */}
+            {/* Guardian Portal Quick Links (respects administrator's portal configuration) */}
             {currentUser && currentUser.role === 'guardian' && (
               <>
                 <button
@@ -229,40 +243,46 @@ export const Navbar: React.FC = () => {
                 >
                   {language === 'es' ? 'Portal del Acudiente' : 'Guardian Portal'}
                 </button>
-                <button
-                  onClick={() => setActiveTab('student-profile')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'student-profile'
-                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {language === 'es' ? 'Expediente del Acudido' : 'Child Profile'}
-                </button>
-                <button
-                  onClick={() => setActiveTab('status')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'status'
-                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {language === 'es' ? 'Estado SIMAT' : 'SIMAT Status'}
-                </button>
-                <button
-                  onClick={() => setActiveTab('beneficios')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'beneficios'
-                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {language === 'es' ? 'Beneficios PAE' : 'School Meals'}
-                </button>
+                {isModuleEnabled('guardian', 'student-profile') && (
+                  <button
+                    onClick={() => setActiveTab('student-profile')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'student-profile'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Expediente del Acudido' : 'Child Profile'}
+                  </button>
+                )}
+                {isModuleEnabled('guardian', 'status') && (
+                  <button
+                    onClick={() => setActiveTab('status')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'status'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Estado SIMAT' : 'SIMAT Status'}
+                  </button>
+                )}
+                {isModuleEnabled('guardian', 'beneficios') && (
+                  <button
+                    onClick={() => setActiveTab('beneficios')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'beneficios'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Beneficios PAE' : 'School Meals'}
+                  </button>
+                )}
               </>
             )}
 
-            {/* Student Portal Quick Links */}
+            {/* Student Portal Quick Links (respects administrator's portal configuration) */}
             {currentUser && currentUser.role === 'student' && (
               <>
                 <button
@@ -275,36 +295,42 @@ export const Navbar: React.FC = () => {
                 >
                   {language === 'es' ? 'Mi Portal y Notas' : 'My Grades'}
                 </button>
-                <button
-                  onClick={() => setActiveTab('status')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'status'
-                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {language === 'es' ? 'Estado Matrícula' : 'Enrollment Status'}
-                </button>
-                <button
-                  onClick={() => setActiveTab('beneficios')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'beneficios'
-                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {language === 'es' ? 'Mis Beneficios' : 'My Benefits'}
-                </button>
-                <button
-                  onClick={() => setActiveTab('institucion')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'institucion'
-                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {language === 'es' ? 'Mi Colegio' : 'My School'}
-                </button>
+                {isModuleEnabled('student', 'status') && (
+                  <button
+                    onClick={() => setActiveTab('status')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'status'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Estado Matrícula' : 'Enrollment Status'}
+                  </button>
+                )}
+                {isModuleEnabled('student', 'beneficios') && (
+                  <button
+                    onClick={() => setActiveTab('beneficios')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'beneficios'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Mis Beneficios' : 'My Benefits'}
+                  </button>
+                )}
+                {isModuleEnabled('student', 'institucion') && (
+                  <button
+                    onClick={() => setActiveTab('institucion')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'institucion'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Mi Colegio' : 'My School'}
+                  </button>
+                )}
               </>
             )}
           </nav>

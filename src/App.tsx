@@ -17,6 +17,7 @@ import { LinkGuardianView } from './components/admin/LinkGuardianView';
 import { ParentsList } from './components/admin/ParentsList';
 import { DocumentsManagement } from './components/admin/DocumentsManagement';
 import { InstitutionalSettings } from './components/admin/InstitutionalSettings';
+import { PortalConfigView } from './components/admin/PortalConfigView';
 import { MandatoryEnrollmentGate } from './components/student/MandatoryEnrollmentGate';
 import { StudentMainDashboard } from './components/student/StudentMainDashboard';
 import { GuardianMainDashboard } from './components/guardian/GuardianMainDashboard';
@@ -34,7 +35,8 @@ const MainAppContent: React.FC = () => {
     isProfileModalOpen,
     setIsProfileModalOpen,
     isStudentEnrollmentCompleted,
-    resetStudentEnrollment
+    resetStudentEnrollment,
+    isModuleEnabled
   } = useApp();
 
   // Protect platform: content can only be seen after logging in
@@ -49,8 +51,10 @@ const MainAppContent: React.FC = () => {
   const isEnrollmentDone = isStudent ? isStudentEnrollmentCompleted(currentUser.id) : true;
 
   // Define admin-only views to enforce strict role isolation
-  const adminOnlyTabs = ['enrollments', 'students', 'link-guardian', 'parents', 'documents', 'settings'];
+  const adminOnlyTabs = ['enrollments', 'students', 'link-guardian', 'parents', 'documents', 'settings', 'portal-config'];
   const isUnauthorizedAdminTab = !isAdmin && adminOnlyTabs.includes(activeTab);
+  const isModuleAllowed = activeTab === 'dashboard' || isAdmin || isModuleEnabled(currentUser.role, activeTab);
+  const isUnauthorized = isUnauthorizedAdminTab || !isModuleAllowed;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
@@ -75,18 +79,21 @@ const MainAppContent: React.FC = () => {
 
             {/* Portal Main Body with strict role authorization */}
             <main className="flex-1 p-3 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
-              {isUnauthorizedAdminTab ? (
+              {isUnauthorized ? (
                 <div className="max-w-xl mx-auto my-12 bg-white dark:bg-slate-900 rounded-2xl border-2 border-rose-200 dark:border-rose-900/60 p-8 sm:p-10 text-center shadow-lg">
                   <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-5 border border-rose-200 dark:border-rose-800 shadow-xs">
                     <ShieldAlert className="w-8 h-8" />
                   </div>
                   <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                    {language === 'es' ? 'Acceso Restringido a este Portal' : 'Portal Access Restricted'}
+                    {language === 'es' ? 'Acceso Restringido o Módulo no Autorizado' : 'Portal Access Restricted'}
                   </h2>
                   <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                     {language === 'es'
-                      ? `Esta sección pertenece exclusivamente al Portal Administrativo y Directivo de la I.E. Félix Henao Botero. Tu cuenta actual (${currentUser.name}) tiene asignado el rol de ${currentUser.role === 'student' ? 'Estudiante' : 'Acudiente'} y no tiene autorización para consultar estos registros.`
-                      : `This section belongs to the Administrative & Leadership Portal. Your account does not have permission to view these records.`}
+                      ? (isUnauthorizedAdminTab
+                          ? `Esta sección pertenece exclusivamente al Portal Administrativo y Directivo de la I.E. Félix Henao Botero. Tu cuenta actual (${currentUser.name}) tiene asignado el rol de ${currentUser.role === 'student' ? 'Estudiante' : 'Acudiente'} y no tiene autorización para consultar estos registros.`
+                          : `El módulo solicitado ('${activeTab}') no se encuentra activo o autorizado en la configuración del portal para tu rol (${currentUser.role === 'student' ? 'Estudiante' : currentUser.role === 'guardian' ? 'Acudiente' : 'Usuario'}). Por favor consulta con la secretaría académica.`
+                        )
+                      : `This module is restricted or not authorized for your current user role. Please contact school administration.`}
                   </p>
                   <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <button
@@ -133,6 +140,7 @@ const MainAppContent: React.FC = () => {
                   {activeTab === 'link-guardian' && <LinkGuardianView />}
                   {activeTab === 'parents' && <ParentsList />}
                   {activeTab === 'documents' && <DocumentsManagement />}
+                  {activeTab === 'portal-config' && <PortalConfigView />}
                   {activeTab === 'settings' && <InstitutionalSettings />}
                   
                   {/* Direct views accessible to authorized users */}

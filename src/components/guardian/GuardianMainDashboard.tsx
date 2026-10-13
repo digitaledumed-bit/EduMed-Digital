@@ -33,7 +33,9 @@ export const GuardianMainDashboard: React.FC = () => {
     language, 
     students, 
     setActiveTab, 
-    setSelectedStudentId 
+    setSelectedStudentId,
+    isWidgetEnabled,
+    hasPermission
   } = useApp();
 
   const isEs = language === 'es';
@@ -101,60 +103,62 @@ export const GuardianMainDashboard: React.FC = () => {
       )}
 
       {/* Hero Welcome Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-800 via-teal-900 to-slate-900 text-white p-6 sm:p-8 md:p-10 shadow-xl border border-teal-700/50">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2.5 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-200 text-xs font-bold uppercase tracking-wider backdrop-blur-xs">
-              <Users className="w-3.5 h-3.5 text-teal-300" />
-              <span>{isEs ? 'Portal del Acudiente y Familia' : 'Guardian & Family Portal'}</span>
-            </div>
-            
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
-              {isEs ? `¡Bienvenido(a), ${currentUser?.name || 'Acudiente'}!` : `Welcome, ${currentUser?.name || 'Guardian'}!`}
-            </h1>
-            
-            <p className="text-sm sm:text-base text-teal-100/90 leading-relaxed font-normal">
-              {isEs 
-                ? 'Desde este portal oficial puedes consultar el estado de matrícula de tus hijos, verificar su radicado SIMAT, descargar certificados y acceder a los beneficios educativos de la I.E. Félix Henao Botero.'
-                : 'From this official portal you can check your children’s enrollment status, verify their SIMAT registration, download certificates, and access school benefits.'}
-            </p>
+      {isWidgetEnabled('guardian', 'welcome-hero') && (
+        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-teal-800 via-teal-900 to-slate-900 text-white p-6 sm:p-8 md:p-10 shadow-xl border border-teal-700/50">
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2.5 max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/20 border border-teal-400/30 text-teal-200 text-xs font-bold uppercase tracking-wider backdrop-blur-xs">
+                <Users className="w-3.5 h-3.5 text-teal-300" />
+                <span>{isEs ? 'Portal del Acudiente y Familia' : 'Guardian & Family Portal'}</span>
+              </div>
+              
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-white">
+                {isEs ? `¡Bienvenido(a), ${currentUser?.name || 'Acudiente'}!` : `Welcome, ${currentUser?.name || 'Guardian'}!`}
+              </h1>
+              
+              <p className="text-sm sm:text-base text-teal-100/90 leading-relaxed font-normal">
+                {isEs 
+                  ? 'Desde este portal oficial puedes consultar el estado de matrícula de tus hijos, verificar su radicado SIMAT, descargar certificados y acceder a los beneficios educativos de la I.E. Félix Henao Botero.'
+                  : 'From this official portal you can check your children’s enrollment status, verify their SIMAT registration, download certificates, and access school benefits.'}
+              </p>
 
-            <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-teal-200/90">
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-teal-300" />
-                <span>{isEs ? 'Año Escolar Activo: 2026' : 'Active School Year: 2026'}</span>
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5 text-teal-300" />
-                <span>{isEs ? 'Acudiente Oficial Autorizado' : 'Authorized Guardian'}</span>
-              </span>
+              <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-teal-200/90">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-teal-300" />
+                  <span>{isEs ? 'Año Escolar Activo: 2026' : 'Active School Year: 2026'}</span>
+                </span>
+                <span>•</span>
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-teal-300" />
+                  <span>{isEs ? 'Acudiente Oficial Autorizado' : 'Authorized Guardian'}</span>
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row md:flex-col gap-3 shrink-0">
+              <button
+                onClick={() => setActiveTab('wizard')}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-teal-500 hover:bg-teal-400 text-teal-950 font-black text-xs sm:text-sm shadow-lg shadow-teal-900/50 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <FilePlus className="w-4 h-4 text-teal-950" />
+                <span>{isEs ? 'Inscribir Nuevo Estudiante' : 'Enroll New Student'}</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('status')}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all cursor-pointer backdrop-blur-xs"
+              >
+                <Search className="w-4 h-4 text-teal-300" />
+                <span>{isEs ? 'Consultar por Radicado' : 'Lookup by Docket'}</span>
+              </button>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row md:flex-col gap-3 shrink-0">
-            <button
-              onClick={() => setActiveTab('wizard')}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-teal-500 hover:bg-teal-400 text-teal-950 font-black text-xs sm:text-sm shadow-lg shadow-teal-900/50 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <FilePlus className="w-4 h-4 text-teal-950" />
-              <span>{isEs ? 'Inscribir Nuevo Estudiante' : 'Enroll New Student'}</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('status')}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 transition-all cursor-pointer backdrop-blur-xs"
-            >
-              <Search className="w-4 h-4 text-teal-300" />
-              <span>{isEs ? 'Consultar por Radicado' : 'Lookup by Docket'}</span>
-            </button>
-          </div>
+          {/* Decorative background shapes */}
+          <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
+          <div className="absolute right-1/3 -top-12 w-48 h-48 rounded-full bg-teal-400/10 blur-2xl pointer-events-none" />
         </div>
-
-        {/* Decorative background shapes */}
-        <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-teal-500/10 blur-3xl pointer-events-none" />
-        <div className="absolute right-1/3 -top-12 w-48 h-48 rounded-full bg-teal-400/10 blur-2xl pointer-events-none" />
-      </div>
+      )}
 
       {/* Section: Linked Students */}
       <div className="space-y-4">
@@ -264,14 +268,16 @@ export const GuardianMainDashboard: React.FC = () => {
                     <span>{isEs ? 'Ver Horario y Notas' : 'View Schedule & Grades'}</span>
                   </button>
 
-                  <button
-                    onClick={() => handlePrintCertificate(student)}
-                    className="w-full sm:w-auto py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                    title={isEs ? 'Descargar comprobante oficial de matrícula' : 'Download official enrollment certificate'}
-                  >
-                    <Download className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                    <span>{isEs ? 'Certificado Oficial' : 'Official Certificate'}</span>
-                  </button>
+                  {hasPermission('guardian', 'canDownloadCertificates') && (
+                    <button
+                      onClick={() => handlePrintCertificate(student)}
+                      className="w-full sm:w-auto py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      title={isEs ? 'Descargar comprobante oficial de matrícula' : 'Download official enrollment certificate'}
+                    >
+                      <Download className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                      <span>{isEs ? 'Certificado Oficial' : 'Official Certificate'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

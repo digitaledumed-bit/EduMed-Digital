@@ -18,7 +18,8 @@ import {
   LifeBuoy,
   Globe,
   FilePlus,
-  Camera
+  Camera,
+  Sliders
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { getDefaultAvatarByGender, isMaleGender } from '../../utils/avatarUtils';
@@ -32,141 +33,60 @@ export const AdminSidebar: React.FC = () => {
     language, 
     documents,
     currentUser,
-    logout
+    logout,
+    portalConfigs
   } = useApp();
 
   const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
 
   const pendingDocsCount = documents.filter(d => d.status === 'in_review' || d.status === 'pending').length;
 
-  const role = currentUser?.role || 'admin';
+  const role = (currentUser?.role as 'admin' | 'guardian' | 'student') || 'admin';
 
-  // Build role-specific menu items so each portal only accesses its corresponding views
+  // Icon lookup for dynamic role modules
+  const iconLookup: Record<string, React.ElementType> = {
+    dashboard: role === 'student' ? GraduationCap : LayoutDashboard,
+    enrollments: FileText,
+    students: Users,
+    parents: UserCheck,
+    'link-guardian': UserCog,
+    documents: FolderKanban,
+    'portal-config': Sliders,
+    settings: Settings,
+    'student-profile': GraduationCap,
+    status: Search,
+    wizard: FilePlus,
+    beneficios: Award,
+    institucion: Globe,
+    soporte: LifeBuoy
+  };
+
+  // Build role-specific menu items dynamically respecting the administrator's configuration and order
   const getMenuItems = () => {
-    if (role === 'guardian') {
-      return [
-        {
-          id: 'dashboard',
-          label: language === 'es' ? 'Portal del Acudiente' : 'Guardian Portal',
-          icon: LayoutDashboard,
-          badge: null
-        },
-        {
-          id: 'student-profile',
-          label: language === 'es' ? 'Expediente del Acudido' : 'My Child Profile',
-          icon: GraduationCap,
-          badge: null
-        },
-        {
-          id: 'status',
-          label: language === 'es' ? 'Estado de Matrícula (SIMAT)' : 'Enrollment Status',
-          icon: Search,
-          badge: null
-        },
-        {
-          id: 'wizard',
-          label: language === 'es' ? 'Inscribir Nuevo Estudiante' : 'Enroll New Student',
-          icon: FilePlus,
-          badge: null
-        },
-        {
-          id: 'beneficios',
-          label: language === 'es' ? 'Beneficios Escolares (PAE)' : 'Student Benefits (PAE)',
-          icon: Award,
-          badge: null
-        },
-        {
-          id: 'institucion',
-          label: language === 'es' ? 'I.E. Félix Henao Botero' : 'School Info',
-          icon: Globe,
-          badge: null
-        },
-        {
-          id: 'soporte',
-          label: language === 'es' ? 'Atención y Secretaría' : 'Support & Admissions',
-          icon: LifeBuoy,
-          badge: null
-        }
-      ];
+    const roleConfig = portalConfigs[role];
+    if (roleConfig && roleConfig.modules) {
+      return roleConfig.modules
+        .filter(m => m.enabled)
+        .map(m => {
+          let badge: string | null = null;
+          if (m.id === 'documents' && pendingDocsCount > 0) {
+            badge = `${pendingDocsCount}`;
+          }
+          return {
+            id: m.id,
+            label: language === 'es' ? m.label : m.labelEn,
+            icon: iconLookup[m.id] || LayoutDashboard,
+            badge
+          };
+        });
     }
 
-    if (role === 'student') {
-      return [
-        {
-          id: 'dashboard',
-          label: language === 'es' ? 'Mi Portal y Notas' : 'My Portal & Grades',
-          icon: GraduationCap,
-          badge: null
-        },
-        {
-          id: 'status',
-          label: language === 'es' ? 'Estado de mi Matrícula' : 'My Enrollment Status',
-          icon: Search,
-          badge: null
-        },
-        {
-          id: 'beneficios',
-          label: language === 'es' ? 'Mis Beneficios Estudiantiles' : 'Student Benefits',
-          icon: Award,
-          badge: null
-        },
-        {
-          id: 'institucion',
-          label: language === 'es' ? 'Mi Colegio I.E. Félix Henao' : 'My School Info',
-          icon: Globe,
-          badge: null
-        },
-        {
-          id: 'soporte',
-          label: language === 'es' ? 'Orientación y Soporte' : 'Guidance & Support',
-          icon: LifeBuoy,
-          badge: null
-        }
-      ];
-    }
-
-    // Role === 'admin': Focused strictly on institutional leadership & school management
+    // Safe fallback if not yet loaded
     return [
       {
         id: 'dashboard',
         label: language === 'es' ? 'Panel de Control' : 'Dashboard',
         icon: LayoutDashboard,
-        badge: null
-      },
-      {
-        id: 'enrollments',
-        label: language === 'es' ? 'Solicitudes de Matrícula' : 'Enrollment Requests',
-        icon: FileText,
-        badge: null
-      },
-      {
-        id: 'students',
-        label: language === 'es' ? 'Directorio de Estudiantes' : 'Students Directory',
-        icon: Users,
-        badge: null
-      },
-      {
-        id: 'parents',
-        label: language === 'es' ? 'Familias y Acudientes' : 'Guardians & Families',
-        icon: UserCheck,
-        badge: null
-      },
-      {
-        id: 'link-guardian',
-        label: language === 'es' ? 'Vincular Acudiente' : 'Link Guardian',
-        icon: UserCog,
-        badge: null
-      },
-      {
-        id: 'documents',
-        label: language === 'es' ? 'Auditoría Documental' : 'Document Audit',
-        icon: FolderKanban,
-        badge: pendingDocsCount > 0 ? `${pendingDocsCount}` : null
-      },
-      {
-        id: 'settings',
-        label: language === 'es' ? 'Configuración Institucional' : 'School Settings',
-        icon: Settings,
         badge: null
       }
     ];

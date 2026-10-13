@@ -128,3 +128,55 @@ export interface AppNotification {
   targetEmail?: string;
   category?: 'academic' | 'administrative' | 'enrollment' | 'document' | 'general';
 }
+
+export interface PortalModuleItem {
+  id: string;
+  label: string;
+  labelEn: string;
+  description: string;
+  descriptionEn: string;
+  enabled: boolean;
+  order: number;
+  iconName: string;
+  requiredRole?: UserRole;
+  isCore?: boolean;
+}
+
+export interface PortalWidgetItem {
+  id: string;
+  title: string;
+  titleEn: string;
+  description: string;
+  descriptionEn: string;
+  category: 'kpi' | 'chart' | 'card' | 'action';
+  enabled: boolean;
+  order: number;
+}
+
+export interface RolePermissions {
+  canDownloadCertificates: boolean;
+  canEditProfile: boolean;
+  canUploadAvatar: boolean;
+  canEnrollStudents: boolean;
+  canAuditDocuments: boolean;
+  canManageUsers: boolean;
+  canExportReports: boolean;
+  canViewAcademicRecords: boolean;
+  canConfigurePortals: boolean;
+}
+
+export interface RolePortalConfig {
+  role: UserRole;
+  name: string;
+  nameEn: string;
+  description: string;
+  descriptionEn: string;
+  badgeLabel: string;
+  badgeLabelEn: string;
+  defaultTab: string;
+  modules: PortalModuleItem[];
+  widgets: PortalWidgetItem[];
+  permissions: RolePermissions;
+  lastUpdated?: string;
+}
+

@@ -1,5 +1,22 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
-import { Language, Theme, FontSize, UserRole, Student, Guardian, EnrollmentRecord, StudentDocument, ActivityItem, EnrollmentStatus, DocumentStatus, AuthUser, AppNotification } from '../types';
+import { 
+  Language, 
+  Theme, 
+  FontSize, 
+  UserRole, 
+  Student, 
+  Guardian, 
+  EnrollmentRecord, 
+  StudentDocument, 
+  ActivityItem, 
+  EnrollmentStatus, 
+  DocumentStatus, 
+  AuthUser, 
+  AppNotification,
+  RolePortalConfig,
+  RolePermissions
+} from '../types';
+import { defaultPortalConfigs } from '../data/defaultPortalConfigs';
 import { translations } from '../i18n/translations';
 import { initialStudents, initialGuardians, initialEnrollments, initialDocuments, initialActivities } from '../data/mockData';
 import { 
@@ -72,10 +89,16 @@ interface AppContextType {
   addGuardian: (guardian: Omit<Guardian, 'id'>) => string;
   linkGuardianToStudent: (studentId: string, guardianData: { name: string; relationship: string; phone: string; email: string; isPrimary: boolean; livesWithStudent: boolean }) => void;
   submitNewEnrollment: (data: { student: Partial<Student>; guardian: Partial<Guardian>; documents: { name: string; file: File | null }[] }) => string;
-  lookupEnrollmentStatus: (query: string) => EnrollmentRecord | null;
   notifications: AppNotification[];
   markNotificationsAsRead: () => void;
   unreadCount: number;
+
+  portalConfigs: Record<'admin' | 'guardian' | 'student', RolePortalConfig>;
+  updateRolePortalConfig: (role: 'admin' | 'guardian' | 'student', updatedConfig: RolePortalConfig) => Promise<{ success: boolean; message?: string }>;
+  resetRolePortalConfig: (role?: 'admin' | 'guardian' | 'student') => Promise<{ success: boolean; message?: string }>;
+  isModuleEnabled: (role: UserRole, moduleId: string) => boolean;
+  isWidgetEnabled: (role: UserRole, widgetId: string) => boolean;
+  hasPermission: (role: UserRole, permissionKey: keyof RolePermissions) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -386,6 +409,154 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem('edumed_documents', JSON.stringify(documents));
   }, [documents]);
+
+  // =========================================================================
+  // PORTAL CONFIGURATION PER ROLE (ADMIN, GUARDIAN, STUDENT)
+  // =========================================================================
+  const [portalConfigs, setPortalConfigs] = useState<Record<'admin' | 'guardian' | 'student', RolePortalConfig>>(() => {
+    const saved = localStorage.getItem('edumed_portal_configs');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.admin && parsed.guardian && parsed.student) {
+          return parsed;
+        }
+      } catch (e) {
+        console.error('Error parsing stored portal configs:', e);
+      }
+    }
+    return defaultPortalConfigs;
+  });
+
+  // Sync to localStorage
+  useEffect(() => {
+    localStorage.setItem('edumed_portal_configs', JSON.stringify(portalConfigs));
+  }, [portalConfigs]);
+
+  // Sync with backend API on mount or role change
+  useEffect(() => {
+    const fetchPortalConfigs = async () => {
+      try {
+        const currentRole = currentUser?.role || activeRole || 'public';
+        if (currentRole === 'public') return;
+
+        const res = await fetch('/api/portal-config', {
+          headers: {
+            'x-user-role': currentRole
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.configs) {
+            setPortalConfigs(prev => ({
+              ...prev,
+              ...data.configs
+            }));
+          }
+        }
+      } catch {
+        // Safe fallback to local state
+      }
+    };
+    fetchPortalConfigs();
+  }, [currentUser?.role, activeRole]);
+
+  const updateRolePortalConfig = async (
+    role: 'admin' | 'guardian' | 'student', 
+    updatedConfig: RolePortalConfig
+  ): Promise<{ success: boolean; message?: string }> => {
+    const finalizedConfig: RolePortalConfig = {
+      ...updatedConfig,
+      role,
+      lastUpdated: new Date().toISOString()
+    };
+
+    setPortalConfigs(prev => ({
+      ...prev,
+      [role]: finalizedConfig
+    }));
+
+    try {
+      const res = await fetch(`/api/portal-config/${role}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': currentUser?.role || 'admin'
+        },
+        body: JSON.stringify(finalizedConfig)
+      });
+      const data = await res.json();
+      return { 
+        success: data.success ?? true, 
+        message: data.message || 'Configuración guardada exitosamente.' 
+      };
+    } catch {
+      return { 
+        success: true, 
+        message: 'Configuración guardada en almacenamiento local.' 
+      };
+    }
+  };
+
+  const resetRolePortalConfig = async (
+    role?: 'admin' | 'guardian' | 'student'
+  ): Promise<{ success: boolean; message?: string }> => {
+    if (role) {
+      const freshDefault = JSON.parse(JSON.stringify(defaultPortalConfigs[role]));
+      freshDefault.lastUpdated = new Date().toISOString();
+      setPortalConfigs(prev => ({
+        ...prev,
+        [role]: freshDefault
+      }));
+    } else {
+      setPortalConfigs(JSON.parse(JSON.stringify(defaultPortalConfigs)));
+    }
+
+    try {
+      const res = await fetch('/api/portal-config/reset', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-user-role': currentUser?.role || 'admin'
+        },
+        body: JSON.stringify({ role })
+      });
+      const data = await res.json();
+      return { 
+        success: data.success ?? true, 
+        message: data.message || 'Valores predeterminados restaurados.' 
+      };
+    } catch {
+      return { 
+        success: true, 
+        message: 'Valores predeterminados restaurados localmente.' 
+      };
+    }
+  };
+
+  const isModuleEnabled = (role: UserRole, moduleId: string): boolean => {
+    if (role === 'public') return true;
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
+    if (!config || !config.modules) return true;
+    const mod = config.modules.find(m => m.id === moduleId);
+    return mod ? mod.enabled : true;
+  };
+
+  const isWidgetEnabled = (role: UserRole, widgetId: string): boolean => {
+    if (role === 'public') return true;
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
+    if (!config || !config.widgets) return true;
+    const widget = config.widgets.find(w => w.id === widgetId);
+    return widget ? widget.enabled : true;
+  };
+
+  const hasPermission = (role: UserRole, permissionKey: keyof RolePermissions): boolean => {
+    if (role === 'public') return false;
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
+    if (!config || !config.permissions) return false;
+    return Boolean(config.permissions[permissionKey]);
+  };
+
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
@@ -1749,7 +1920,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lookupEnrollmentStatus,
         notifications: userNotifications,
         markNotificationsAsRead,
-        unreadCount
+        unreadCount,
+        portalConfigs,
+        updateRolePortalConfig,
+        resetRolePortalConfig,
+        isModuleEnabled,
+        isWidgetEnabled,
+        hasPermission
       }}
     >
       {children}
