@@ -121,7 +121,7 @@ export const AdminSidebar: React.FC = () => {
   return (
     <>
       {/* Mobile Horizontal Navigation Bar (< md) */}
-      <div className="md:hidden bg-[#0a192f] border-b border-slate-800 text-slate-300 px-3 py-2 sticky top-16 z-30 shadow-md">
+      <div className="md:hidden bg-[#0a192f] border-b border-slate-800 text-slate-300 px-3 py-2 sticky top-16 sm:top-20 z-30 shadow-md">
         <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-800/80 text-xs">
           <div className="flex items-center gap-2">
             <span className="font-black text-white text-xs">{headerInfo.title} <span className="text-teal-400">{headerInfo.accent}</span></span>
@@ -129,14 +129,14 @@ export const AdminSidebar: React.FC = () => {
           </div>
           <button
             onClick={logout}
-            className="text-[10px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+            className="min-h-[36px] px-2 text-[11px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
           >
-            <LogOut className="w-3 h-3" />
+            <LogOut className="w-3.5 h-3.5" />
             <span>{language === 'es' ? 'Salir' : 'Exit'}</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-thin">
+        <div className="flex items-center gap-2 overflow-x-auto py-1 scrollbar-none">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id || (item.id === 'students' && (activeTab === 'student-profile' || activeTab === 'link-guardian'));
@@ -144,16 +144,16 @@ export const AdminSidebar: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`shrink-0 flex items-center gap-2 min-h-[44px] px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-teal-700 text-white shadow-xs'
-                    : 'bg-slate-800/60 text-slate-300 hover:text-white'
+                    ? 'bg-teal-700 text-white shadow-xs font-bold'
+                    : 'bg-slate-800/70 text-slate-300 hover:text-white'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-4 h-4 shrink-0" />
                 <span className="whitespace-nowrap">{item.label}</span>
                 {item.badge && (
-                  <span className="px-1 py-0.2 text-[9px] font-bold rounded-full bg-amber-400 text-slate-950">
+                  <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-amber-400 text-slate-950">
                     {item.badge}
                   </span>
                 )}
@@ -197,7 +197,7 @@ export const AdminSidebar: React.FC = () => {
                 key={item.id}
                 id={`sidebar-link-${item.id}`}
                 onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+                className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all cursor-pointer ${
                   isActive
                     ? 'bg-teal-700 text-white font-semibold shadow-md shadow-teal-950/40'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/80'

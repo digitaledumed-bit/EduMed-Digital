@@ -525,6 +525,51 @@ export const EnrollmentWizard: React.FC = () => {
           </div>
         )}
 
+        {/* Mobile Stepper Bar (< lg) */}
+        {currentStep < 6 && (
+          <div className="lg:hidden mb-6 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+              <span className="truncate pr-2">
+                {language === 'es' ? `Paso ${currentStep} de 6: ${stepsList[currentStep - 1]?.label.replace(/^\d+\.\s*/, '')}` : `Step ${currentStep} of 6`}
+              </span>
+              <span className="text-teal-600 dark:text-teal-400 font-extrabold shrink-0">
+                {Math.round((currentStep / 6) * 100)}%
+              </span>
+            </div>
+            
+            <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden mb-3">
+              <div 
+                className="h-full bg-teal-600 dark:bg-teal-400 rounded-full transition-all duration-300"
+                style={{ width: `${(currentStep / 6) * 100}%` }}
+              />
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+              {stepsList.map((st) => {
+                const isCompleted = currentStep > st.num;
+                const isCurrent = currentStep === st.num;
+                return (
+                  <button
+                    key={st.num}
+                    type="button"
+                    onClick={() => handleStepJump(st.num)}
+                    className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                      isCurrent
+                        ? 'bg-teal-700 text-white shadow-xs'
+                        : isCompleted
+                        ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                    }`}
+                  >
+                    <span>{st.num}.</span>
+                    <span className="whitespace-nowrap">{st.label.replace(/^\d+\.\s*/, '')}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* LEFT MAIN FORM COLUMN (8 cols) */}
@@ -1460,6 +1505,45 @@ export const EnrollmentWizard: React.FC = () => {
                     >
                       <Download className="w-4 h-4" />
                       <span>{language === 'es' ? 'Descargar Comprobante' : 'Download Receipt'}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Mobile Bottom Quick Actions (< lg) */}
+              {currentStep < 6 && (
+                <div className="lg:hidden mt-8 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="w-full min-h-[44px] py-3.5 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-black text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  >
+                    <span>{currentStep === 5 ? (language === 'es' ? 'Radicar Matrícula Definitiva' : t.wizard.finish) : (language === 'es' ? 'Guardar y Continuar al Siguiente Paso' : t.wizard.saveAndContinue)}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center gap-2">
+                    {currentStep > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCurrentStep(prev => prev - 1);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="flex-1 min-h-[44px] py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        <span>{t.wizard.backToPrev}</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={handleSaveDraft}
+                      className="flex-1 min-h-[44px] py-2.5 px-3 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      <span>{t.wizard.saveDraft}</span>
                     </button>
                   </div>
                 </div>

@@ -104,11 +104,93 @@ export const StudentsList: React.FC = () => {
         </div>
       </div>
 
-      {/* Students Table */}
+      {/* Students Table and Mobile Cards */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+        {filteredStudents.length === 0 ? (
+          <div className="p-8 sm:p-12 text-center text-slate-500 dark:text-slate-400">
+            <Inbox className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              {language === 'es' ? 'No se encontraron estudiantes matriculados' : 'No enrolled students found'}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              {language === 'es' 
+                ? 'Los estudiantes que matricules o registres aparecerán en este listado.' 
+                : 'Students you enroll or register will appear here.'}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Cards (< sm) */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {filteredStudents.map((std) => {
+                const primaryGuardian = std.guardians.find(g => g.isPrimary) || std.guardians[0];
+                return (
+                  <div key={std.id} className="p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <UserAvatar name={std.fullName} size="sm" />
+                        <div>
+                          <h3 
+                            onClick={() => {
+                              setSelectedStudentId(std.id);
+                              setActiveTab('student-profile');
+                            }}
+                            className="font-bold text-sm text-slate-900 dark:text-white hover:text-teal-600 dark:hover:text-teal-400 cursor-pointer"
+                          >
+                            {std.fullName}
+                          </h3>
+                          <span className="text-xs text-teal-700 dark:text-teal-400 font-semibold">{std.grade}</span>
+                        </div>
+                      </div>
+
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
+                        std.status === 'active'
+                          ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                          : std.status === 'in_process'
+                          ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                          : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300'
+                      }`}>
+                        {std.status === 'active' ? (language === 'es' ? 'Activo' : 'Active') : (language === 'es' ? 'En Proceso' : 'In Process')}
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-slate-500 dark:text-slate-400 space-y-0.5">
+                      <p>Doc: <strong className="text-slate-700 dark:text-slate-300">{std.documentType} {std.documentNumber}</strong></p>
+                      <p>{language === 'es' ? 'Acudiente:' : 'Guardian:'} {primaryGuardian ? primaryGuardian.name : 'Sin asignar'}</p>
+                    </div>
+
+                    <div className="pt-2 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800/60">
+                      <button
+                        onClick={() => {
+                          setSelectedStudentId(std.id);
+                          setActiveTab('student-profile');
+                        }}
+                        className="flex-1 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-teal-600" />
+                        <span>{language === 'es' ? 'Ver Expediente' : 'Profile'}</span>
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setSelectedStudentId(std.id);
+                          setActiveTab('link-guardian');
+                        }}
+                        className="min-h-[40px] px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <UserPlus className="w-3.5 h-3.5" />
+                        <span>{language === 'es' ? 'Acudiente' : 'Guardian'}</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop Table (>= sm) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
               <tr>
                 <th className="px-6 py-4">{t.admin.students.table.name}</th>
                 <th className="px-6 py-4">{t.admin.students.table.doc}</th>
@@ -233,6 +315,8 @@ export const StudentsList: React.FC = () => {
             </tbody>
           </table>
         </div>
+      </>
+    )}
 
         {/* Footer pagination info */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">

@@ -17,7 +17,8 @@ import {
   Sparkles,
   LogOut,
   LogIn,
-  Camera
+  Camera,
+  Menu
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
@@ -46,6 +47,7 @@ export const Navbar: React.FC = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
+  const [showMobileNav, setShowMobileNav] = useState(false);
 
   const handleRoleChange = (role: 'public' | 'admin' | 'guardian' | 'student') => {
     setActiveRole(role);
@@ -594,18 +596,31 @@ export const Navbar: React.FC = () => {
                 </button>
               </div>
             ) : (
-              /* Public Not Logged In Quick Action: Iniciar Sesión only */
+              /* Public Not Logged In Quick Action: Iniciar Sesión and Mobile Menu */
               activeRole === 'public' && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <button
                     id="btn-nav-login"
                     onClick={() => {
                       setActiveTab('home');
+                      setShowMobileNav(false);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="inline-flex items-center px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-sm font-bold shadow-xs transition-all cursor-pointer"
+                    className="inline-flex items-center justify-center min-h-[44px] px-3.5 sm:px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-xs transition-all cursor-pointer"
                   >
                     <span>{language === 'es' ? 'Iniciar Sesión' : 'Sign In'}</span>
+                  </button>
+
+                  {/* Mobile Hamburger Toggle (< md) */}
+                  <button
+                    type="button"
+                    id="btn-mobile-nav-toggle"
+                    onClick={() => setShowMobileNav(!showMobileNav)}
+                    className="md:hidden flex items-center justify-center min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
+                    aria-label={showMobileNav ? 'Cerrar menú de navegación' : 'Abrir menú de navegación'}
+                    aria-expanded={showMobileNav}
+                  >
+                    {showMobileNav ? <X className="w-5 h-5 text-teal-600 dark:text-teal-400" /> : <Menu className="w-5 h-5" />}
                   </button>
                 </div>
               )
@@ -632,6 +647,108 @@ export const Navbar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Navigation Drawer for Screens < md */}
+      {showMobileNav && (
+        <div 
+          id="mobile-nav-drawer"
+          className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-slate-900/98 backdrop-blur-md px-4 py-4 space-y-2 shadow-xl animate-in slide-in-from-top duration-200"
+        >
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-1">
+            {language === 'es' ? 'Navegación Institucional' : 'School Navigation'}
+          </div>
+
+          <button
+            onClick={() => {
+              setActiveTab('home');
+              setShowMobileNav(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
+              activeTab === 'home' || activeTab === 'landing'
+                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{t.nav.home}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('institucion');
+              setShowMobileNav(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
+              activeTab === 'institucion'
+                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{language === 'es' ? 'La Institución Educativa' : 'School Information'}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('beneficios');
+              setShowMobileNav(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
+              activeTab === 'beneficios'
+                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{language === 'es' ? 'Beneficios (PAE y Transporte)' : 'Benefits'}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('soporte');
+              setShowMobileNav(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
+              activeTab === 'soporte'
+                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{language === 'es' ? 'Canal de Soporte y Contacto' : 'Support & Help'}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+          </button>
+
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+            <button
+              onClick={() => {
+                setActiveTab('status');
+                setShowMobileNav(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <Search className="w-4 h-4 text-teal-600" />
+              <span>{language === 'es' ? 'Consultar Estado de Matrícula (SIMAT)' : 'Check Enrollment Status'}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('wizard');
+                setShowMobileNav(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-xs cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{language === 'es' ? 'Iniciar Nueva Matrícula en Línea' : 'Start Online Enrollment'}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Avatar Customization Modal for Student */}
       {currentUser && currentUser.role === 'student' && (

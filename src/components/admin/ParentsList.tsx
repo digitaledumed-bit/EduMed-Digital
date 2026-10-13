@@ -87,20 +87,99 @@ export const ParentsList: React.FC = () => {
         </div>
       </div>
 
-      {/* Parents Table */}
+      {/* Parents Table & Mobile Cards */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="px-6 py-4">{t.admin.parents.table.doc}</th>
-                <th className="px-6 py-4">{t.admin.parents.table.name}</th>
-                <th className="px-6 py-4">{t.admin.parents.table.relationship}</th>
-                <th className="px-6 py-4">{t.admin.parents.table.phone}</th>
-                <th className="px-6 py-4">{t.admin.parents.table.students}</th>
-                <th className="px-6 py-4 text-right">{t.admin.parents.table.actions}</th>
-              </tr>
-            </thead>
+        {filtered.length === 0 ? (
+          <div className="p-8 sm:p-12 text-center text-slate-500 dark:text-slate-400">
+            <UserCheck className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              {language === 'es' ? 'No se encontraron acudientes registrados' : 'No registered guardians found'}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              {language === 'es' ? 'Intenta modificar el término de búsqueda.' : 'Try adjusting the search query.'}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Cards (< sm) */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
+              {filtered.map((guardian) => (
+                <div key={guardian.id} className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                      {guardian.fullName}
+                    </h3>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                      {guardian.relationship}
+                    </span>
+                  </div>
+
+                  <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
+                    <p>Doc: <strong className="text-slate-700 dark:text-slate-300">{guardian.documentType} {guardian.documentNumber}</strong></p>
+                    <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                      <Phone className="w-3.5 h-3.5 text-teal-600" />
+                      <span>{guardian.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
+                      <Mail className="w-3.5 h-3.5 text-teal-600" />
+                      <span>{guardian.email}</span>
+                    </div>
+                  </div>
+
+                  {guardian.associatedStudents.length > 0 && (
+                    <div className="pt-1">
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                        {language === 'es' ? 'Estudiantes a Cargo:' : 'Children:'}
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {guardian.associatedStudents.map((std, i) => (
+                          <button
+                            key={i}
+                            onClick={() => {
+                              setSelectedStudentId(std.id);
+                              setActiveTab('student-profile');
+                            }}
+                            className="px-2.5 py-1 rounded-lg text-xs bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 font-semibold hover:bg-teal-100 flex items-center gap-1 transition-colors cursor-pointer"
+                          >
+                            <GraduationCap className="w-3 h-3" />
+                            <span>{std.name}</span>
+                            <span className="text-[10px] opacity-75">({std.grade})</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/60 flex justify-end">
+                    <button
+                      onClick={() => {
+                        if (guardian.associatedStudents[0]) {
+                          setSelectedStudentId(guardian.associatedStudents[0].id);
+                        }
+                        setActiveTab('link-guardian');
+                      }}
+                      className="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 hover:bg-teal-100 transition-colors cursor-pointer"
+                    >
+                      {language === 'es' ? 'Vincular a otro estudiante' : 'Link another'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop Table (>= sm) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="px-6 py-4">{t.admin.parents.table.doc}</th>
+                    <th className="px-6 py-4">{t.admin.parents.table.name}</th>
+                    <th className="px-6 py-4">{t.admin.parents.table.relationship}</th>
+                    <th className="px-6 py-4">{t.admin.parents.table.phone}</th>
+                    <th className="px-6 py-4">{t.admin.parents.table.students}</th>
+                    <th className="px-6 py-4 text-right">{t.admin.parents.table.actions}</th>
+                  </tr>
+                </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {filtered.map((guardian) => (
                 <tr key={guardian.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
@@ -174,7 +253,9 @@ export const ParentsList: React.FC = () => {
             </tbody>
           </table>
         </div>
-      </div>
+      </>
+    )}
+  </div>
 
     </div>
   );

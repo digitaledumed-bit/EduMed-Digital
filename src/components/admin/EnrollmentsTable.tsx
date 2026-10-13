@@ -130,115 +130,177 @@ export const EnrollmentsTable: React.FC = () => {
 
       </div>
 
-      {/* Enrollments Table */}
+      {/* Enrollments Table & Mobile Cards */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs sm:text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
-              <tr>
-                <th className="px-6 py-4">{t.admin.enrollments.table.id}</th>
-                <th className="px-6 py-4">{t.admin.enrollments.table.student}</th>
-                <th className="px-6 py-4">{t.admin.enrollments.table.year}</th>
-                <th className="px-6 py-4">{t.admin.enrollments.table.date}</th>
-                <th className="px-6 py-4">{t.admin.enrollments.table.status}</th>
-                <th className="px-6 py-4 text-right">{t.admin.enrollments.table.actions}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+        {filteredEnrollments.length === 0 ? (
+          <div className="p-8 sm:p-12 text-center text-slate-500 dark:text-slate-400">
+            <FileText className="w-10 h-10 mx-auto text-slate-400 mb-2 opacity-60" />
+            <p className="font-bold text-sm sm:text-base text-slate-700 dark:text-slate-200">
+              {language === 'es' ? 'No se encontraron matrículas con los filtros seleccionados' : 'No enrollments match the selected filters'}
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              {language === 'es' ? 'Intenta modificar el término de búsqueda, año o estado.' : 'Try adjusting your search query, academic year or status.'}
+            </p>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Card View (< sm) */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800">
               {filteredEnrollments.map((rec) => (
-                <tr key={rec.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
-                  
-                  {/* ID */}
-                  <td className="px-6 py-4 font-bold text-teal-700 dark:text-teal-400">
-                    {rec.id}
-                  </td>
-
-                  {/* Student */}
-                  <td className="px-6 py-4">
-                    <div className="font-bold text-slate-900 dark:text-white">
-                      {rec.studentName}
-                    </div>
-                    <div className="text-[11px] text-slate-400">
-                      Doc: {rec.studentDoc} • {rec.grade}
-                    </div>
-                  </td>
-
-                  {/* Year */}
-                  <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                    {rec.academicYear}
-                  </td>
-
-                  {/* Date */}
-                  <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
-                    {rec.submissionDate}
-                  </td>
-
-                  {/* Status Badge */}
-                  <td className="px-6 py-4">
-                    <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                <div key={rec.id} className="p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-bold text-xs text-teal-700 dark:text-teal-400 font-mono">
+                      {rec.id}
+                    </span>
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${
                       rec.status === 'approved' || rec.status === 'completed'
                         ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                         : rec.status === 'rejected'
                         ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
                         : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
                     }`}>
-                      {rec.status === 'approved' || rec.status === 'completed' ? (
-                        <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" />
-                      ) : rec.status === 'rejected' ? (
-                        <XCircle className="w-3 h-3 mr-1 text-rose-600" />
-                      ) : (
-                        <Clock className="w-3 h-3 mr-1 text-amber-600" />
-                      )}
                       {t.statuses[rec.status]}
                     </span>
-                  </td>
+                  </div>
 
-                  {/* Actions */}
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      
-                      {/* Review details */}
+                  <div>
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                      {rec.studentName}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                      Doc: {rec.studentDoc} • {rec.grade} • {rec.academicYear}
+                    </p>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      {language === 'es' ? 'Radicado:' : 'Submitted:'} {rec.submissionDate}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800/60">
+                    <button
+                      onClick={() => {
+                        setSelectedStudentId(rec.studentId);
+                        setActiveTab('student-profile');
+                      }}
+                      className="flex-1 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <Eye className="w-3.5 h-3.5 text-teal-600" />
+                      <span>{language === 'es' ? 'Ver Perfil' : 'Profile'}</span>
+                    </button>
+
+                    {rec.status !== 'approved' && (
                       <button
-                        onClick={() => {
-                          setSelectedStudentId(rec.studentId);
-                          setActiveTab('student-profile');
-                        }}
-                        className="p-1.5 text-slate-500 hover:text-teal-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                        title={language === 'es' ? 'Ver Perfil' : 'View Profile'}
+                        onClick={() => handleStatusChange(rec.id, 'approved')}
+                        className="min-h-[40px] px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
                       >
-                        <Eye className="w-4 h-4" />
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>{language === 'es' ? 'Aprobar' : 'Approve'}</span>
                       </button>
+                    )}
 
-                      {/* Quick Approve */}
-                      {rec.status !== 'approved' && (
-                        <button
-                          onClick={() => handleStatusChange(rec.id, 'approved')}
-                          className="p-1.5 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-lg transition-colors"
-                          title={language === 'es' ? 'Aprobar Matrícula' : 'Approve Enrollment'}
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      {/* Quick Reject */}
-                      {rec.status !== 'rejected' && (
-                        <button
-                          onClick={() => handleStatusChange(rec.id, 'rejected')}
-                          className="p-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors"
-                          title={language === 'es' ? 'Rechazar' : 'Reject'}
-                        >
-                          <XCircle className="w-4 h-4" />
-                        </button>
-                      )}
-
-                    </div>
-                  </td>
-
-                </tr>
+                    {rec.status !== 'rejected' && (
+                      <button
+                        onClick={() => handleStatusChange(rec.id, 'rejected')}
+                        className="min-h-[40px] px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                      >
+                        <XCircle className="w-3.5 h-3.5" />
+                        <span>{language === 'es' ? 'Rechazar' : 'Reject'}</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        </div>
+            </div>
+
+            {/* Desktop Table (>= sm) */}
+            <div className="hidden sm:block overflow-x-auto">
+              <table className="w-full text-left text-xs sm:text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
+                  <tr>
+                    <th className="px-6 py-4">{t.admin.enrollments.table.id}</th>
+                    <th className="px-6 py-4">{t.admin.enrollments.table.student}</th>
+                    <th className="px-6 py-4">{t.admin.enrollments.table.year}</th>
+                    <th className="px-6 py-4">{t.admin.enrollments.table.date}</th>
+                    <th className="px-6 py-4">{t.admin.enrollments.table.status}</th>
+                    <th className="px-6 py-4 text-right">{t.admin.enrollments.table.actions}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredEnrollments.map((rec) => (
+                    <tr key={rec.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-6 py-4 font-bold text-teal-700 dark:text-teal-400 font-mono">
+                        {rec.id}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-slate-900 dark:text-white">
+                          {rec.studentName}
+                        </div>
+                        <div className="text-[11px] text-slate-400">
+                          Doc: {rec.studentDoc} • {rec.grade}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                        {rec.academicYear}
+                      </td>
+                      <td className="px-6 py-4 text-slate-500 dark:text-slate-400">
+                        {rec.submissionDate}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold ${
+                          rec.status === 'approved' || rec.status === 'completed'
+                            ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                            : rec.status === 'rejected'
+                            ? 'bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                            : 'bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                        }`}>
+                          {rec.status === 'approved' || rec.status === 'completed' ? (
+                            <CheckCircle className="w-3 h-3 mr-1 text-emerald-600" />
+                          ) : rec.status === 'rejected' ? (
+                            <XCircle className="w-3 h-3 mr-1 text-rose-600" />
+                          ) : (
+                            <Clock className="w-3 h-3 mr-1 text-amber-600" />
+                          )}
+                          {t.statuses[rec.status]}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedStudentId(rec.studentId);
+                              setActiveTab('student-profile');
+                            }}
+                            className="p-2 text-slate-500 hover:text-teal-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                            title={language === 'es' ? 'Ver Perfil' : 'View Profile'}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          {rec.status !== 'approved' && (
+                            <button
+                              onClick={() => handleStatusChange(rec.id, 'approved')}
+                              className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-lg transition-colors cursor-pointer"
+                              title={language === 'es' ? 'Aprobar Matrícula' : 'Approve Enrollment'}
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                          {rec.status !== 'rejected' && (
+                            <button
+                              onClick={() => handleStatusChange(rec.id, 'rejected')}
+                              className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
+                              title={language === 'es' ? 'Rechazar' : 'Reject'}
+                            >
+                              <XCircle className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
       </div>
 
     </div>

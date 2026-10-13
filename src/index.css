@@ -4,51 +4,138 @@
 
 /* ==========================================================================
    TIPOGRAFÍA Y ESTILOS BASE - EDU MED DIGITAL (I.E. FÉLIX HENAO BOTERO)
-   Adaptable desde 320px (celulares pequeños) hasta 1920px+ (pantallas grandes)
+   Auditoría y optimización integral: 320px a 1920px+
+   WCAG AA, Objetivos táctiles >= 44px, Prefers-Reduced-Motion, Sin desbordamiento
    ========================================================================== */
 
 :root, html {
-  font-size: 15px; /* Optimizado para celulares pequeños 320px-375px */
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-size: 15px; /* Optimizado para celulares pequeños 320px - 375px */
   line-height: 1.6;
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   overflow-x: hidden;
   max-width: 100vw;
+  scroll-behavior: smooth;
 }
 
 @media (min-width: 640px) {
   :root, html {
-    font-size: 16px; /* Tabletas y pantallas estándar */
+    font-size: 15.5px; /* Celulares grandes y tabletas pequeñas */
+  }
+}
+
+@media (min-width: 768px) {
+  :root, html {
+    font-size: 16px; /* Tabletas y portátiles estándar */
   }
 }
 
 @media (min-width: 1280px) {
   :root, html {
-    font-size: 16.5px; /* Escritorio y portátiles amplios */
+    font-size: 16px; /* Escritorio 1280px - 1440px */
+  }
+}
+
+@media (min-width: 1920px) {
+  :root, html {
+    font-size: 16.5px; /* Pantallas grandes 1920px+ */
   }
 }
 
 body {
+  font-family: inherit;
   font-size: 1rem;
   line-height: 1.6;
   color: inherit;
   overflow-x: hidden;
   width: 100%;
   max-width: 100vw;
+  min-height: 100vh;
 }
 
-/* Tipografía amplia, cómoda y accesible en controles de formulario */
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+}
+
+/* ==========================================================================
+   ACCESIBILIDAD: FOCO VISIBLE Y OBJETIVOS TÁCTILES (WCAG 2.1 AA)
+   ========================================================================== */
+
+/* Indicador de foco visible de alto contraste para teclado */
+:focus-visible {
+  outline: 2px solid #0d9488 !important; /* Teal 600 */
+  outline-offset: 2px !important;
+}
+
+/* Botones y controles de formulario con tamaño adecuado y prevención de zoom */
 input, select, textarea, button {
   font-family: inherit;
   font-size: 1rem;
 }
 
+@media (max-width: 639px) {
+  /* En iOS, tamaños menores a 16px provocan zoom indeseado */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* Títulos con proporciones óptimas y legibilidad */
 h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
+  text-wrap: balance;
 }
 
+p {
+  text-wrap: pretty;
+}
+
+/* ==========================================================================
+   BARRA DE DESPLAZAMIENTO SUAVE Y ELEGANTE
+   ========================================================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* ==========================================================================
+   ANIMACIONES SUAVES Y RESPETO POR PREFERS-REDUCED-MOTION
+   ========================================================================== */
 @keyframes subtle-float {
   0%, 100% {
     transform: translateY(0px);
@@ -88,5 +175,17 @@ h1, h2, h3, h4, h5, h6 {
 
 .group:hover .card-shine-effect {
   animation: card-shimmer 1s ease-in-out;
+}
+
+/* Respeta la preferencia de movimiento reducido del usuario */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 

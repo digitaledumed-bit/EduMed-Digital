@@ -63,7 +63,7 @@ const MainAppContent: React.FC = () => {
 
         {/* Main Content Area */}
         {activeRole === 'public' ? (
-          <main className="flex-1">
+          <main className="flex-1 min-w-0">
             {(activeTab === 'landing' || activeTab === 'home') && <LandingPage />}
             {activeTab === 'wizard' && <EnrollmentWizard />}
             {activeTab === 'status' && <StatusLookup />}
@@ -72,13 +72,13 @@ const MainAppContent: React.FC = () => {
             {activeTab === 'soporte' && <SoporteView />}
           </main>
         ) : (
-          <div className="flex-1 flex flex-col md:flex-row">
+          <div className="flex-1 min-w-0 flex flex-col md:flex-row w-full">
             
             {/* Admin / Role Sidebar */}
             <AdminSidebar />
 
             {/* Portal Main Body with strict role authorization */}
-            <main className="flex-1 p-3 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
+            <main className="flex-1 min-w-0 p-3 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
               {isUnauthorized ? (
                 <div className="max-w-xl mx-auto my-12 bg-white dark:bg-slate-900 rounded-2xl border-2 border-rose-200 dark:border-rose-900/60 p-8 sm:p-10 text-center shadow-lg">
                   <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-5 border border-rose-200 dark:border-rose-800 shadow-xs">

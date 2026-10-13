@@ -402,7 +402,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               return (
                 <div
                   key={slide.id}
-                  className={`absolute inset-0 p-6 sm:p-10 md:p-12 lg:p-14 xl:p-16 flex items-center transition-all duration-700 ease-in-out ${
+                  className={`absolute inset-0 p-4 sm:p-8 md:p-12 lg:p-14 xl:p-16 flex items-center transition-all duration-700 ease-in-out ${
                     isActive ? 'opacity-100 scale-100 z-10 pointer-events-auto' : 'opacity-0 scale-98 z-0 pointer-events-none'
                   }`}
                 >
@@ -416,39 +416,39 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                     {/* Columna de Texto: Tipografía amplia y legible */}
                     <div className="lg:col-span-7 xl:col-span-7 space-y-4 sm:space-y-6 text-left">
                       
-                      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs sm:text-sm font-bold uppercase tracking-wider shadow-2xs">
+                      <div className="inline-flex items-center gap-2 px-3.5 sm:px-4 py-1.5 rounded-full border text-xs sm:text-sm font-bold uppercase tracking-wider shadow-2xs">
                         <Sparkles className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                         <span className={slide.palette.badge}>{slide.badge}</span>
                       </div>
 
-                      <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
+                      <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.1]">
                         {slide.title}
                       </h1>
 
-                      <p className="text-base sm:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-2xl">
+                      <p className="text-sm sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-2xl">
                         {slide.subtitle}
                       </p>
 
-                      <div className="flex flex-wrap items-center gap-2.5 pt-1">
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
                         {slide.keyBenefits.map((benefit, i) => (
                           <div 
                             key={i} 
-                            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold border ${slide.palette.pill}`}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold border ${slide.palette.pill}`}
                           >
-                            <Check className="w-4 h-4 shrink-0" />
+                            <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                             <span>{benefit}</span>
                           </div>
                         ))}
                       </div>
 
-                      <div className="pt-3 sm:pt-4 flex flex-wrap items-center gap-4">
+                      <div className="pt-2 sm:pt-4 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
                         <button
                           type="button"
                           onClick={() => handleSlideAction(slide.action)}
-                          className={`px-8 sm:px-10 py-4 sm:py-4.5 rounded-2xl font-bold text-base sm:text-lg shadow-lg transition-all flex items-center gap-3 cursor-pointer hover:scale-102 active:scale-95 group ${slide.palette.cta}`}
+                          className={`w-full sm:w-auto min-h-[44px] px-6 sm:px-10 py-3.5 sm:py-4.5 rounded-2xl font-bold text-sm sm:text-lg shadow-lg transition-all flex items-center justify-center gap-3 cursor-pointer hover:scale-102 active:scale-95 group ${slide.palette.cta}`}
                         >
                           <span>{slide.ctaText}</span>
-                          <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
+                          <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1.5 transition-transform" />
                         </button>
 
                         <button
@@ -460,7 +460,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                               scrollToSedesSection();
                             }
                           }}
-                          className="px-6 sm:px-8 py-4 sm:py-4.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-base sm:text-lg border border-slate-200 dark:border-slate-700 transition-all cursor-pointer active:scale-95"
+                          className="w-full sm:w-auto min-h-[44px] px-5 sm:px-8 py-3.5 sm:py-4.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-sm sm:text-lg border border-slate-200 dark:border-slate-700 transition-all cursor-pointer active:scale-95 text-center"
                         >
                           <span>{slide.secondaryText}</span>
                         </button>
@@ -994,7 +994,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
             if (e.target === e.currentTarget) resetContactForm();
           }}
         >
-          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left m-auto">
+          <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 sm:p-8 text-left m-auto max-h-[90vh] overflow-y-auto">
             <button
               type="button"
               onClick={resetContactForm}
