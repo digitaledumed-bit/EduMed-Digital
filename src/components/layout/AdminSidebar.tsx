@@ -46,38 +46,44 @@ export const AdminSidebar: React.FC = () => {
     if (role === 'guardian') {
       return [
         {
+          id: 'dashboard',
+          label: language === 'es' ? 'Portal del Acudiente' : 'Guardian Portal',
+          icon: LayoutDashboard,
+          badge: null
+        },
+        {
+          id: 'student-profile',
+          label: language === 'es' ? 'Expediente del Acudido' : 'My Child Profile',
+          icon: GraduationCap,
+          badge: null
+        },
+        {
           id: 'status',
-          label: language === 'es' ? 'Estado de Matrícula' : 'Enrollment Status',
+          label: language === 'es' ? 'Estado de Matrícula (SIMAT)' : 'Enrollment Status',
           icon: Search,
           badge: null
         },
         {
           id: 'wizard',
-          label: language === 'es' ? 'Pasos para Matricularse' : 'Enrollment Steps',
+          label: language === 'es' ? 'Inscribir Nuevo Estudiante' : 'Enroll New Student',
           icon: FilePlus,
           badge: null
         },
         {
-          id: 'student-profile',
-          label: language === 'es' ? 'Expediente de mi Acudido' : 'My Child Profile',
-          icon: GraduationCap,
-          badge: null
-        },
-        {
-          id: 'institucion',
-          label: language === 'es' ? 'I.E. Félix Henao' : 'School Info',
-          icon: Globe,
-          badge: null
-        },
-        {
           id: 'beneficios',
-          label: language === 'es' ? 'Beneficios Escolares' : 'Student Benefits',
+          label: language === 'es' ? 'Beneficios Escolares (PAE)' : 'Student Benefits (PAE)',
           icon: Award,
           badge: null
         },
         {
+          id: 'institucion',
+          label: language === 'es' ? 'I.E. Félix Henao Botero' : 'School Info',
+          icon: Globe,
+          badge: null
+        },
+        {
           id: 'soporte',
-          label: language === 'es' ? 'Soporte y Ayuda' : 'Support & Help',
+          label: language === 'es' ? 'Atención y Secretaría' : 'Support & Admissions',
           icon: LifeBuoy,
           badge: null
         }
@@ -87,15 +93,9 @@ export const AdminSidebar: React.FC = () => {
     if (role === 'student') {
       return [
         {
-          id: 'student-profile',
-          label: language === 'es' ? 'Mi Expediente y Notas' : 'My Grades & Profile',
+          id: 'dashboard',
+          label: language === 'es' ? 'Mi Portal y Notas' : 'My Portal & Grades',
           icon: GraduationCap,
-          badge: null
-        },
-        {
-          id: 'wizard',
-          label: language === 'es' ? 'Pasos para Matricularse' : 'Enrollment Steps',
-          icon: FilePlus,
           badge: null
         },
         {
@@ -105,15 +105,15 @@ export const AdminSidebar: React.FC = () => {
           badge: null
         },
         {
-          id: 'institucion',
-          label: language === 'es' ? 'Mi Colegio I.E. Félix Henao' : 'My School Info',
-          icon: Globe,
+          id: 'beneficios',
+          label: language === 'es' ? 'Mis Beneficios Estudiantiles' : 'Student Benefits',
+          icon: Award,
           badge: null
         },
         {
-          id: 'beneficios',
-          label: language === 'es' ? 'Beneficios Estudiantiles' : 'Student Benefits',
-          icon: Award,
+          id: 'institucion',
+          label: language === 'es' ? 'Mi Colegio I.E. Félix Henao' : 'My School Info',
+          icon: Globe,
           badge: null
         },
         {
@@ -125,71 +125,47 @@ export const AdminSidebar: React.FC = () => {
       ];
     }
 
-    // Default: Admin / Teacher portal
+    // Role === 'admin': Focused strictly on institutional leadership & school management
     return [
       {
         id: 'dashboard',
-        label: t.nav.dashboard,
+        label: language === 'es' ? 'Panel de Control' : 'Dashboard',
         icon: LayoutDashboard,
         badge: null
       },
       {
         id: 'enrollments',
-        label: t.nav.enrollment,
+        label: language === 'es' ? 'Solicitudes de Matrícula' : 'Enrollment Requests',
         icon: FileText,
         badge: null
       },
       {
         id: 'students',
-        label: t.nav.students,
+        label: language === 'es' ? 'Directorio de Estudiantes' : 'Students Directory',
         icon: Users,
         badge: null
       },
       {
         id: 'parents',
-        label: t.nav.parents,
+        label: language === 'es' ? 'Familias y Acudientes' : 'Guardians & Families',
         icon: UserCheck,
         badge: null
       },
       {
+        id: 'link-guardian',
+        label: language === 'es' ? 'Vincular Acudiente' : 'Link Guardian',
+        icon: UserCog,
+        badge: null
+      },
+      {
         id: 'documents',
-        label: t.nav.documents,
+        label: language === 'es' ? 'Auditoría Documental' : 'Document Audit',
         icon: FolderKanban,
         badge: pendingDocsCount > 0 ? `${pendingDocsCount}` : null
       },
       {
-        id: 'wizard',
-        label: language === 'es' ? 'Nueva Matrícula' : 'New Enrollment',
-        icon: FilePlus,
-        badge: null
-      },
-      {
-        id: 'status',
-        label: t.nav.status,
-        icon: Search,
-        badge: null
-      },
-      {
-        id: 'institucion',
-        label: language === 'es' ? 'I.E. Félix Henao' : 'School Info',
-        icon: Globe,
-        badge: null
-      },
-      {
-        id: 'beneficios',
-        label: language === 'es' ? 'Beneficios' : 'Benefits',
-        icon: Award,
-        badge: null
-      },
-      {
-        id: 'soporte',
-        label: language === 'es' ? 'Soporte' : 'Support',
-        icon: LifeBuoy,
-        badge: null
-      },
-      {
         id: 'settings',
-        label: t.nav.settings,
+        label: language === 'es' ? 'Configuración Institucional' : 'School Settings',
         icon: Settings,
         badge: null
       }
@@ -223,58 +199,103 @@ export const AdminSidebar: React.FC = () => {
   const headerInfo = getPortalHeader();
 
   return (
-    <aside className="w-64 bg-[#0a192f] text-slate-300 flex flex-col shrink-0 border-r border-slate-800 select-none min-h-[calc(100vh-4rem)]">
-      {/* Institution header badge */}
-      <div className="p-4 border-b border-slate-800/80">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-teal-600 flex items-center justify-center text-white font-bold shadow-md shadow-teal-900/40">
-            <GraduationCap className="w-5 h-5" />
+    <>
+      {/* Mobile Horizontal Navigation Bar (< md) */}
+      <div className="md:hidden bg-[#0a192f] border-b border-slate-800 text-slate-300 px-3 py-2 sticky top-16 z-30 shadow-md">
+        <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-800/80 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-black text-white text-xs">{headerInfo.title} <span className="text-teal-400">{headerInfo.accent}</span></span>
+            <span className="text-[10px] text-teal-300 font-semibold">• {headerInfo.subtitle}</span>
           </div>
-          <div>
-            <div className="font-bold text-white text-sm tracking-wide">
-              {headerInfo.title} <span className="text-teal-400">{headerInfo.accent}</span>
-            </div>
-            <div className="text-[11px] text-teal-300 font-medium truncate max-w-[150px]">
-              {headerInfo.subtitle}
-            </div>
-          </div>
+          <button
+            onClick={logout}
+            className="text-[10px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+          >
+            <LogOut className="w-3 h-3" />
+            <span>{language === 'es' ? 'Salir' : 'Exit'}</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto py-1 scrollbar-thin">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id || (item.id === 'students' && (activeTab === 'student-profile' || activeTab === 'link-guardian'));
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-teal-700 text-white shadow-xs'
+                    : 'bg-slate-800/60 text-slate-300 hover:text-white'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span className="whitespace-nowrap">{item.label}</span>
+                {item.badge && (
+                  <span className="px-1 py-0.2 text-[9px] font-bold rounded-full bg-amber-400 text-slate-950">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Navigation List */}
-      <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <div className="px-3 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-          {language === 'es' ? 'Menú Principal' : 'Main Menu'}
-        </div>
-
-        {menuItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = activeTab === item.id || (item.id === 'students' && (activeTab === 'student-profile' || activeTab === 'link-guardian'));
-          
-          return (
-            <button
-              key={item.id}
-              id={`sidebar-link-${item.id}`}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                isActive
-                  ? 'bg-teal-700 text-white font-semibold shadow-md shadow-teal-950/40'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
-                <span>{item.label}</span>
+      {/* Desktop Vertical Sidebar (>= md) */}
+      <aside className="hidden md:flex w-64 bg-[#0a192f] text-slate-300 flex-col shrink-0 border-r border-slate-800 select-none min-h-[calc(100vh-5rem)]">
+        {/* Institution header badge */}
+        <div className="p-4 border-b border-slate-800/80">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-teal-600 flex items-center justify-center text-white font-bold shadow-md shadow-teal-900/40">
+              <GraduationCap className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-white text-sm tracking-wide">
+                {headerInfo.title} <span className="text-teal-400">{headerInfo.accent}</span>
               </div>
-              {item.badge && (
-                <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500 text-slate-950">
-                  {item.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+              <div className="text-[11px] text-teal-300 font-medium truncate max-w-[150px]">
+                {headerInfo.subtitle}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation List */}
+        <div className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+          <div className="px-3 pb-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+            {language === 'es' ? 'Menú Principal' : 'Main Menu'}
+          </div>
+
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = activeTab === item.id || (item.id === 'students' && (activeTab === 'student-profile' || activeTab === 'link-guardian'));
+            
+            return (
+              <button
+                key={item.id}
+                id={`sidebar-link-${item.id}`}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all cursor-pointer ${
+                  isActive
+                    ? 'bg-teal-700 text-white font-semibold shadow-md shadow-teal-950/40'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/80'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <span>{item.label}</span>
+                </div>
+                {item.badge && (
+                  <span className="px-1.5 py-0.5 text-[10px] font-bold rounded-full bg-amber-500 text-slate-950">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
 
       {/* Return to Public Portal button */}
       <div className="px-3 pb-3">
@@ -374,5 +395,6 @@ export const AdminSidebar: React.FC = () => {
         />
       )}
     </aside>
+    </>
   );
 };

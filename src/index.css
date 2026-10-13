@@ -4,26 +4,38 @@
 
 /* ==========================================================================
    TIPOGRAFÍA Y ESTILOS BASE - EDU MED DIGITAL (I.E. FÉLIX HENAO BOTERO)
+   Adaptable desde 320px (celulares pequeños) hasta 1920px+ (pantallas grandes)
    ========================================================================== */
 
 :root, html {
-  font-size: 17.5px;
-  line-height: 1.65;
+  font-size: 15px; /* Optimizado para celulares pequeños 320px-375px */
+  line-height: 1.6;
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 640px) {
   :root, html {
-    font-size: 18px;
+    font-size: 16px; /* Tabletas y pantallas estándar */
+  }
+}
+
+@media (min-width: 1280px) {
+  :root, html {
+    font-size: 16.5px; /* Escritorio y portátiles amplios */
   }
 }
 
 body {
-  font-size: 1.05rem;
-  line-height: 1.65;
+  font-size: 1rem;
+  line-height: 1.6;
   color: inherit;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
 }
 
 /* Tipografía amplia, cómoda y accesible en controles de formulario */

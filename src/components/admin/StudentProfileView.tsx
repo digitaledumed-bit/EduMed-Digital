@@ -17,7 +17,8 @@ import {
   AlertCircle,
   Camera,
   FilePlus,
-  Sparkles
+  Sparkles,
+  Download
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
@@ -233,14 +234,25 @@ export const StudentProfileView: React.FC = () => {
                     <span>{language === 'es' ? 'Cambiar Foto de Avatar' : 'Change Avatar Photo'}</span>
                   </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('wizard')}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold transition-all shadow-md shadow-teal-700/20 cursor-pointer"
-                  >
-                    <FilePlus className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Llenar Pasos para Matricularse' : 'Enrollment Steps'}</span>
-                  </button>
+                  {student.status === 'active' ? (
+                    <button
+                      type="button"
+                      onClick={() => setFeedbackToast(language === 'es' ? 'Comprobante oficial de matrícula de la I.E. Félix Henao Botero listo para descargar e imprimir.' : 'Official enrollment certificate ready to download.')}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold transition-all shadow-md shadow-teal-700/20 cursor-pointer"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>{language === 'es' ? 'Comprobante de Matrícula' : 'Download Certificate'}</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('wizard')}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold transition-all shadow-md shadow-teal-700/20 cursor-pointer"
+                    >
+                      <FilePlus className="w-4 h-4" />
+                      <span>{language === 'es' ? 'Completar Pasos de Matrícula' : 'Complete Enrollment Steps'}</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

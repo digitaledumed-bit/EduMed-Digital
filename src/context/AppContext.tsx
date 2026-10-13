@@ -842,13 +842,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('edumed_current_user', JSON.stringify(authUser));
     setActiveRole(authUser.role);
 
-    if (authUser.role === 'admin') {
-      setActiveTab('dashboard');
-    } else if (authUser.role === 'student') {
-      setActiveTab('student-profile');
-    } else {
-      setActiveTab('status');
-    }
+    setActiveTab('dashboard');
 
     setActivities((prev) => [
       {
@@ -1142,13 +1136,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem('edumed_current_user', JSON.stringify(newUser));
     setActiveRole(newUser.role);
 
-    if (newUser.role === 'admin') {
-      setActiveTab('dashboard');
-    } else if (newUser.role === 'student') {
-      setActiveTab('student-profile');
-    } else {
-      setActiveTab('status');
-    }
+    setActiveTab('dashboard');
 
     const roleName = newUser.role === 'admin' 
       ? (language === 'es' ? 'Personal Administrativo y Directivo' : 'Administrative / Staff') 
@@ -1417,9 +1405,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
 
-    // Persist in custom passwords map
+    // Persist in custom passwords map (indexed by email and document number if available)
     const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
     customPasswords[cleanEmail] = newPassword;
+    if (userIndex >= 0 && registered[userIndex]?.documentNumber) {
+      const cleanDoc = registered[userIndex].documentNumber.replace(/^[A-Za-z.\s]+/, '').trim();
+      if (cleanDoc) customPasswords[cleanDoc] = newPassword;
+    }
     localStorage.setItem('edumed_custom_passwords', JSON.stringify(customPasswords));
 
     // Strictly enforce single-use: mark as used and remove

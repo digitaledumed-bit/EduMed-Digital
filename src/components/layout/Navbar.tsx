@@ -52,9 +52,9 @@ export const Navbar: React.FC = () => {
     if (role === 'admin') {
       setActiveTab('dashboard');
     } else if (role === 'student') {
-      setActiveTab('student-portal');
+      setActiveTab('dashboard');
     } else if (role === 'guardian') {
-      setActiveTab('guardian-portal');
+      setActiveTab('dashboard');
     } else {
       setActiveTab('home');
     }
@@ -68,7 +68,15 @@ export const Navbar: React.FC = () => {
           {/* Brand Logo & Name */}
           <div 
             id="brand-logo"
-            onClick={() => { setActiveRole('public'); setActiveTab('home'); }} 
+            onClick={() => {
+              if (currentUser) {
+                setActiveRole(currentUser.role);
+                setActiveTab('dashboard');
+              } else {
+                setActiveRole('public');
+                setActiveTab('home');
+              }
+            }} 
             className="flex flex-col items-center justify-center text-center cursor-pointer select-none group py-1"
           >
             <div className="relative shrink-0">
@@ -95,21 +103,55 @@ export const Navbar: React.FC = () => {
             </span>
           </div>
 
-          {/* Navigation Links: Clean top bar without redundant buttons */}
+          {/* Navigation Links: Differentiated per role without redundancy */}
           <nav className="hidden md:flex items-center gap-1 lg:gap-2">
-            <button
-              id="nav-link-home"
-              onClick={() => { setActiveTab('home'); }}
-              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'home' || activeTab === 'landing'
-                  ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              {t.nav.home}
-            </button>
+            {!currentUser && (
+              <>
+                <button
+                  id="nav-link-home"
+                  onClick={() => setActiveTab('home')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'home' || activeTab === 'landing'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {t.nav.home}
+                </button>
+                <button
+                  onClick={() => setActiveTab('institucion')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'institucion'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'La Institución' : 'School'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('beneficios')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'beneficios'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Beneficios' : 'Benefits'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('soporte')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'soporte'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Soporte' : 'Support'}
+                </button>
+              </>
+            )}
 
-            {/* Admin Management Links */}
+            {/* Admin Portal Quick Links */}
             {currentUser && currentUser.role === 'admin' && (
               <>
                 <button
@@ -170,6 +212,98 @@ export const Navbar: React.FC = () => {
                   }`}
                 >
                   {t.nav.documents}
+                </button>
+              </>
+            )}
+
+            {/* Guardian Portal Quick Links */}
+            {currentUser && currentUser.role === 'guardian' && (
+              <>
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'dashboard'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Portal del Acudiente' : 'Guardian Portal'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('student-profile')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'student-profile'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Expediente del Acudido' : 'Child Profile'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('status')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'status'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Estado SIMAT' : 'SIMAT Status'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('beneficios')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'beneficios'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Beneficios PAE' : 'School Meals'}
+                </button>
+              </>
+            )}
+
+            {/* Student Portal Quick Links */}
+            {currentUser && currentUser.role === 'student' && (
+              <>
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'dashboard' || activeTab === 'student-profile'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Mi Portal y Notas' : 'My Grades'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('status')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'status'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Estado Matrícula' : 'Enrollment Status'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('beneficios')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'beneficios'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Mis Beneficios' : 'My Benefits'}
+                </button>
+                <button
+                  onClick={() => setActiveTab('institucion')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'institucion'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Mi Colegio' : 'My School'}
                 </button>
               </>
             )}
@@ -404,8 +538,7 @@ export const Navbar: React.FC = () => {
                   <div 
                     onClick={() => {
                       setActiveRole(currentUser.role);
-                      if (currentUser.role === 'admin') setActiveTab('dashboard');
-                      else setActiveTab('status');
+                      setActiveTab('dashboard');
                     }}
                     className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors"
                   >

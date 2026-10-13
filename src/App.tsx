@@ -19,6 +19,7 @@ import { DocumentsManagement } from './components/admin/DocumentsManagement';
 import { InstitutionalSettings } from './components/admin/InstitutionalSettings';
 import { MandatoryEnrollmentGate } from './components/student/MandatoryEnrollmentGate';
 import { StudentMainDashboard } from './components/student/StudentMainDashboard';
+import { GuardianMainDashboard } from './components/guardian/GuardianMainDashboard';
 import { StudentEditProfileModal } from './components/student/StudentEditProfileModal';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
@@ -43,11 +44,13 @@ const MainAppContent: React.FC = () => {
 
   // Check mandatory enrollment status for students
   const isStudent = currentUser.role === 'student';
+  const isGuardian = currentUser.role === 'guardian';
+  const isAdmin = currentUser.role === 'admin';
   const isEnrollmentDone = isStudent ? isStudentEnrollmentCompleted(currentUser.id) : true;
 
   // Define admin-only views to enforce strict role isolation
-  const adminOnlyTabs = ['dashboard', 'enrollments', 'students', 'link-guardian', 'parents', 'documents', 'settings'];
-  const isUnauthorizedAdminTab = currentUser.role !== 'admin' && adminOnlyTabs.includes(activeTab);
+  const adminOnlyTabs = ['enrollments', 'students', 'link-guardian', 'parents', 'documents', 'settings'];
+  const isUnauthorizedAdminTab = !isAdmin && adminOnlyTabs.includes(activeTab);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
@@ -67,11 +70,11 @@ const MainAppContent: React.FC = () => {
         ) : (
           <div className="flex-1 flex flex-col md:flex-row">
             
-            {/* Admin Sidebar */}
+            {/* Admin / Role Sidebar */}
             <AdminSidebar />
 
             {/* Portal Main Body with strict role authorization */}
-            <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
+            <main className="flex-1 p-3 sm:p-5 lg:p-8 max-w-7xl w-full mx-auto overflow-y-auto">
               {isUnauthorizedAdminTab ? (
                 <div className="max-w-xl mx-auto my-12 bg-white dark:bg-slate-900 rounded-2xl border-2 border-rose-200 dark:border-rose-900/60 p-8 sm:p-10 text-center shadow-lg">
                   <div className="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-950/80 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto mb-5 border border-rose-200 dark:border-rose-800 shadow-xs">
@@ -87,12 +90,12 @@ const MainAppContent: React.FC = () => {
                   </p>
                   <div className="mt-6 flex flex-col sm:flex-row items-center justify-center gap-3">
                     <button
-                      onClick={() => setActiveTab(currentUser.role === 'student' ? 'student-profile' : 'status')}
+                      onClick={() => setActiveTab('dashboard')}
                       className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-md transition-all cursor-pointer"
                     >
                       {currentUser.role === 'student'
-                        ? (language === 'es' ? 'Ir a Mi Expediente y Notas' : 'Go to My Profile & Grades')
-                        : (language === 'es' ? 'Ir a Estado de Matrícula' : 'Go to Enrollment Status')}
+                        ? (language === 'es' ? 'Ir a Mi Portal y Notas' : 'Go to My Portal & Grades')
+                        : (language === 'es' ? 'Ir a Mi Portal del Acudiente' : 'Go to Guardian Portal')}
                     </button>
                     <button
                       onClick={() => setActiveTab('institucion')}
@@ -105,14 +108,28 @@ const MainAppContent: React.FC = () => {
               ) : isStudent && !isEnrollmentDone ? (
                 /* MANDATORY ENROLLMENT PROCESS GATE FOR STUDENTS */
                 <MandatoryEnrollmentGate 
-                  onEnrollmentCompleted={() => setActiveTab('student-profile')} 
+                  onEnrollmentCompleted={() => setActiveTab('dashboard')} 
                 />
               ) : (
                 <>
-                  {activeTab === 'dashboard' && (isStudent ? <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} /> : <AdminDashboard />)}
+                  {activeTab === 'dashboard' && (
+                    isStudent ? (
+                      <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} />
+                    ) : isGuardian ? (
+                      <GuardianMainDashboard />
+                    ) : (
+                      <AdminDashboard />
+                    )
+                  )}
                   {activeTab === 'enrollments' && <EnrollmentsTable />}
                   {activeTab === 'students' && <StudentsList />}
-                  {activeTab === 'student-profile' && (isStudent ? <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} /> : <StudentProfileView />)}
+                  {activeTab === 'student-profile' && (
+                    isStudent ? (
+                      <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} />
+                    ) : (
+                      <StudentProfileView />
+                    )
+                  )}
                   {activeTab === 'link-guardian' && <LinkGuardianView />}
                   {activeTab === 'parents' && <ParentsList />}
                   {activeTab === 'documents' && <DocumentsManagement />}
