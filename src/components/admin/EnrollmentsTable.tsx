@@ -175,24 +175,24 @@ export const EnrollmentsTable: React.FC = () => {
                     </p>
                   </div>
 
-                  <div className="pt-2 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800/60">
+                  <div className="pt-2 flex flex-wrap sm:flex-nowrap items-center gap-2 border-t border-slate-100 dark:border-slate-800/60">
                     <button
                       onClick={() => {
                         setSelectedStudentId(rec.studentId);
                         setActiveTab('student-profile');
                       }}
-                      className="flex-1 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="flex-1 min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 cursor-pointer"
                     >
-                      <Eye className="w-3.5 h-3.5 text-teal-600" />
+                      <Eye className="w-3.5 h-3.5 text-teal-600 shrink-0" />
                       <span>{language === 'es' ? 'Ver Perfil' : 'Profile'}</span>
                     </button>
 
                     {rec.status !== 'approved' && (
                       <button
                         onClick={() => handleStatusChange(rec.id, 'approved')}
-                        className="min-h-[40px] px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        className="min-h-[44px] px-3.5 py-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
                       >
-                        <CheckCircle className="w-3.5 h-3.5" />
+                        <CheckCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>{language === 'es' ? 'Aprobar' : 'Approve'}</span>
                       </button>
                     )}
@@ -200,9 +200,9 @@ export const EnrollmentsTable: React.FC = () => {
                     {rec.status !== 'rejected' && (
                       <button
                         onClick={() => handleStatusChange(rec.id, 'rejected')}
-                        className="min-h-[40px] px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        className="min-h-[44px] px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
                       >
-                        <XCircle className="w-3.5 h-3.5" />
+                        <XCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>{language === 'es' ? 'Rechazar' : 'Reject'}</span>
                       </button>
                     )}
@@ -269,16 +269,18 @@ export const EnrollmentsTable: React.FC = () => {
                               setSelectedStudentId(rec.studentId);
                               setActiveTab('student-profile');
                             }}
-                            className="p-2 text-slate-500 hover:text-teal-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-slate-500 hover:text-teal-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
                             title={language === 'es' ? 'Ver Perfil' : 'View Profile'}
+                            aria-label={language === 'es' ? 'Ver Perfil' : 'View Profile'}
                           >
                             <Eye className="w-4 h-4" />
                           </button>
                           {rec.status !== 'approved' && (
                             <button
                               onClick={() => handleStatusChange(rec.id, 'approved')}
-                              className="p-2 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-lg transition-colors cursor-pointer"
+                              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-colors cursor-pointer"
                               title={language === 'es' ? 'Aprobar Matrícula' : 'Approve Enrollment'}
+                              aria-label={language === 'es' ? 'Aprobar Matrícula' : 'Approve Enrollment'}
                             >
                               <CheckCircle className="w-4 h-4" />
                             </button>
@@ -286,8 +288,9 @@ export const EnrollmentsTable: React.FC = () => {
                           {rec.status !== 'rejected' && (
                             <button
                               onClick={() => handleStatusChange(rec.id, 'rejected')}
-                              className="p-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-lg transition-colors cursor-pointer"
+                              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition-colors cursor-pointer"
                               title={language === 'es' ? 'Rechazar' : 'Reject'}
+                              aria-label={language === 'es' ? 'Rechazar' : 'Reject'}
                             >
                               <XCircle className="w-4 h-4" />
                             </button>

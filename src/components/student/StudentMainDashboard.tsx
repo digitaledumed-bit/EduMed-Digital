@@ -245,10 +245,10 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               type="button"
               id="student-dashboard-btn-restore-avatar"
               onClick={handleRestoreDefault}
-              className="px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
               title={isEs ? "Elimina la fotografía personalizada y vuelve a mostrar automáticamente el avatar correspondiente al sexo registrado" : "Removes custom photo and restores default avatar"}
             >
-              <RotateCcw className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <RotateCcw className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
               <span>{isEs ? 'Restaurar avatar predeterminado' : 'Restore default avatar'}</span>
             </button>
 
@@ -257,9 +257,9 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               type="button"
               id="student-dashboard-btn-edit-profile"
               onClick={() => setShowEditModal(true)}
-              className="px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+              className="min-h-[44px] px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Edit3 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+              <Edit3 className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
               <span>{isEs ? 'Editar perfil' : 'Edit profile'}</span>
             </button>
 
@@ -268,10 +268,10 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               <button
                 type="button"
                 onClick={onResetEnrollmentForTest}
-                className="px-3 py-1.5 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 text-[11px] font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                className="min-h-[44px] px-3 py-2 rounded-xl border border-amber-300 dark:border-amber-800/80 bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/40 text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 title={isEs ? "Simula que la matrícula no ha sido completada para verificar la pantalla de 6 pasos obligatorios" : "Simulate incomplete enrollment"}
               >
-                <RefreshCw className="w-3 h-3 text-amber-600" />
+                <RefreshCw className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                 <span>{isEs ? 'Simular matrícula incompleta' : 'Simulate incomplete enrollment'}</span>
               </button>
             )}
@@ -281,7 +281,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
       </div>
 
       {/* KPI Cards: Student Academic Status */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">{isEs ? 'Estado Matrícula' : 'Enrollment Status'}</span>
@@ -290,7 +290,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
             </span>
           </div>
           <div className="mt-2">
-            <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400">{isEs ? 'Activa 100%' : 'Active 100%'}</span>
+            <span className="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">{isEs ? 'Activa 100%' : 'Active 100%'}</span>
             <p className="text-[11px] text-slate-400 mt-0.5">{isEs ? 'Vigente año escolar 2025' : 'Valid school year 2025'}</p>
           </div>
         </div>
@@ -303,7 +303,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
             </span>
           </div>
           <div className="mt-2">
-            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">4.7 / 5.0</span>
+            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tabular-nums">4.7 / 5.0</span>
             <p className="text-[11px] text-teal-600 dark:text-teal-400 mt-0.5 font-bold">{isEs ? 'Desempeño Superior' : 'Top Performance'}</p>
           </div>
         </div>
@@ -316,7 +316,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
             </span>
           </div>
           <div className="mt-2">
-            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">98.4%</span>
+            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tabular-nums">98.4%</span>
             <p className="text-[11px] text-slate-400 mt-0.5">{isEs ? 'Excelente cumplimiento' : 'Excellent compliance'}</p>
           </div>
         </div>
@@ -329,63 +329,63 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
             </span>
           </div>
           <div className="mt-2">
-            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white">{isEs ? '4 de 4' : '4 of 4'}</span>
+            <span className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tabular-nums">{isEs ? '4 de 4' : '4 of 4'}</span>
             <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-0.5 font-bold">{isEs ? 'Aprobados por secretaría' : 'Approved by office'}</p>
           </div>
         </div>
       </div>
 
-      {/* Tabs Switcher for Student Content */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+      {/* Tabs Switcher for Student Content - Horizontal scroll on mobile with touch targets */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto scrollbar-none py-1">
         <button
           type="button"
           onClick={() => setActiveTabSection('grades')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+          className={`shrink-0 min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
             activeTabSection === 'grades'
               ? 'bg-teal-700 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <Award className="w-4 h-4" />
+          <Award className="w-4 h-4 shrink-0" />
           <span>{isEs ? 'Mis Asignaturas y Calificaciones' : 'My Subjects & Grades'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTabSection('schedule')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+          className={`shrink-0 min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
             activeTabSection === 'schedule'
               ? 'bg-teal-700 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <Clock className="w-4 h-4" />
+          <Clock className="w-4 h-4 shrink-0" />
           <span>{isEs ? 'Horario de Clases' : 'Class Schedule'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTabSection('documents')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+          className={`shrink-0 min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
             activeTabSection === 'documents'
               ? 'bg-teal-700 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <FileText className="w-4 h-4" />
+          <FileText className="w-4 h-4 shrink-0" />
           <span>{isEs ? 'Documentos y Matrícula' : 'Documents & Enrollment'}</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTabSection('guardian')}
-          className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+          className={`shrink-0 min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 whitespace-nowrap ${
             activeTabSection === 'guardian'
               ? 'bg-teal-700 text-white shadow-xs'
               : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
           }`}
         >
-          <Users className="w-4 h-4" />
+          <Users className="w-4 h-4 shrink-0" />
           <span>{isEs ? 'Acudiente Vinculado' : 'Linked Guardian'}</span>
         </button>
       </div>

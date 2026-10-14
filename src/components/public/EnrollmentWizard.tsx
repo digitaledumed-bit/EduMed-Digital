@@ -553,7 +553,7 @@ export const EnrollmentWizard: React.FC = () => {
                     key={st.num}
                     type="button"
                     onClick={() => handleStepJump(st.num)}
-                    className={`shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    className={`shrink-0 min-h-[44px] flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isCurrent
                         ? 'bg-teal-700 text-white shadow-xs'
                         : isCompleted

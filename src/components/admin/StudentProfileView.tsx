@@ -94,39 +94,39 @@ export const StudentProfileView: React.FC = () => {
     <div className="space-y-6">
       
       {/* Breadcrumb & Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         {currentUser?.role === 'admin' ? (
           <button
             onClick={() => setActiveTab('students')}
             className="flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-500 hover:text-teal-600 dark:text-slate-400 dark:hover:text-teal-400 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 shrink-0" />
             <span>{t.admin.studentProfile.breadcrumbs}</span>
             <span className="text-slate-300 dark:text-slate-600">/</span>
-            <span className="text-slate-900 dark:text-white">{student.fullName}</span>
+            <span className="text-slate-900 dark:text-white truncate">{student.fullName}</span>
           </button>
         ) : (
           <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300">
-            <GraduationCap className="w-4 h-4 text-teal-600" />
+            <GraduationCap className="w-4 h-4 text-teal-600 shrink-0" />
             <span>{currentUser?.role === 'student' ? (language === 'es' ? 'Portal Estudiante' : 'Student Portal') : (language === 'es' ? 'Portal Acudiente' : 'Guardian Portal')}</span>
             <span className="text-slate-300 dark:text-slate-600">/</span>
-            <span className="text-slate-900 dark:text-white">{student.fullName}</span>
+            <span className="text-slate-900 dark:text-white truncate">{student.fullName}</span>
           </div>
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => setActiveTab('status')}
-            className="px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="min-h-[40px] px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
           >
-            <FileText className="w-3.5 h-3.5" />
+            <FileText className="w-3.5 h-3.5 text-teal-600" />
             <span>{language === 'es' ? 'Ver Estado de Matrícula' : 'View Enrollment Status'}</span>
           </button>
 
           {currentUser?.role === 'admin' ? (
             <button
               onClick={() => setFeedbackToast(language === 'es' ? 'Ficha académica en modo de edición directiva.' : 'Academic file in editing mode.')}
-              className="px-3.5 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              className="min-h-[40px] px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>{t.admin.studentProfile.editProfile}</span>
@@ -134,7 +134,7 @@ export const StudentProfileView: React.FC = () => {
           ) : (
             <button
               onClick={() => setFeedbackToast(language === 'es' ? 'Para actualizar datos personales o de contacto, por favor radique la solicitud ante la secretaría de la I.E. Félix Henao Botero.' : 'To update personal info, please request at school secretary office.')}
-              className="px-3.5 py-1.5 rounded-lg border border-teal-500/50 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+              className="min-h-[40px] px-3.5 py-2 rounded-xl border border-teal-500/50 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>{language === 'es' ? 'Solicitar Actualización' : 'Request Update'}</span>

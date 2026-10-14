@@ -604,10 +604,10 @@ export const AvatarChangeModal: React.FC<AvatarChangeModalProps> = ({
             type="button"
             id="btn-restore-default-avatar"
             onClick={handleRestoreDefault}
-            className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+            className="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer transition-all"
             title="Elimina la fotografía personalizada y vuelve al avatar según el sexo registrado"
           >
-            <RotateCcw className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+            <RotateCcw className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
             <span>{language === 'es' ? 'Restaurar avatar predeterminado' : 'Restore default avatar'}</span>
           </button>
 
@@ -617,7 +617,7 @@ export const AvatarChangeModal: React.FC<AvatarChangeModalProps> = ({
               type="button"
               id="btn-cancel-avatar-modal"
               onClick={handleCancel}
-              className="w-1/2 sm:w-auto px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer text-center"
+              className="w-1/2 sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer text-center flex items-center justify-center"
             >
               {language === 'es' ? 'Cancelar' : 'Cancel'}
             </button>
@@ -627,9 +627,9 @@ export const AvatarChangeModal: React.FC<AvatarChangeModalProps> = ({
               id="btn-confirm-avatar-photo"
               onClick={handleConfirmPhoto}
               disabled={isSuccess}
-              className="w-1/2 sm:w-auto px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-black shadow-md shadow-teal-700/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="w-1/2 sm:w-auto min-h-[44px] px-5 sm:px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-black shadow-md shadow-teal-700/25 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 text-center"
             >
-              <Check className="w-4 h-4 stroke-[2.5]" />
+              <Check className="w-4 h-4 stroke-[2.5] shrink-0" />
               <span>{language === 'es' ? 'Confirmar y Guardar Foto' : 'Confirm & Save'}</span>
             </button>
           </div>

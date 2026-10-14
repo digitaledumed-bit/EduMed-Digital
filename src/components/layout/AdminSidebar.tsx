@@ -129,9 +129,10 @@ export const AdminSidebar: React.FC = () => {
           </div>
           <button
             onClick={logout}
-            className="min-h-[36px] px-2 text-[11px] font-bold text-rose-400 hover:text-rose-300 flex items-center gap-1 cursor-pointer"
+            className="min-h-[44px] min-w-[44px] px-2.5 text-xs font-bold text-rose-400 hover:text-rose-300 flex items-center justify-center gap-1.5 cursor-pointer rounded-lg bg-rose-500/10 active:bg-rose-500/20"
+            aria-label={language === 'es' ? 'Cerrar sesión' : 'Log out'}
           >
-            <LogOut className="w-3.5 h-3.5" />
+            <LogOut className="w-4 h-4 shrink-0" />
             <span>{language === 'es' ? 'Salir' : 'Exit'}</span>
           </button>
         </div>

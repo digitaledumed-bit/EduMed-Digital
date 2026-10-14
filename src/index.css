@@ -189,3 +189,38 @@ p {
   }
 }
 
+/* ==========================================================================
+   UTILIDADES RESPONSIVE Y ACCESIBILIDAD
+   ========================================================================== */
+
+/* Clases para números tabulares alineados en tablas y cifras */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Ocultar barra de scroll pero mantener deslizamiento táctil */
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Objetivo táctil accesible estándar (mínimo 44px en móviles) */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Contenedor seguro contra desbordamiento horizontal */
+.safe-viewport-container {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+

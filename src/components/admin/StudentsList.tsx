@@ -159,15 +159,15 @@ export const StudentsList: React.FC = () => {
                       <p>{language === 'es' ? 'Acudiente:' : 'Guardian:'} {primaryGuardian ? primaryGuardian.name : 'Sin asignar'}</p>
                     </div>
 
-                    <div className="pt-2 flex items-center gap-2 border-t border-slate-100 dark:border-slate-800/60">
+                    <div className="pt-2 flex flex-wrap sm:flex-nowrap items-center gap-2 border-t border-slate-100 dark:border-slate-800/60">
                       <button
                         onClick={() => {
                           setSelectedStudentId(std.id);
                           setActiveTab('student-profile');
                         }}
-                        className="flex-1 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 cursor-pointer"
+                        className="flex-1 min-h-[44px] px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 cursor-pointer"
                       >
-                        <Eye className="w-3.5 h-3.5 text-teal-600" />
+                        <Eye className="w-3.5 h-3.5 text-teal-600 shrink-0" />
                         <span>{language === 'es' ? 'Ver Expediente' : 'Profile'}</span>
                       </button>
 
@@ -176,9 +176,9 @@ export const StudentsList: React.FC = () => {
                           setSelectedStudentId(std.id);
                           setActiveTab('link-guardian');
                         }}
-                        className="min-h-[40px] px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
+                        className="min-h-[44px] px-3.5 py-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
                       >
-                        <UserPlus className="w-3.5 h-3.5" />
+                        <UserPlus className="w-3.5 h-3.5 shrink-0" />
                         <span>{language === 'es' ? 'Acudiente' : 'Guardian'}</span>
                       </button>
                     </div>

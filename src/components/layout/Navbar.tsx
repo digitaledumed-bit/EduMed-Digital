@@ -513,20 +513,20 @@ export const Navbar: React.FC = () => {
 
             {/* If User Logged In: User profile chip with role and logout button */}
             {currentUser ? (
-              <div className="flex items-center gap-2 pl-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2 shrink-0">
                 {currentUser.role === 'student' ? (
                   /* Student Profile Badge with Gender-Based Avatar & Photo Customizer */
-                  <div className="flex items-center gap-2 px-2.5 py-1 rounded-2xl bg-teal-50 dark:bg-slate-800 border border-teal-300 dark:border-slate-700 shadow-xs">
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-2xl bg-teal-50 dark:bg-slate-800 border border-teal-300 dark:border-slate-700 shadow-xs">
                     {/* Interactive Avatar with Gender and Photo-Changer */}
                     <div 
                       onClick={() => setShowAvatarModal(true)}
-                      className="relative group cursor-pointer"
+                      className="relative group cursor-pointer shrink-0"
                       title={language === 'es' ? 'Cambiar tu foto de avatar' : 'Change avatar photo'}
                     >
                       <img
                         src={currentUser.avatarUrl || getDefaultAvatarByGender(currentUser.gender)}
                         alt={currentUser.name}
-                        className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-teal-500 shadow-xs bg-slate-200"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-teal-500 shadow-xs bg-slate-200"
                         onError={(e) => {
                           (e.currentTarget as HTMLImageElement).src = getDefaultAvatarByGender(currentUser.gender);
                         }}
@@ -539,26 +539,26 @@ export const Navbar: React.FC = () => {
                     {/* Student Name & Gender Label */}
                     <div 
                       onClick={() => { setActiveRole('student'); setActiveTab('student-profile'); }}
-                      className="text-left cursor-pointer"
+                      className="text-left cursor-pointer hidden min-[400px]:block"
                       title="Ver expediente del estudiante"
                     >
-                      <p className="text-sm font-black text-slate-900 dark:text-white leading-tight truncate max-w-[140px]">
+                      <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight truncate max-w-[90px] sm:max-w-[130px] md:max-w-[150px]">
                         {currentUser.name}
                       </p>
-                      <span className="text-xs font-bold text-teal-700 dark:text-teal-400 block leading-tight">
-                        {isMaleGender(currentUser.gender) ? (language === 'es' ? '♂ Estudiante (Hombre)' : '♂ Student (Male)') : isFemaleGender(currentUser.gender) ? (language === 'es' ? '♀ Estudiante (Mujer)' : '♀ Student (Female)') : (language === 'es' ? '🎓 Estudiante (Neutro)' : '🎓 Student (Neutral)')}
+                      <span className="text-[10px] sm:text-xs font-bold text-teal-700 dark:text-teal-400 block leading-tight truncate">
+                        {isMaleGender(currentUser.gender) ? (language === 'es' ? '♂ Hombre' : '♂ Male') : isFemaleGender(currentUser.gender) ? (language === 'es' ? '♀ Mujer' : '♀ Female') : (language === 'es' ? '🎓 Neutro' : '🎓 Neutral')}
                       </span>
                     </div>
 
-                    {/* Quick Button to Change Avatar Photo */}
+                    {/* Quick Button to Change Avatar Photo (Desktop & Tablet) */}
                     <button
                       type="button"
                       onClick={() => setShowAvatarModal(true)}
-                      className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-teal-100 dark:hover:bg-slate-600 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-slate-600 transition-colors cursor-pointer shadow-2xs"
+                      className="hidden md:inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-teal-100 dark:hover:bg-slate-600 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-slate-600 transition-colors cursor-pointer shadow-2xs"
                       title={language === 'es' ? 'Cambiar foto de avatar' : 'Change avatar photo'}
                     >
                       <Camera className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
-                      <span className="hidden sm:inline">{language === 'es' ? 'Cambiar foto' : 'Change'}</span>
+                      <span>{language === 'es' ? 'Cambiar foto' : 'Change'}</span>
                     </button>
                   </div>
                 ) : (
@@ -568,17 +568,17 @@ export const Navbar: React.FC = () => {
                       setActiveRole(currentUser.role);
                       setActiveTab('dashboard');
                     }}
-                    className="hidden md:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors"
+                    className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-750 transition-colors shrink-0"
                   >
-                    <div className="w-6 h-6 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold">
+                    <div className="w-7 h-7 rounded-full bg-teal-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
                       {currentUser.name.charAt(0)}
                     </div>
                     <div className="text-left">
                       <p className="text-xs font-bold text-slate-900 dark:text-white leading-tight truncate max-w-[120px]">
                         {currentUser.name}
                       </p>
-                      <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 capitalize">
-                        {currentUser.role === 'admin' ? (language === 'es' ? 'Directivo / Administrativo' : 'Administrative Staff') : (language === 'es' ? 'Acudiente' : 'Guardian')}
+                      <span className="text-[11px] font-semibold text-teal-600 dark:text-teal-400 capitalize block leading-tight">
+                        {currentUser.role === 'admin' ? (language === 'es' ? 'Directivo / Admin' : 'Staff') : (language === 'es' ? 'Acudiente' : 'Guardian')}
                       </span>
                     </div>
                   </div>
@@ -587,12 +587,12 @@ export const Navbar: React.FC = () => {
                 <button
                   id="nav-logout-btn"
                   onClick={logout}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 min-h-[40px] sm:min-h-[44px] px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-semibold border border-slate-200 dark:border-slate-700 transition-colors cursor-pointer shrink-0"
                   title={language === 'es' ? 'Cerrar Sesión' : 'Log Out'}
                 >
-                  <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                  <LogOut className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                   <span className="hidden sm:inline">{language === 'es' ? 'Cerrar Sesión' : 'Log Out'}</span>
-                  <span className="sm:hidden">{language === 'es' ? 'Salir' : 'Exit'}</span>
+                  <span className="sm:hidden text-xs">{language === 'es' ? 'Salir' : 'Exit'}</span>
                 </button>
               </div>
             ) : (
@@ -634,9 +634,9 @@ export const Navbar: React.FC = () => {
                 className="flex items-center gap-2 pl-2 pr-1 cursor-pointer"
               >
                 <img 
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80" 
+                  src="/school_logo.jpg" 
                   alt="Admin Avatar"
-                  className="w-8 h-8 rounded-full object-cover border border-teal-500"
+                  className="w-8 h-8 rounded-full object-cover border border-teal-500 bg-white"
                 />
                 <div className="hidden lg:block text-left">
                   <div className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Secretaría Académica</div>

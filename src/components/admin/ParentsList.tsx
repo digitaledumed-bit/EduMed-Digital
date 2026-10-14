@@ -158,7 +158,7 @@ export const ParentsList: React.FC = () => {
                         }
                         setActiveTab('link-guardian');
                       }}
-                      className="min-h-[40px] px-3.5 py-2 rounded-xl text-xs font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 hover:bg-teal-100 transition-colors cursor-pointer"
+                      className="min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs font-bold bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 hover:bg-teal-100 transition-colors cursor-pointer flex items-center justify-center"
                     >
                       {language === 'es' ? 'Vincular a otro estudiante' : 'Link another'}
                     </button>

@@ -258,23 +258,23 @@ export const GuardianMainDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row items-center gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
+                {/* Actions with min-h-[44px] touch targets */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
                   <button
                     onClick={() => handleViewStudentProfile(student.id)}
-                    className="w-full sm:flex-1 py-2.5 px-3 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                    className="w-full sm:flex-1 min-h-[44px] py-2.5 px-3 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                   >
-                    <BookOpen className="w-3.5 h-3.5" />
+                    <BookOpen className="w-3.5 h-3.5 shrink-0" />
                     <span>{isEs ? 'Ver Horario y Notas' : 'View Schedule & Grades'}</span>
                   </button>
 
                   {hasPermission('guardian', 'canDownloadCertificates') && (
                     <button
                       onClick={() => handlePrintCertificate(student)}
-                      className="w-full sm:w-auto py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                      className="w-full sm:w-auto min-h-[44px] py-2.5 px-3.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       title={isEs ? 'Descargar comprobante oficial de matrícula' : 'Download official enrollment certificate'}
                     >
-                      <Download className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                      <Download className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
                       <span>{isEs ? 'Certificado Oficial' : 'Official Certificate'}</span>
                     </button>
                   )}
