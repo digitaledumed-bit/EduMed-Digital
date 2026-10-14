@@ -560,14 +560,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
+    try {
+      localStorage.setItem('edumed_lang', lang);
+    } catch (e) {
+      // ignore
+    }
   };
 
   const setTheme = (t: Theme) => {
     setThemeState(t);
+    try {
+      localStorage.setItem('edumed_theme', t);
+    } catch (e) {
+      // ignore
+    }
   };
 
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
+    setThemeState((prev) => {
+      const next = prev === 'light' ? 'dark' : 'light';
+      try {
+        localStorage.setItem('edumed_theme', next);
+      } catch (e) {
+        // ignore
+      }
+      return next;
+    });
   };
 
   const updateDocumentStatus = (docId: string, status: DocumentStatus, rejectionReason?: string) => {

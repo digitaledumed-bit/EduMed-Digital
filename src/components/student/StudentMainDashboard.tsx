@@ -18,13 +18,25 @@ import {
   Users, 
   Download, 
   ShieldCheck, 
-  Sparkles,
-  ArrowRight,
-  Printer,
-  ChevronRight,
-  Check,
-  RefreshCw,
-  X
+  Sparkles, 
+  ArrowRight, 
+  Printer, 
+  ChevronRight, 
+  Check, 
+  RefreshCw, 
+  X,
+  Paperclip,
+  Trash2,
+  UploadCloud,
+  FileCheck,
+  FolderCheck,
+  AlertCircle,
+  XCircle,
+  File,
+  Loader2,
+  HelpCircle,
+  Upload,
+  AlertTriangle
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { StudentEditProfileModal } from './StudentEditProfileModal';
@@ -34,15 +46,66 @@ interface StudentMainDashboardProps {
   onResetEnrollmentForTest?: () => void;
 }
 
+export interface AttachedStudentFile {
+  id: string;
+  name: string;
+  sizeFormatted: string;
+  extension: string;
+  rawSize: number;
+  uploadedAt: string;
+  file?: File;
+}
+
 export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
   onResetEnrollmentForTest
 }) => {
-  const { currentUser, language, students, setActiveTab, resetStudentEnrollment, restoreDefaultAvatar } = useApp();
+  const { currentUser, language, students, enrollments, setActiveTab, resetStudentEnrollment, restoreDefaultAvatar } = useApp();
 
   const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
   const [showEditModal, setShowEditModal] = useState<boolean>(false);
   const [activeTabSection, setActiveTabSection] = useState<'grades' | 'schedule' | 'documents' | 'guardian'>('grades');
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  // Selected files pending submission
+  const [selectedFiles, setSelectedFiles] = useState<AttachedStudentFile[]>([]);
+  
+  // Files already filed in system
+  const [uploadedFilesList, setUploadedFilesList] = useState<AttachedStudentFile[]>([
+    {
+      id: 'doc-init-1',
+      name: 'Documento_Identidad_Estudiante_TI.pdf',
+      sizeFormatted: '1.4 MB',
+      extension: 'PDF',
+      rawSize: 1468006,
+      uploadedAt: '15/01/2025'
+    },
+    {
+      id: 'doc-init-2',
+      name: 'Certificado_EPS_Vigente_2025.pdf',
+      sizeFormatted: '820 KB',
+      extension: 'PDF',
+      rawSize: 839680,
+      uploadedAt: '15/01/2025'
+    },
+    {
+      id: 'doc-init-3',
+      name: 'Paz_y_Salvo_Colegio_Anterior_2024.pdf',
+      sizeFormatted: '540 KB',
+      extension: 'PDF',
+      rawSize: 552960,
+      uploadedAt: '15/01/2025'
+    }
+  ]);
+
+  const [isUploading, setIsUploading] = useState<boolean>(false);
+  const [uploadSuccessMsg, setUploadSuccessMsg] = useState<string | null>(null);
+  const [uploadErrorMsg, setUploadErrorMsg] = useState<string | null>(null);
+
+  // Confirmation Status: 'approved' | 'rejected' | 'pending'
+  const [confirmationStatus, setConfirmationStatus] = useState<'approved' | 'rejected' | 'pending'>('approved');
+  const [rejectionReason, setRejectionReason] = useState<string>(
+    'El certificado de paz y salvo del año escolar 2024 presenta baja resolución y los sellos de la secretaría de procedencia no son legibles.'
+  );
 
   // Obtain student real data from database or currentUser
   const student = students.find(
@@ -110,6 +173,81 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
     { day: isEs ? 'Jueves' : 'Thursday', items: [isEs ? 'Filosofía (6:30 - 8:30)' : 'Philosophy (6:30 - 8:30)', isEs ? 'Lengua Castellana (8:30 - 10:00)' : 'Spanish (8:30 - 10:00)', isEs ? 'Descanso (10:00 - 10:30)' : 'Break (10:00 - 10:30)', isEs ? 'Biología (10:30 - 12:30)' : 'Biology (10:30 - 12:30)'] },
     { day: isEs ? 'Viernes' : 'Friday', items: [isEs ? 'Ética y Valores (6:30 - 8:30)' : 'Ethics (6:30 - 8:30)', isEs ? 'Artes (8:30 - 10:00)' : 'Arts (8:30 - 10:00)', isEs ? 'Descanso (10:00 - 10:30)' : 'Break (10:00 - 10:30)', isEs ? 'Dirección de Grupo (10:30 - 12:30)' : 'Homeroom (10:30 - 12:30)'] }
   ];
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setUploadErrorMsg(null);
+    setUploadSuccessMsg(null);
+
+    const newFiles: AttachedStudentFile[] = [];
+    const filesArray: File[] = Array.from(e.target.files);
+
+    for (const f of filesArray) {
+      if (f.size > 15 * 1024 * 1024) {
+        setUploadErrorMsg(
+          isEs
+            ? `El archivo "${f.name}" supera el límite institucional de 15 MB.`
+            : `File "${f.name}" exceeds institutional 15 MB limit.`
+        );
+        continue;
+      }
+
+      const ext = f.name.includes('.') ? f.name.split('.').pop()?.toUpperCase() || 'FILE' : 'FILE';
+      const sizeStr = f.size < 1024 * 1024
+        ? `${(f.size / 1024).toFixed(1)} KB`
+        : `${(f.size / (1024 * 1024)).toFixed(2)} MB`;
+
+      newFiles.push({
+        id: `att-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+        name: f.name,
+        sizeFormatted: sizeStr,
+        extension: ext,
+        rawSize: f.size,
+        uploadedAt: new Date().toLocaleDateString(isEs ? 'es-CO' : 'en-US'),
+        file: f
+      });
+    }
+
+    if (newFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...newFiles]);
+    }
+
+    e.target.value = '';
+  };
+
+  const handleRemoveSelectedFile = (fileId: string) => {
+    setSelectedFiles(prev => prev.filter(f => f.id !== fileId));
+    setUploadErrorMsg(null);
+    setUploadSuccessMsg(null);
+  };
+
+  const handleConfirmSubmitFiles = () => {
+    if (selectedFiles.length === 0) {
+      setUploadErrorMsg(
+        isEs
+          ? 'No hay archivos seleccionados para radicar. Adjunta al menos un archivo primero.'
+          : 'No files selected to submit. Please attach at least one file first.'
+      );
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadErrorMsg(null);
+    setUploadSuccessMsg(null);
+
+    setTimeout(() => {
+      setIsUploading(false);
+      setUploadedFilesList(prev => [...prev, ...selectedFiles]);
+      const count = selectedFiles.length;
+      setSelectedFiles([]);
+      setUploadSuccessMsg(
+        isEs
+          ? `✓ Se han enviado y radicado exitosamente ${count} archivo(s) ante la secretaría académica.`
+          : `✓ Successfully submitted and filed ${count} file(s) with academic office.`
+      );
+      // NOTE: Status does NOT automatically change to approved on upload, preserving administrative authority
+    }, 850);
+  };
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
@@ -191,7 +329,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                   </span>
                 ) : (
                   <span className="px-2.5 py-0.5 rounded-full bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 text-xs font-bold border border-teal-200 dark:border-teal-800 flex items-center gap-1">
-                    {isEs ? `🎨 Avatar oficial (${isMale ? 'Masculino' : isFemale ? 'Femenino' : 'Neutro'})` : `🎨 Official avatar (${isMale ? 'Male' : isFemale ? 'Female' : 'Neutral'})`}
+                    {isEs ? '🎨 Avatar oficial' : '🎨 Official avatar'}
                   </span>
                 )}
 
@@ -218,9 +356,6 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5 text-teal-600" />
                   {student.neighborhood}
-                </span>
-                <span className="font-semibold text-teal-700 dark:text-teal-300">
-                  {isMale ? (isEs ? '♂ Sexo: Masculino (Hombre)' : '♂ Gender: Male') : isFemale ? (isEs ? '♀ Sexo: Femenino (Mujer)' : '♀ Gender: Female') : (isEs ? '🎓 Sexo: Neutro' : '🎓 Gender: Neutral')}
                 </span>
               </div>
             </div>
@@ -476,52 +611,494 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
 
       {/* SECTION 3: DOCUMENTS & OFFICIAL ENROLLMENT RECEIPT */}
       {activeTabSection === 'documents' && (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                {isEs ? 'Comprobante Oficial y Documentos de Matrícula' : 'Official Receipt & Enrollment Documents'}
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {isEs ? 'Radicado institucional oficial generado para el año lectivo 2025' : 'Official institutional docket generated for academic year 2025'}
-              </p>
+        <div className="space-y-6">
+
+          {/* =========================================================================
+              A. SECCIÓN DE DOCUMENTOS: BOTÓN ADJUNTAR ARCHIVOS, LISTA Y SUBIDA
+              ========================================================================= */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-xs space-y-6">
+            
+            {/* Header del área de documentos */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <FolderCheck className="w-5 h-5 text-teal-600 shrink-0" />
+                  <span>{isEs ? 'Área de Documentos de Matrícula' : 'Enrollment Documents Area'}</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  {isEs 
+                    ? 'Adjunta, visualiza y gestiona los soportes oficiales requeridos para el expediente institucional.'
+                    : 'Attach, view, and manage the official documents required for your institutional record.'}
+                </p>
+              </div>
+
+              {/* Botón visible “Adjuntar archivos” / “Attach Files” */}
+              <div>
+                <label 
+                  htmlFor="student-attach-files-input"
+                  className="min-h-[44px] px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shadow-sm hover:scale-[1.01] active:scale-[0.99] transition-all shrink-0"
+                >
+                  <Paperclip className="w-4 h-4 shrink-0" />
+                  <span>{isEs ? 'Adjuntar archivos' : 'Attach Files'}</span>
+                  <input
+                    id="student-attach-files-input"
+                    type="file"
+                    multiple
+                    accept=".pdf,image/png,image/jpeg,image/webp,.doc,.docx"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                </label>
+              </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => alert(isEs ? `Comprobante de matrícula institucional para ${studentName} (Radicado #MAT-2025-4821) listo para imprimir.` : `Official enrollment receipt for ${studentName} (Docket #MAT-2025-4821) ready to print.`)}
-              className="px-4 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold flex items-center gap-1.5 transition-all shadow-xs cursor-pointer self-start sm:self-auto"
-            >
-              <Printer className="w-3.5 h-3.5" />
-              <span>{isEs ? 'Imprimir Certificado de Matrícula' : 'Print Enrollment Certificate'}</span>
-            </button>
+            {/* Mensajes de éxito y error de carga */}
+            {uploadSuccessMsg && (
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border-2 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100 text-xs sm:text-sm font-bold flex items-center justify-between shadow-xs animate-in fade-in">
+                <div className="flex items-center gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>{uploadSuccessMsg}</span>
+                </div>
+                <button 
+                  onClick={() => setUploadSuccessMsg(null)}
+                  className="min-h-[32px] px-2 text-xs text-emerald-700 dark:text-emerald-300 hover:underline font-bold cursor-pointer"
+                >
+                  {isEs ? 'Cerrar' : 'Close'}
+                </button>
+              </div>
+            )}
+
+            {uploadErrorMsg && (
+              <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/70 border-2 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-100 text-xs sm:text-sm font-bold flex items-center justify-between shadow-xs animate-in fade-in">
+                <div className="flex items-center gap-2.5">
+                  <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                  <span>{uploadErrorMsg}</span>
+                </div>
+                <button 
+                  onClick={() => setUploadErrorMsg(null)}
+                  className="min-h-[32px] px-2 text-xs text-rose-700 dark:text-rose-300 hover:underline font-bold cursor-pointer"
+                >
+                  {isEs ? 'Cerrar' : 'Close'}
+                </button>
+              </div>
+            )}
+
+            {/* Indicador de carga cuando el archivo se está subiendo */}
+            {isUploading && (
+              <div className="p-5 rounded-2xl bg-teal-50/80 dark:bg-teal-950/60 border border-teal-300 dark:border-teal-700 flex flex-col sm:flex-row items-center gap-4 animate-in fade-in">
+                <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                </div>
+                <div className="flex-1 text-center sm:text-left">
+                  <span className="text-xs sm:text-sm font-extrabold text-teal-950 dark:text-teal-100 block">
+                    {isEs ? 'Cargando y procesando archivos adjuntos...' : 'Uploading and processing attached files...'}
+                  </span>
+                  <p className="text-xs text-teal-700 dark:text-teal-300 mt-0.5">
+                    {isEs 
+                      ? 'Validando formato, tamaño y preparando registro digital para secretaría académica.' 
+                      : 'Verifying format, size, and preparing digital filing with academic office.'}
+                  </p>
+                  <div className="w-full bg-teal-200 dark:bg-teal-800 h-1.5 rounded-full overflow-hidden mt-2">
+                    <div className="bg-teal-600 h-full w-3/4 rounded-full animate-pulse" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Mensaje cuando NO se ha seleccionado ningún archivo */}
+            {selectedFiles.length === 0 && !isUploading && (
+              <div className="p-6 sm:p-8 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400 flex items-center justify-center mx-auto mb-3">
+                  <UploadCloud className="w-6 h-6" />
+                </div>
+                <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  {isEs 
+                    ? 'No se ha seleccionado ningún archivo todavía' 
+                    : 'No files selected yet'}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 leading-relaxed">
+                  {isEs 
+                    ? 'Haz clic en el botón "Adjuntar archivos" para seleccionar documentos desde tu celular, tableta o computador (PDF, JPG, PNG o Word hasta 15 MB).'
+                    : 'Click on the "Attach Files" button to select documents from your phone, tablet, or computer (PDF, JPG, PNG, or Word up to 15 MB).'}
+                </p>
+              </div>
+            )}
+
+            {/* Lista de archivos seleccionados (pendientes de confirmación) */}
+            {selectedFiles.length > 0 && !isUploading && (
+              <div className="space-y-3 p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <Paperclip className="w-4 h-4 text-teal-600" />
+                    <span>{isEs ? `Archivos seleccionados (${selectedFiles.length})` : `Selected files (${selectedFiles.length})`}</span>
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {isEs ? 'Pendientes de confirmar envío' : 'Pending submission confirmation'}
+                  </span>
+                </div>
+
+                <div className="space-y-2.5">
+                  {selectedFiles.map((file) => (
+                    <div 
+                      key={file.id}
+                      className="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs hover:border-teal-400 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center font-black text-xs shrink-0 uppercase">
+                          {file.extension.slice(0, 4)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate block">
+                            {file.name}
+                          </span>
+                          <div className="flex items-center gap-2 text-[11px] text-slate-400 mt-0.5">
+                            <span className="font-semibold text-teal-600 dark:text-teal-400">
+                              {file.extension}
+                            </span>
+                            <span>•</span>
+                            <span>{file.sizeFormatted}</span>
+                            <span>•</span>
+                            <span>{file.uploadedAt}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveSelectedFile(file.id)}
+                        className="min-h-[44px] min-w-[44px] px-3 rounded-lg text-rose-600 hover:text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/60 text-xs font-bold flex items-center justify-center gap-1.5 transition-colors cursor-pointer self-end sm:self-auto"
+                        title={isEs ? 'Eliminar archivo antes de enviar' : 'Remove file before submitting'}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="sm:hidden">{isEs ? 'Eliminar' : 'Remove'}</span>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Botón para confirmar y enviar los archivos seleccionados */}
+                <div className="pt-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={handleConfirmSubmitFiles}
+                    className="min-h-[44px] px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer hover:scale-[1.01]"
+                  >
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>{isEs ? 'Confirmar y Radicar Archivos' : 'Confirm & Submit Files'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Documentos ya radicados y confirmados en el sistema */}
+            <div className="pt-4 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <FileCheck className="w-4 h-4 text-emerald-600" />
+                  <span>{isEs ? 'Documentos Radicados en la Institución' : 'Official Documents Filed'}</span>
+                </h4>
+                <span className="text-xs font-semibold text-slate-500">
+                  {uploadedFilesList.length} {isEs ? 'archivos' : 'files'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {uploadedFilesList.map((doc) => (
+                  <div 
+                    key={doc.id}
+                    className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col justify-between gap-2"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-bold text-slate-900 dark:text-white truncate block">
+                          {doc.name}
+                        </span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                          {doc.extension} • {doc.sizeFormatted} • {doc.uploadedAt}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md self-start border border-emerald-200 dark:border-emerald-800">
+                      <Check className="w-3 h-3" />
+                      {isEs ? 'Radicado oficial' : 'Officially filed'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 my-4">
-            <div className="p-4 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800">
-              <span className="text-[11px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider block">
-                {isEs ? 'Código de Radicado Oficial' : 'Official Docket Code'}
-              </span>
-              <span className="text-xl font-black text-slate-900 dark:text-white font-mono mt-1 block">
-                #MAT-2025-4821
-              </span>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                {isEs ? 'Registrado en SIMAT - Secretaría de Educación de Medellín' : 'Registered in SIMAT - Medellín Education Secretariat'}
-              </p>
+          {/* =========================================================================
+              B. SECCIÓN DE CONFIRMACIÓN: ESTADO CLARO DE LA SOLICITUD DE MATRÍCULA
+                 - Aprobado / Approved
+                 - No aprobado / Not Approved (con motivo de rechazo e instrucciones)
+                 - Pendiente de revisión / Pending Review (sin marcar automáticamente)
+              ========================================================================= */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-xs space-y-6">
+            
+            {/* Encabezado y selector de estado para pruebas del sistema */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-teal-600 shrink-0" />
+                  <span>{isEs ? 'Sección de Confirmación y Estado de Matrícula' : 'Enrollment Confirmation & Status Section'}</span>
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {isEs 
+                    ? 'El estado depende de la información real del sistema y de la decisión de la secretaría académica; no cambia automáticamente al adjuntar archivos.'
+                    : 'The status depends on actual system records and authorized staff decision; it does not automatically change when attaching files.'}
+                </p>
+              </div>
+
+              {/* Botones de simulación / visualización del estado institucional */}
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-semibold self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={() => setConfirmationStatus('approved')}
+                  className={`min-h-[36px] px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    confirmationStatus === 'approved'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  {isEs ? 'Aprobado' : 'Approved'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmationStatus('pending')}
+                  className={`min-h-[36px] px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    confirmationStatus === 'pending'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  {isEs ? 'Pendiente' : 'Pending'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmationStatus('rejected')}
+                  className={`min-h-[36px] px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    confirmationStatus === 'rejected'
+                      ? 'bg-rose-600 text-white shadow-xs'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                  }`}
+                >
+                  {isEs ? 'No aprobado' : 'Not Approved'}
+                </button>
+              </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                {isEs ? 'Póliza Estudiantil Institucional' : 'Student Insurance Policy'}
-              </span>
-              <span className="text-base font-bold text-slate-900 dark:text-white mt-1 block">
-                {isEs ? 'Seguros del Estado • Póliza No. 9028-2025' : 'State Insurance • Policy No. 9028-2025'}
-              </span>
-              <p className="text-xs text-slate-500 mt-1">
-                {isEs ? 'Cobertura médica accidentes escolares 24/7' : '24/7 student accident medical coverage'}
-              </p>
+            {/* 1. ESTADO: APROBADO / APPROVED */}
+            {confirmationStatus === 'approved' && (
+              <div className="p-6 sm:p-7 rounded-2xl bg-gradient-to-br from-emerald-50 via-white to-emerald-50/50 dark:from-emerald-950/40 dark:via-slate-900 dark:to-emerald-950/20 border-2 border-emerald-500 dark:border-emerald-600 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shadow-md shrink-0">
+                      <CheckCircle2 className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 dark:bg-emerald-900 text-emerald-900 dark:text-emerald-100 uppercase tracking-wider inline-block">
+                        {isEs ? 'Aprobado / Approved' : 'Approved'}
+                      </span>
+                      <h4 className="text-base sm:text-lg font-black text-emerald-950 dark:text-emerald-100 mt-1">
+                        {isEs ? 'Matrícula Oficial Aprobada y Formalizada' : 'Official Enrollment Approved & Finalized'}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-mono font-bold text-emerald-800 dark:text-emerald-300 bg-white dark:bg-slate-800 px-3 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800 shadow-2xs">
+                    #MAT-2025-4821
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-emerald-900/90 dark:text-emerald-200/90 leading-relaxed font-medium">
+                  {isEs 
+                    ? 'Tu solicitud de matrícula y los documentos adjuntos han sido revisados y aprobados oficialmente por el personal autorizado de la secretaría académica de la I.E. Félix Henao Botero. Tu cupo para el año lectivo 2025 se encuentra plenamente formalizado ante el SIMAT y la Secretaría de Educación de Medellín.'
+                    : 'Your enrollment application and attached documents have been officially reviewed and approved by authorized academic office staff at I.E. Félix Henao Botero. Your student seat for academic year 2025 is fully finalized in SIMAT.'}
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-emerald-200/60 dark:border-emerald-800/60 text-xs">
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">{isEs ? 'Grado y Grupo' : 'Grade & Group'}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">{student.grade} - Jornada {student.shift}</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">{isEs ? 'Póliza Escolar' : 'School Policy'}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">Seguros del Estado No. 9028</span>
+                  </div>
+                  <div className="p-3 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-emerald-200 dark:border-emerald-800">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase block">{isEs ? 'Fecha de Aprobación' : 'Approval Date'}</span>
+                    <span className="font-bold text-slate-900 dark:text-white">15 de Enero de 2025</span>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => alert(isEs ? `Comprobante oficial de matrícula de ${studentName} listo para impresión.` : `Official enrollment receipt for ${studentName} ready to print.`)}
+                    className="min-h-[44px] px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold flex items-center gap-2 shadow-xs transition-all cursor-pointer"
+                  >
+                    <Printer className="w-4 h-4" />
+                    <span>{isEs ? 'Imprimir Certificado de Matrícula' : 'Print Enrollment Certificate'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 2. ESTADO: NO APROBADO / NOT APPROVED */}
+            {confirmationStatus === 'rejected' && (
+              <div className="p-6 sm:p-7 rounded-2xl bg-gradient-to-br from-rose-50 via-white to-rose-50/50 dark:from-rose-950/40 dark:via-slate-900 dark:to-rose-950/20 border-2 border-rose-500 dark:border-rose-600 shadow-sm space-y-5">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-rose-600 text-white flex items-center justify-center shadow-md shrink-0">
+                      <XCircle className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-rose-100 dark:bg-rose-900 text-rose-900 dark:text-rose-100 uppercase tracking-wider inline-block">
+                        {isEs ? 'No aprobado / Not Approved' : 'Not Approved'}
+                      </span>
+                      <h4 className="text-base sm:text-lg font-black text-rose-950 dark:text-rose-100 mt-1">
+                        {isEs ? 'Solicitud No Aprobada por Secretaría Académica' : 'Application Not Approved by Academic Office'}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-bold text-rose-700 dark:text-rose-300 bg-rose-100/80 dark:bg-rose-950 px-3 py-1 rounded-xl border border-rose-300 dark:border-rose-800">
+                    {isEs ? 'Requiere Subsanación' : 'Action Required'}
+                  </span>
+                </div>
+
+                {/* Explicación del estado */}
+                <p className="text-xs sm:text-sm text-rose-900/90 dark:text-rose-200/90 leading-relaxed font-medium">
+                  {isEs 
+                    ? 'La solicitud o los documentos presentados han sido revisados y rechazados por el personal autorizado. Para continuar con el proceso de asignación de cupo, debes atender las observaciones y corregir los soportes indicados.'
+                    : 'The application or submitted documents have been reviewed and rejected by authorized staff. To continue with enrollment, please address the observations and correct the indicated files.'}
+                </p>
+
+                {/* Motivo del Rechazo */}
+                <div className="p-4 rounded-xl bg-white dark:bg-slate-800/90 border border-rose-200 dark:border-rose-800 shadow-2xs">
+                  <span className="text-xs font-extrabold text-rose-800 dark:text-rose-300 uppercase tracking-wider flex items-center gap-1.5 mb-1.5">
+                    <AlertTriangle className="w-4 h-4 text-rose-600" />
+                    <span>{isEs ? 'Motivo del Rechazo Emitido por Personal Autorizado:' : 'Rejection Reason Issued by Authorized Staff:'}</span>
+                  </span>
+                  <p className="text-xs sm:text-sm text-slate-800 dark:text-slate-200 font-semibold leading-relaxed">
+                    "{rejectionReason}"
+                  </p>
+                </div>
+
+                {/* Instrucciones para corregir los documentos o realizar nuevamente el proceso */}
+                <div className="p-5 rounded-2xl bg-rose-50/70 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 space-y-3">
+                  <h5 className="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4 text-rose-600" />
+                    <span>{isEs ? 'Instrucciones para corregir los documentos o realizar nuevamente el proceso:' : 'Instructions to correct documents or re-apply:'}</span>
+                  </h5>
+
+                  <ol className="list-decimal list-inside space-y-2 text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <li>
+                      <strong className="text-slate-900 dark:text-white">{isEs ? 'Verificación de archivo: ' : 'File check: '}</strong>
+                      {isEs 
+                        ? 'Escanea nuevamente el documento solicitado en formato PDF o fotografía nítida con buena luz, asegurando que los sellos institucionales y firmas sean completamente legibles.'
+                        : 'Re-scan the requested document in crisp PDF or clear photograph ensuring official seals and signatures are legible.'}
+                    </li>
+                    <li>
+                      <strong className="text-slate-900 dark:text-white">{isEs ? 'Adjuntar soporte corregido: ' : 'Attach corrected file: '}</strong>
+                      {isEs 
+                        ? 'Utiliza el botón "Adjuntar archivos" ubicado en el área superior de esta sección para cargar el nuevo documento corregido.'
+                        : 'Use the "Attach Files" button located in the upper area of this section to upload the new corrected document.'}
+                    </li>
+                    <li>
+                      <strong className="text-slate-900 dark:text-white">{isEs ? 'Confirmar radicación: ' : 'Confirm filing: '}</strong>
+                      {isEs 
+                        ? 'Haz clic en "Confirmar y Radicar Archivos" para remitir la corrección formal a la secretaría del colegio.'
+                        : 'Click "Confirm & Submit Files" to officially send the correction to the school office.'}
+                    </li>
+                    <li>
+                      <strong className="text-slate-900 dark:text-white">{isEs ? 'Atención presencial o telefónica: ' : 'Office contact: '}</strong>
+                      {isEs 
+                        ? 'Si el motivo del rechazo requiere aclaración presencial, comunícate a secretaria@edumed.edu.co o acércate a la sede de la I.E. Félix Henao Botero (Lunes a Viernes de 7:00 AM a 1:00 PM).'
+                        : 'If you need clarification, contact secretaria@edumed.edu.co or visit the main office of I.E. Félix Henao Botero.'}
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            )}
+
+            {/* 3. ESTADO: PENDIENTE DE REVISIÓN / PENDING REVIEW */}
+            {confirmationStatus === 'pending' && (
+              <div className="p-6 sm:p-7 rounded-2xl bg-gradient-to-br from-amber-50 via-white to-amber-50/50 dark:from-amber-950/40 dark:via-slate-900 dark:to-amber-950/20 border-2 border-amber-400 dark:border-amber-600 shadow-sm space-y-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-md shrink-0">
+                      <Clock className="w-7 h-7 animate-pulse" />
+                    </div>
+                    <div>
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-100 dark:bg-amber-900 text-amber-900 dark:text-amber-100 uppercase tracking-wider inline-block">
+                        {isEs ? 'Pendiente de revisión / Pending Review' : 'Pending Review'}
+                      </span>
+                      <h4 className="text-base sm:text-lg font-black text-amber-950 dark:text-amber-100 mt-1">
+                        {isEs ? 'Solicitud en Fila de Validación por Secretaría' : 'Application in Queue for Secretariat Validation'}
+                      </h4>
+                    </div>
+                  </div>
+
+                  <span className="text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-3 py-1 rounded-xl border border-amber-300 dark:border-amber-700">
+                    {isEs ? 'En Auditoría Institucional' : 'Under Institutional Audit'}
+                  </span>
+                </div>
+
+                <p className="text-xs sm:text-sm text-amber-950 dark:text-amber-200 leading-relaxed font-medium">
+                  {isEs 
+                    ? 'Tu solicitud de matrícula y los documentos adjuntos se encuentran radicados y en espera de revisión por el personal autorizado. La validación requiere verificación manual de autenticidad y antecedentes; el estado NO cambia automáticamente a aprobado por el hecho de adjuntar archivos.'
+                    : 'Your enrollment application and attached documents are filed and pending review by authorized personnel. Validation requires manual verification; status does NOT automatically change to approved just by attaching files.'}
+                </p>
+
+                <div className="p-4 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-amber-200 dark:border-amber-800/80 flex items-start gap-3">
+                  <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+                    <strong className="text-slate-900 dark:text-white block mb-0.5">
+                      {isEs ? '¿Qué ocurre durante esta etapa?' : 'What happens during this step?'}
+                    </strong>
+                    {isEs 
+                      ? 'La coordinación académica coteja el historial académico del estudiante, valida el paz y salvo financiero y cruza la información en el sistema SIMAT de la Secretaría de Educación de Medellín. Tiempo estimado: 24 a 48 horas hábiles.'
+                      : 'The academic coordination reviews academic history, verifies financial standing, and cross-checks data with SIMAT. Estimated time: 24 to 48 business hours.'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Radicado y póliza institucional */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800">
+                <span className="text-[11px] font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider block">
+                  {isEs ? 'Código de Radicado Oficial' : 'Official Docket Code'}
+                </span>
+                <span className="text-xl font-black text-slate-900 dark:text-white font-mono mt-1 block">
+                  #MAT-2025-4821
+                </span>
+                <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                  {isEs ? 'Registrado en SIMAT - Secretaría de Educación de Medellín' : 'Registered in SIMAT - Medellín Education Secretariat'}
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                  {isEs ? 'Póliza Estudiantil Institucional' : 'Student Insurance Policy'}
+                </span>
+                <span className="text-base font-bold text-slate-900 dark:text-white mt-1 block">
+                  {isEs ? 'Seguros del Estado • Póliza No. 9028-2025' : 'State Insurance • Policy No. 9028-2025'}
+                </span>
+                <p className="text-xs text-slate-500 mt-1">
+                  {isEs ? 'Cobertura médica accidentes escolares 24/7' : '24/7 student accident medical coverage'}
+                </p>
+              </div>
             </div>
+
           </div>
+
         </div>
       )}
 

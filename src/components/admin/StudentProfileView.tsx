@@ -173,11 +173,6 @@ export const StudentProfileView: React.FC = () => {
                   }}
                 />
                 
-                {/* Gender Indicator Badge */}
-                <div className="absolute -bottom-2 -left-2 px-2.5 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-black shadow-md border border-slate-700">
-                  {isMale ? '♂ Hombre' : isFemale ? '♀ Mujer' : '🎓 Neutro'}
-                </div>
-
                 {/* Change photo button on hover/click */}
                 <button
                   type="button"
@@ -217,9 +212,6 @@ export const StudentProfileView: React.FC = () => {
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-teal-600" />
                     {student.neighborhood}
-                  </span>
-                  <span className="font-semibold text-teal-700 dark:text-teal-300">
-                    {isMale ? 'Estudiante Masculino (Hombre)' : 'Estudiante Femenino (Mujer)'}
                   </span>
                 </div>
 

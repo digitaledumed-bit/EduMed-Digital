@@ -832,7 +832,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                 <span className="font-black text-slate-900 dark:text-white text-sm">
                   {formData.firstNames} {formData.lastNames}
                 </span>
-                <p className="text-slate-500">{formData.docType} {formData.docNumber} • {formData.gender}</p>
+                <p className="text-slate-500">{formData.docType} {formData.docNumber}</p>
               </div>
 
               <div>

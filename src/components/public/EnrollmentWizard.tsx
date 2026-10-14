@@ -1365,7 +1365,7 @@ export const EnrollmentWizard: React.FC = () => {
                             {formData.studentFirstNames} {formData.studentLastNames}
                           </span>
                           <span className="text-slate-500 dark:text-slate-400 block text-xs mt-0.5">
-                            {formData.studentDocType}: {formData.studentDocNumber} • {formData.studentGender} • RH {formData.studentBloodType}
+                            {formData.studentDocType}: {formData.studentDocNumber} • RH {formData.studentBloodType}
                           </span>
                           <span className="text-slate-500 dark:text-slate-400 block text-xs">
                             {formData.studentAddress}, {formData.studentNeighborhood}
