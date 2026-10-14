@@ -242,19 +242,21 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
             </div>
             <div>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-200 text-[11px] font-black uppercase tracking-wider mb-1">
-                Requisito Obligatorio de Acceso
+                {isEs ? 'Requisito Obligatorio de Acceso' : 'Mandatory Access Requirement'}
               </span>
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
-                Completa tu proceso de matrícula
+                {isEs ? 'Completa tu proceso de matrícula' : 'Complete Your Enrollment Process'}
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl">
-                Hola, <strong className="text-slate-900 dark:text-white">{currentUser?.name}</strong>. Para habilitar el acceso regular a tu panel principal de estudiante, calificaciones y horario institucional, debes completar los 6 pasos obligatorios de matrícula.
+                {isEs 
+                  ? <>Hola, <strong className="text-slate-900 dark:text-white">{currentUser?.name}</strong>. Para habilitar el acceso regular a tu panel principal de estudiante, calificaciones y horario institucional, debes completar los 6 pasos obligatorios de matrícula.</>
+                  : <>Hello, <strong className="text-slate-900 dark:text-white">{currentUser?.name}</strong>. To enable regular access to your student dashboard, grades, and schedule, please complete the 6 mandatory enrollment steps.</>}
               </p>
             </div>
           </div>
 
           <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shrink-0 shadow-xs">
-            <span className="text-[10px] font-bold text-slate-400 block uppercase">Año Lectivo</span>
+            <span className="text-[10px] font-bold text-slate-400 block uppercase">{isEs ? 'Año Lectivo' : 'Academic Year'}</span>
             <span className="text-base font-black text-teal-700 dark:text-teal-400">2025</span>
           </div>
         </div>
@@ -265,10 +267,10 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
           <div>
             <span className="text-xs font-black uppercase tracking-wider text-teal-700 dark:text-teal-400">
-              Paso {currentStep} de {TOTAL_ENROLLMENT_STEPS}
+              {isEs ? `Paso ${currentStep} de ${TOTAL_ENROLLMENT_STEPS}` : `Step ${currentStep} of ${TOTAL_ENROLLMENT_STEPS}`}
             </span>
             <h2 className="text-lg font-black text-slate-900 dark:text-white">
-              {stepConfig.title}
+              {isEs ? stepConfig.title : stepConfig.titleEn}
             </h2>
           </div>
 
@@ -278,7 +280,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
               {getAsciiBar(progressPercent)}
             </div>
             <span className="text-[11px] text-slate-500 dark:text-slate-400">
-              Progreso de matrícula
+              {isEs ? 'Progreso de matrícula' : 'Enrollment Progress'}
             </span>
           </div>
         </div>
@@ -307,7 +309,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                     : 'text-slate-400 dark:text-slate-600 font-medium'
                 }`}
               >
-                <div className="text-[10px] hidden sm:block truncate">{step.shortTitle}</div>
+                <div className="text-[10px] hidden sm:block truncate">{isEs ? step.shortTitle : step.shortTitleEn}</div>
                 <div className="text-xs sm:text-xs">
                   {isCompleted ? '✓' : step.stepNumber}
                 </div>
@@ -828,7 +830,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
             {/* Summary Box */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs">
               <div>
-                <span className="text-slate-400 block font-semibold">Estudiante:</span>
+                <span className="text-slate-400 block font-semibold">{isEs ? 'Estudiante:' : 'Student:'}</span>
                 <span className="font-black text-slate-900 dark:text-white text-sm">
                   {formData.firstNames} {formData.lastNames}
                 </span>
@@ -836,23 +838,23 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold">Grado y Jornada:</span>
+                <span className="text-slate-400 block font-semibold">{isEs ? 'Grado y Jornada:' : 'Grade & Shift:'}</span>
                 <span className="font-black text-slate-900 dark:text-white text-sm">
-                  Grado {formData.grade} • Jornada {formData.shift}
+                  {isEs ? 'Grado' : 'Grade'} {formData.grade} • {isEs ? 'Jornada' : 'Shift'} {formData.shift}
                 </span>
                 <p className="text-slate-500">I.E. Félix Henao Botero (Medellín)</p>
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold">Acudiente Responsable:</span>
+                <span className="text-slate-400 block font-semibold">{isEs ? 'Acudiente Responsable:' : 'Responsible Guardian:'}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">{formData.guardianFullName}</span>
-                <p className="text-slate-500">Parentesco: {formData.guardianRelationship} • Tel: {formData.guardianPhone}</p>
+                <p className="text-slate-500">{isEs ? 'Parentesco' : 'Relationship'}: {formData.guardianRelationship} • {isEs ? 'Tel' : 'Phone'}: {formData.guardianPhone}</p>
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold">Documentación Adjunta:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">4 de 4 Documentos Validados</span>
-                <p className="text-slate-500">Listo para aprobación en SIMAT</p>
+                <span className="text-slate-400 block font-semibold">{isEs ? 'Documentación Adjunta:' : 'Attached Documentation:'}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400">{isEs ? '4 de 4 Documentos Validados' : '4 of 4 Documents Validated'}</span>
+                <p className="text-slate-500">{isEs ? 'Listo para aprobación en SIMAT' : 'Ready for official SIMAT validation'}</p>
               </div>
             </div>
 
@@ -880,7 +882,9 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   className="mt-1 w-5 h-5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer"
                 />
                 <span className="text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-200 leading-relaxed">
-                  Declaro bajo la gravedad de juramento que la información suministrada es verídica y que los documentos adjuntos corresponden fielmente a los originales, aceptando el manual de convivencia y los reglamentos institucionales de la I.E. Félix Henao Botero.
+                  {isEs 
+                    ? 'Declaro bajo la gravedad de juramento que la información suministrada es verídica y que los documentos adjuntos corresponden fielmente a los originales, aceptando el manual de convivencia y los reglamentos institucionales de la I.E. Félix Henao Botero.'
+                    : 'I declare under penalty of perjury that the information provided is truthful and that the attached documents faithfully correspond to the originals, accepting the student handbook and institutional regulations of I.E. Félix Henao Botero.'}
                 </span>
               </label>
               {errors.swornOathAccepted && (
@@ -906,7 +910,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
             }`}
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Anterior</span>
+            <span>{isEs ? 'Anterior' : 'Previous'}</span>
           </button>
 
           <button
@@ -916,8 +920,8 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
           >
             <span>
               {currentStep === TOTAL_ENROLLMENT_STEPS 
-                ? 'Finalizar y Radicar Matrícula Oficial' 
-                : 'Siguiente Paso'}
+                ? (isEs ? 'Finalizar y Radicar Matrícula Oficial' : 'Finish & Submit Official Enrollment')
+                : (isEs ? 'Siguiente Paso' : 'Next Step')}
             </span>
             <ArrowRight className="w-4 h-4 stroke-[2.5]" />
           </button>

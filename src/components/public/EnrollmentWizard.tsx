@@ -1303,10 +1303,18 @@ export const EnrollmentWizard: React.FC = () => {
                                 </div>
 
                                 {isAttached ? (
-                                  <span className="text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1 mt-1 font-bold">
-                                    <CheckCircle className="w-3.5 h-3.5" />
-                                    <span>{docItem.fileName}</span>
-                                  </span>
+                                  <div className="flex flex-wrap items-center gap-2 mt-1">
+                                    <span className="text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-bold">
+                                      <CheckCircle className="w-3.5 h-3.5" />
+                                      <span>{docItem.fileName}</span>
+                                    </span>
+                                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
+                                      {(docItem.fileName.split('.').pop() || 'PDF').toUpperCase()}
+                                    </span>
+                                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
+                                      • {docItem.file ? `${(docItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB'}
+                                    </span>
+                                  </div>
                                 ) : hasError ? (
                                   <span className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1 font-bold">
                                     <AlertCircle className="w-3.5 h-3.5" />
@@ -1314,32 +1322,46 @@ export const EnrollmentWizard: React.FC = () => {
                                   </span>
                                 ) : (
                                   <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-1">
-                                    {language === 'es' ? 'Ningún archivo cargado aún' : 'No file uploaded yet'}
+                                    {language === 'es' ? 'No se ha seleccionado ningún archivo.' : 'No file selected.'}
                                   </span>
                                 )}
                               </div>
                             </div>
 
-                            <label className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs self-start sm:self-auto ${
-                              isAttached
-                                ? 'bg-white dark:bg-slate-700 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50'
-                                : hasError
-                                ? 'bg-rose-600 hover:bg-rose-700 text-white'
-                                : 'bg-white dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 hover:bg-slate-100'
-                            }`}>
-                              <Upload className="w-3.5 h-3.5" />
-                              <span>
-                                {isAttached 
-                                  ? (language === 'es' ? 'Cambiar archivo' : 'Change file')
-                                  : (language === 'es' ? 'Seleccionar archivo' : 'Select file')}
-                              </span>
-                              <input
-                                type="file"
-                                accept=".pdf,image/png,image/jpeg,image/webp"
-                                className="hidden"
-                                onChange={(e) => handleFileChange(idx, e)}
-                              />
-                            </label>
+                            <div className="flex items-center gap-2 self-start sm:self-auto">
+                              {isAttached && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setUploadedFiles(prev => prev.map((item, i) => i === idx ? { ...item, file: null, fileName: '' } : item));
+                                  }}
+                                  className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-800 transition-colors flex items-center gap-1 cursor-pointer"
+                                  title={language === 'es' ? 'Eliminar archivo' : 'Remove file'}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>{language === 'es' ? 'Eliminar' : 'Remove'}</span>
+                                </button>
+                              )}
+
+                              <label className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs ${
+                                isAttached
+                                  ? 'bg-white dark:bg-slate-700 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50'
+                                  : hasError
+                                  ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                                  : 'bg-teal-700 hover:bg-teal-800 text-white shadow-xs'
+                              }`}>
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>
+                                  {language === 'es' ? 'Adjuntar archivos' : 'Attach Files'}
+                                </span>
+                                <input
+                                  type="file"
+                                  accept=".pdf,image/png,image/jpeg,image/webp"
+                                  className="hidden"
+                                  onChange={(e) => handleFileChange(idx, e)}
+                                />
+                              </label>
+                            </div>
                           </div>
                         );
                       })}

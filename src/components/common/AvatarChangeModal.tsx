@@ -204,16 +204,10 @@ export const AvatarChangeModal: React.FC<AvatarChangeModalProps> = ({
     }
 
     setIsSuccess(true);
-    const genderLabel = isMaleGender(effectiveGender) 
-      ? (language === 'es' ? 'masculino (Chico)' : 'male (Boy)') 
-      : isFemaleGender(effectiveGender) 
-      ? (language === 'es' ? 'femenino (Chica)' : 'female (Girl)') 
-      : (language === 'es' ? 'neutro / no especificado (Académico)' : 'neutral / unspecified');
-
     setFeedback(
       language === 'es'
-        ? `✓ Fotografía personalizada eliminada. Se ha restaurado el avatar predeterminado según el sexo registrado: ${genderLabel}.`
-        : `✓ Custom photo removed. Restored default illustrated avatar for registered sex: ${genderLabel}.`
+        ? '✓ Fotografía personalizada eliminada. Se ha restaurado el avatar predeterminado institucional.'
+        : '✓ Custom photo removed. Restored official default avatar.'
     );
 
     setTimeout(() => {
@@ -314,11 +308,8 @@ export const AvatarChangeModal: React.FC<AvatarChangeModalProps> = ({
                 {studentName}
               </h3>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                {language === 'es' ? 'Sexo registrado:' : 'Registered gender:'}{' '}
-                <strong className="text-slate-800 dark:text-slate-200 font-bold">
-                  {isMale ? 'Masculino' : isFemale ? 'Femenino' : 'No especificado (Neutro)'}
-                </strong>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
+                {language === 'es' ? 'Estudiante Institucional • I.E. Félix Henao Botero' : 'Enrolled Student • I.E. Félix Henao Botero'}
               </p>
 
               {/* Quick Restore Default Action */}
@@ -328,7 +319,7 @@ export const AvatarChangeModal: React.FC<AvatarChangeModalProps> = ({
                   id="modal-restore-default-link"
                   onClick={handleRestoreDefault}
                   className="inline-flex items-center gap-1.5 text-xs font-bold text-teal-700 dark:text-teal-300 hover:text-teal-900 dark:hover:text-white hover:underline cursor-pointer"
-                  title="Elimina la foto personalizada y restaura el avatar correspondiente al sexo registrado"
+                  title={language === 'es' ? 'Elimina la foto personalizada y restaura el avatar institucional' : 'Remove custom photo and restore official avatar'}
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>{language === 'es' ? 'Restaurar avatar predeterminado' : 'Restore default avatar'}</span>

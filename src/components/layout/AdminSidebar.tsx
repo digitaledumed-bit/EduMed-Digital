@@ -98,14 +98,14 @@ export const AdminSidebar: React.FC = () => {
     if (role === 'guardian') {
       return {
         title: 'EduMed',
-        accent: 'Familias',
+        accent: language === 'es' ? 'Familias' : 'Families',
         subtitle: language === 'es' ? 'Portal del Acudiente' : 'Guardian Portal'
       };
     }
     if (role === 'student') {
       return {
         title: 'EduMed',
-        accent: 'Alumnos',
+        accent: language === 'es' ? 'Alumnos' : 'Students',
         subtitle: language === 'es' ? 'Portal del Estudiante' : 'Student Portal'
       };
     }
@@ -275,7 +275,7 @@ export const AdminSidebar: React.FC = () => {
                 {currentUser?.role === 'admin' 
                   ? (language === 'es' ? 'Directivo / Administrativo' : 'Administrative / Staff')
                   : currentUser?.role === 'student'
-                  ? (language === 'es' ? (isMaleGender(currentUser.gender) ? 'Estudiante (Hombre)' : 'Estudiante (Mujer)') : 'Student')
+                  ? (language === 'es' ? 'Estudiante' : 'Student')
                   : (language === 'es' ? 'Acudiente' : 'Guardian')}
               </div>
             </div>
