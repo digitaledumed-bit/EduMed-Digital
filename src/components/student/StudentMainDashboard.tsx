@@ -364,7 +364,7 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
               type="button"
               id="student-dashboard-btn-change-avatar"
               onClick={() => setShowAvatarModal(true)}
-              className="px-4 py-2.5 rounded-2xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
+              className="min-h-[44px] px-4 py-2.5 rounded-2xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer hover:scale-[1.02]"
             >
               <Camera className="w-4 h-4" />
               <span>{isEs ? 'Cambiar foto de perfil' : 'Change profile photo'}</span>

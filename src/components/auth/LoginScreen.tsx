@@ -459,7 +459,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
       >
         <div className="w-full max-w-[1700px] mx-auto px-3 sm:px-6 lg:px-10 xl:px-12">
           
-          <div className="relative min-h-[660px] xs:min-h-[620px] sm:min-h-[580px] md:min-h-[540px] lg:min-h-[560px] xl:min-h-[580px] rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-xl overflow-hidden flex items-center pb-16 lg:pb-0">
+          <div className="relative min-h-[620px] xs:min-h-[580px] sm:min-h-[540px] md:min-h-[520px] lg:min-h-[560px] xl:min-h-[580px] rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-xl overflow-hidden flex items-center pb-16 lg:pb-0">
             
             {/* Diapositivas */}
             {heroSlides.map((slide, index) => {
@@ -467,30 +467,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               return (
                 <div
                   key={slide.id}
-                  className={`absolute inset-0 p-4 xs:p-5 sm:p-8 md:p-12 lg:p-14 xl:p-16 flex items-center transition-all duration-700 ease-in-out ${
+                  className={`absolute inset-0 p-4 xs:p-5 sm:p-8 md:p-10 lg:p-12 xl:p-16 flex items-center transition-all duration-700 ease-in-out ${
                     isActive ? 'opacity-100 scale-100 z-10 pointer-events-auto' : 'opacity-0 scale-98 z-0 pointer-events-none'
                   }`}
                 >
                   {/* Resplandor ambiental */}
-                  <div className={`absolute -right-10 -bottom-10 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-gradient-to-br ${slide.palette.glow} rounded-full blur-3xl pointer-events-none`} />
-                  <div className="absolute left-10 top-10 w-48 sm:w-72 h-48 sm:h-72 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
+                  <div className={`absolute -right-10 -bottom-10 w-[260px] sm:w-[450px] h-[260px] sm:h-[450px] bg-gradient-to-br ${slide.palette.glow} rounded-full blur-3xl pointer-events-none`} />
+                  <div className="absolute left-10 top-10 w-40 sm:w-64 h-40 sm:h-64 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
 
                   {/* Grid equilibrado */}
-                  <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 xl:gap-16 items-center">
+                  <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-12 xl:gap-16 items-center">
                     
                     {/* Columna de Texto: Tipografía amplia y legible */}
-                    <div className="lg:col-span-7 xl:col-span-7 space-y-3 sm:space-y-5 text-left">
+                    <div className="lg:col-span-7 xl:col-span-7 space-y-2.5 sm:space-y-4 text-left">
                       
                       <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-xs sm:text-sm font-bold uppercase tracking-wider shadow-2xs">
                         <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-teal-600 dark:text-teal-400" />
                         <span className={slide.palette.badge}>{slide.badge}</span>
                       </div>
 
-                      <h1 className="text-xl xs:text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+                      <h1 className="heading-hero text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
                         {slide.title}
                       </h1>
 
-                      <p className="text-xs xs:text-sm sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-2xl">
+                      <p className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-2xl">
                         {slide.subtitle}
                       </p>
 
@@ -498,7 +498,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                         {slide.keyBenefits.map((benefit, i) => (
                           <div 
                             key={i} 
-                            className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold border ${slide.palette.pill}`}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold border ${slide.palette.pill}`}
                           >
                             <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                             <span>{benefit}</span>
@@ -506,11 +506,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                         ))}
                       </div>
 
-                      <div className="pt-2 sm:pt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4">
+                      <div className="pt-2 sm:pt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5">
                         <button
                           type="button"
                           onClick={() => handleSlideAction(slide.action)}
-                          className={`w-full sm:w-auto min-h-[44px] px-5 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs xs:text-sm sm:text-base shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer hover:scale-102 active:scale-95 group ${slide.palette.cta}`}
+                          className={`w-full sm:w-auto min-h-[44px] px-5 sm:px-7 py-3 rounded-xl sm:rounded-2xl font-bold text-xs xs:text-sm sm:text-base shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer hover:scale-102 active:scale-95 group ${slide.palette.cta}`}
                         >
                           <span>{slide.ctaText}</span>
                           <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1.5 transition-transform" />
@@ -525,7 +525,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                               scrollToSedesSection();
                             }
                           }}
-                          className="w-full sm:w-auto min-h-[44px] px-4 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs xs:text-sm sm:text-base border border-slate-200 dark:border-slate-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center"
+                          className="w-full sm:w-auto min-h-[44px] px-4 sm:px-6 py-3 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs xs:text-sm sm:text-base border border-slate-200 dark:border-slate-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center"
                         >
                           <span>{slide.secondaryText}</span>
                         </button>
@@ -534,15 +534,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                     </div>
 
                     {/* Columna de Ilustración con escalado responsive */}
-                    <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center">
-                      <div className="relative w-full max-w-[280px] xs:max-w-xs sm:max-w-md lg:max-w-xl aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 dark:border-slate-700/90 bg-slate-50 dark:bg-slate-800 group animate-subtle-float">
+                    <div className="hidden sm:flex lg:col-span-5 xl:col-span-5 justify-center items-center">
+                      <div className="relative w-full max-w-[260px] xs:max-w-xs sm:max-w-sm md:max-w-md lg:max-w-xl aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 dark:border-slate-700/90 bg-slate-50 dark:bg-slate-800 group animate-subtle-float">
                         <img 
                           src={slide.image} 
                           alt={slide.alt}
                           className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
-                        <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-md flex items-center justify-between">
+                        <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-md flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse" />
                             <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">EduMed Digital</span>
@@ -560,11 +560,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               );
             })}
 
-            {/* Flechas de navegación con touch-target de 44px */}
+            {/* Flechas de navegación con touch-target de 44px (ocultas en < sm para evitar superposición en pantallas pequeñas) */}
             <button
               type="button"
               onClick={handlePrevSlide}
-              className="absolute left-1.5 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
+              className="hidden sm:flex absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer items-center justify-center hover:scale-105 active:scale-95"
               aria-label={isEs ? 'Diapositiva anterior' : 'Previous slide'}
             >
               <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -573,14 +573,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
             <button
               type="button"
               onClick={handleNextSlide}
-              className="absolute right-1.5 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
+              className="hidden sm:flex absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer items-center justify-center hover:scale-105 active:scale-95"
               aria-label={isEs ? 'Siguiente diapositiva' : 'Next slide'}
             >
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
-            {/* Indicadores inferiores elegantes */}
-            <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-2.5 bg-white/90 dark:bg-slate-900/90 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full border border-slate-200/90 dark:border-slate-700/90 shadow-md backdrop-blur-md">
+            {/* Indicadores inferiores elegantes y accesibles */}
+            <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2.5 bg-white/95 dark:bg-slate-900/95 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full border border-slate-200/90 dark:border-slate-700/90 shadow-md backdrop-blur-md">
               {heroSlides.map((slide, idx) => {
                 const isActive = idx === currentSlide;
                 return (
@@ -591,28 +591,32 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                       setSlideProgress(0);
                       setCurrentSlide(idx);
                     }}
-                    className={`relative h-2.5 rounded-full overflow-hidden transition-all cursor-pointer flex items-center ${
-                      isActive ? 'w-8 xs:w-12 sm:w-14 bg-slate-200 dark:bg-slate-700' : 'w-2.5 sm:w-3 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'
-                    }`}
+                    className="p-1.5 flex items-center justify-center cursor-pointer min-h-[36px] touch-manipulation"
                     title={`Diapositiva ${idx + 1}: ${slide.title}`}
+                    aria-label={`Ir a diapositiva ${idx + 1}: ${slide.title}`}
                   >
-                    {isActive && (
-                      <span 
-                        className="absolute inset-y-0 left-0 bg-teal-600 dark:bg-teal-400 rounded-full transition-all duration-75"
-                        style={{ width: `${slideProgress}%` }}
-                      />
-                    )}
+                    <span className={`relative h-2.5 rounded-full overflow-hidden transition-all flex items-center block ${
+                      isActive ? 'w-8 xs:w-12 sm:w-14 bg-slate-200 dark:bg-slate-700' : 'w-2.5 sm:w-3 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'
+                    }`}>
+                      {isActive && (
+                        <span 
+                          className="absolute inset-y-0 left-0 bg-teal-600 dark:bg-teal-400 rounded-full transition-all duration-75"
+                          style={{ width: `${slideProgress}%` }}
+                        />
+                      )}
+                    </span>
                   </button>
                 );
               })}
 
-              <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1 sm:mx-1.5" />
+              <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-0.5 sm:mx-1.5" />
 
               <button
                 type="button"
                 onClick={() => setIsCarouselPaused(!isCarouselPaused)}
-                className="w-7 h-7 flex items-center justify-center rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="w-8 h-8 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 title={isCarouselPaused ? (isEs ? 'Reanudar carrusel' : 'Play') : (isEs ? 'Pausar carrusel' : 'Pause')}
+                aria-label={isCarouselPaused ? (isEs ? 'Reanudar carrusel automático' : 'Resume slideshow') : (isEs ? 'Pausar carrusel automático' : 'Pause slideshow')}
               >
                 {isCarouselPaused ? <Play className="w-4 h-4 text-teal-600 dark:text-teal-400" /> : <Pause className="w-4 h-4" />}
               </button>
@@ -1212,13 +1216,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                     />
                   </div>
 
-                  <div className="pt-2 flex items-center justify-between gap-3">
+                  <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
                     <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {isEs ? 'Soporte oficial:' : 'Official support:'} <strong className="text-teal-600 dark:text-teal-400">digitaledumed@gmail.com</strong>
+                      {isEs ? 'Soporte oficial:' : 'Official support:'} <strong className="text-teal-600 dark:text-teal-400 break-all">digitaledumed@gmail.com</strong>
                     </span>
                     <button
                       type="submit"
-                      className="px-7 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm sm:text-base shadow-md transition-all flex items-center gap-2 cursor-pointer"
+                      className="min-h-[44px] px-7 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm sm:text-base shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
                     >
                       <Send className="w-4 h-4" />
                       <span>{isEs ? 'Enviar Mensaje' : 'Send Message'}</span>
@@ -1305,7 +1309,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               <button
                 type="button"
                 onClick={() => setIsPrivacyModalOpen(false)}
-                className="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer flex items-center justify-center"
               >
                 {isEs ? 'Entendido y Cerrar' : 'Done & Close'}
               </button>
@@ -1376,7 +1380,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               <button
                 type="button"
                 onClick={() => setIsTermsModalOpen(false)}
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer"
+                className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer flex items-center justify-center"
               >
                 {isEs ? 'Aceptar y Cerrar' : 'Accept & Close'}
               </button>
@@ -1444,7 +1448,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               <button
                 type="button"
                 onClick={() => setIsLegalModalOpen(false)}
-                className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer dark:bg-slate-700 dark:hover:bg-slate-600"
+                className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center"
               >
                 {isEs ? 'Cerrar' : 'Close'}
               </button>

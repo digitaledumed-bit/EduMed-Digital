@@ -224,3 +224,36 @@ p {
   overflow-x: hidden;
 }
 
+/* Tipografía de títulos con escalado fluido seguro */
+.heading-hero {
+  font-size: clamp(1.75rem, 5vw, 3.25rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  font-weight: 900;
+  text-wrap: balance;
+}
+
+.heading-section {
+  font-size: clamp(1.5rem, 3.5vw, 2.25rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  text-wrap: balance;
+}
+
+.heading-card {
+  font-size: clamp(1.125rem, 2vw, 1.35rem);
+  line-height: 1.35;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+/* Contenedor de tablas responsivo con indicación visual de scroll */
+.table-responsive-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 1rem;
+}
+

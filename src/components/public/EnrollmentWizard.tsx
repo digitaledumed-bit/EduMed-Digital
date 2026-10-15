@@ -1691,7 +1691,7 @@ export const EnrollmentWizard: React.FC = () => {
                 <button
                   id="wizard-continue-btn"
                   onClick={handleNextStep}
-                  className="w-full py-3.5 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  className="w-full min-h-[44px] py-3.5 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-black text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
                 >
                   <span>{currentStep === 5 ? (language === 'es' ? 'Radicar Matrícula Definitiva' : t.wizard.finish) : (language === 'es' ? 'Guardar y Continuar al Siguiente Paso' : t.wizard.saveAndContinue)}</span>
                   <ArrowRight className="w-4 h-4" />
@@ -1700,7 +1700,7 @@ export const EnrollmentWizard: React.FC = () => {
                 <button
                   id="wizard-draft-btn"
                   onClick={handleSaveDraft}
-                  className="w-full py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full min-h-[44px] py-2.5 px-4 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>{t.wizard.saveDraft}</span>
@@ -1712,7 +1712,7 @@ export const EnrollmentWizard: React.FC = () => {
                       setCurrentStep((prev) => prev - 1);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
                     }}
-                    className="w-full py-2 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors flex items-center justify-center gap-1 cursor-pointer font-semibold"
+                    className="w-full min-h-[44px] py-2 text-xs text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition-colors flex items-center justify-center gap-1 cursor-pointer font-semibold"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>{t.wizard.backToPrev}</span>
