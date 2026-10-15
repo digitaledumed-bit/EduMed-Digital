@@ -62,6 +62,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     login, 
     register, 
     isEmailRegistered,
+    isUsernameRegistered,
+    isDocumentRegistered,
     logout, 
     currentUser, 
     activeRole,
@@ -69,6 +71,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     setActiveTab,
     customLogoUrl,
     validateGuardianCode,
+    validateAdminCode,
     requestPasswordResetCode,
     verifyPasswordResetCode,
     resetPasswordWithCode
@@ -81,6 +84,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       setMode(defaultMode);
     }
   }, [defaultMode]);
+
+  React.useEffect(() => {
+    if (initialRole) {
+      setRegRole(initialRole);
+    }
+  }, [initialRole]);
 
   // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
@@ -97,10 +106,27 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
-  const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
+  const [regRole, setRegRole] = useState<'guardian' | 'student' | 'admin'>((initialRole as any) || 'guardian');
   const [regGender, setRegGender] = useState<'Masculino' | 'Femenino' | 'LGBTIQ+' | 'Prefiero no decirlo'>('Masculino');
   const [guardianValidationCode, setGuardianValidationCode] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(true);
+
+  // Administrative & Directive account creation form state
+  const [adminFirstName, setAdminFirstName] = useState('');
+  const [adminLastName, setAdminLastName] = useState('');
+  const [adminDocType, setAdminDocType] = useState('CC');
+  const [adminDocNumber, setAdminDocNumber] = useState('');
+  const [adminPhone, setAdminPhone] = useState('');
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminInstitution] = useState('I.E. Félix Henao Botero - Sede Principal (DANE 105001002345)');
+  const [adminPosition, setAdminPosition] = useState<'Rector' | 'Coordinador' | 'Secretario' | ''>('');
+  const [adminEmployeeCode, setAdminEmployeeCode] = useState('');
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
+  const [showAdminPassword, setShowAdminPassword] = useState(false);
+  const [adminVerificationCode, setAdminVerificationCode] = useState('');
+  const [acceptAdminTerms, setAcceptAdminTerms] = useState(true);
 
   // Restringir tipo de documento para rol Acudiente a C.C. o C.E.
   React.useEffect(() => {
@@ -138,6 +164,21 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     guardianCode?: string;
     password?: string;
     confirmPassword?: string;
+    terms?: string;
+    role?: string;
+  }>({});
+
+  const [adminFieldErrors, setAdminFieldErrors] = useState<{
+    firstName?: string;
+    lastName?: string;
+    docNumber?: string;
+    phone?: string;
+    email?: string;
+    position?: string;
+    username?: string;
+    password?: string;
+    confirmPassword?: string;
+    verificationCode?: string;
     terms?: string;
   }>({});
 
@@ -193,11 +234,15 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     setSuccessMsg(null);
     setLoginFieldErrors({});
     setRegFieldErrors({});
+    setAdminFieldErrors({});
     setRecoveryFieldErrors({});
   };
 
   // Check in real-time if the email being registered already exists in the platform
   const isRegEmailTaken = regEmail.trim().length > 3 && regEmail.includes('@') && isEmailRegistered(regEmail.trim().toLowerCase());
+  const isAdminEmailTaken = adminEmail.trim().length > 3 && adminEmail.includes('@') && isEmailRegistered(adminEmail.trim().toLowerCase());
+  const isAdminUsernameTaken = adminUsername.trim().length >= 3 && isUsernameRegistered(adminUsername.trim());
+  const isAdminDocTaken = adminDocNumber.trim().length >= 4 && isDocumentRegistered(adminDocNumber.trim());
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -332,6 +377,126 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         }
       } else {
         setSuccessMsg(language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!');
+        if (onSuccess) onSuccess();
+      }
+    }, 450);
+  };
+
+  const handleAdminRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    clearAllErrors();
+
+    const missingRequired = 
+      !adminFirstName.trim() || 
+      !adminLastName.trim() || 
+      !adminDocNumber.trim() || 
+      !adminPhone.trim() || 
+      !adminEmail.trim() || 
+      !adminPosition || 
+      !adminUsername.trim() || 
+      !adminPassword || 
+      !adminConfirmPassword || 
+      !adminVerificationCode.trim();
+
+    const newErrors: Record<string, string> = {};
+
+    if (!adminFirstName.trim()) newErrors.firstName = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminLastName.trim()) newErrors.lastName = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminDocNumber.trim()) newErrors.docNumber = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminPhone.trim()) newErrors.phone = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminEmail.trim()) newErrors.email = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminPosition) newErrors.position = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminUsername.trim()) newErrors.username = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminPassword) newErrors.password = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminConfirmPassword) newErrors.confirmPassword = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+    if (!adminVerificationCode.trim()) newErrors.verificationCode = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
+
+    if (missingRequired) {
+      setErrorMsg(language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.');
+      setAdminFieldErrors(newErrors);
+      return;
+    }
+
+    const cleanAdminEmail = adminEmail.trim().toLowerCase();
+    if (!cleanAdminEmail.includes('@')) {
+      setErrorMsg(language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.');
+      setAdminFieldErrors({ email: language === 'es' ? 'Formato de correo no válido.' : 'Invalid email format.' });
+      return;
+    }
+
+    if (adminPassword.length < 5) {
+      setErrorMsg(language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.');
+      setAdminFieldErrors({ password: language === 'es' ? 'Mínimo 5 caracteres.' : 'Minimum 5 characters.' });
+      return;
+    }
+
+    if (adminPassword !== adminConfirmPassword) {
+      setErrorMsg(language === 'es' ? 'Las contraseñas deben coincidir.' : 'Passwords must match.');
+      setAdminFieldErrors({ confirmPassword: language === 'es' ? 'Las contraseñas deben coincidir.' : 'Passwords must match.' });
+      return;
+    }
+
+    if (isEmailRegistered(cleanAdminEmail)) {
+      setErrorMsg(language === 'es' ? 'El correo electrónico ya se encuentra registrado previamente en el sistema.' : 'Email is already registered in the system.');
+      setAdminFieldErrors({ email: language === 'es' ? 'Este correo ya se encuentra registrado.' : 'Email already in use.' });
+      return;
+    }
+
+    if (isUsernameRegistered(adminUsername.trim())) {
+      setErrorMsg(language === 'es' ? 'El usuario ya se encuentra registrado previamente.' : 'The username is already registered.');
+      setAdminFieldErrors({ username: language === 'es' ? 'El usuario ya se encuentra registrado previamente.' : 'Username already in use.' });
+      return;
+    }
+
+    if (isDocumentRegistered(adminDocNumber.trim())) {
+      setErrorMsg(language === 'es' ? 'El documento ya se encuentra registrado previamente.' : 'Document is already registered.');
+      setAdminFieldErrors({ docNumber: language === 'es' ? 'El documento ya se encuentra registrado previamente.' : 'Document already registered.' });
+      return;
+    }
+
+    const cleanCode = adminVerificationCode.trim();
+    if (!validateAdminCode(cleanCode) && !validateGuardianCode(cleanCode)) {
+      setErrorMsg(language === 'es' ? 'El código de verificación debe ser válido y no estar vencido.' : 'The verification code must be valid and not expired.');
+      setAdminFieldErrors({ verificationCode: language === 'es' ? 'El código de verificación debe ser válido y no estar vencido.' : 'Invalid or expired code.' });
+      return;
+    }
+
+    if (!acceptAdminTerms) {
+      setErrorMsg(language === 'es' ? 'Debe aceptar los términos institucionales y la política de tratamiento de datos.' : 'You must accept terms to continue.');
+      setAdminFieldErrors({ terms: language === 'es' ? 'Debe aceptar los términos.' : 'Required.' });
+      return;
+    }
+
+    setIsLoading(true);
+    setTimeout(() => {
+      const res = register({
+        name: `${adminFirstName.trim()} ${adminLastName.trim()}`,
+        email: cleanAdminEmail,
+        password: adminPassword,
+        role: 'admin',
+        documentNumber: `${adminDocType} ${adminDocNumber.trim()}`,
+        phone: adminPhone.trim(),
+        position: adminPosition,
+        username: adminUsername.trim(),
+        employeeCode: adminEmployeeCode.trim() || undefined,
+        department: adminPosition === 'Rector' 
+          ? 'Dirección Institucional' 
+          : adminPosition === 'Coordinador' 
+          ? 'Gestión Académica' 
+          : 'Gestión Documental',
+        institutionCode: '105001002345',
+        guardianValidationCode: cleanCode
+      });
+      setIsLoading(false);
+
+      if (!res.success) {
+        setErrorMsg(res.message || (language === 'es' ? 'Error al registrar la cuenta administrativa.' : 'Registration failed.'));
+      } else {
+        setSuccessMsg(language === 'es' 
+          ? `¡Registro exitoso! La cuenta administrativa de ${adminPosition} ha sido creada correctamente.`
+          : `Registration successful! The administrative account for ${adminPosition} has been created.`);
+        
+        login(cleanAdminEmail, adminPassword, 'admin');
         if (onSuccess) onSuccess();
       }
     }, 450);
@@ -558,7 +723,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   return (
     <div 
       id="auth-login-register-card"
-      className="w-full max-w-md mx-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-2xl shadow-slate-900/10 dark:shadow-black/40 transition-all relative overflow-hidden text-center"
+      className={`w-full ${mode === 'register' && regRole === 'admin' ? 'max-w-2xl' : 'max-w-md'} mx-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 sm:p-7 shadow-2xl shadow-slate-900/10 dark:shadow-black/40 transition-all relative overflow-hidden text-center`}
     >
       {/* Centered Logo and Institution Name Header */}
       <div className="flex flex-col items-center justify-center pb-5 pt-2 border-b border-slate-100 dark:border-slate-800">
@@ -1043,52 +1208,560 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         /* TAB 2: CREAR UNA CUENTA */
         <div className="mt-5 space-y-4">
           
-          {/* Institutional Guidance Notice for Teachers and Families */}
-          <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-left space-y-1">
+          {/* Selector de Rol para el Registro: Únicamente lista desplegable */}
+          <div className="space-y-1.5 text-left">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                {language === "es" ? "Registro de Acudientes y Estudiantes" : "Guardians & Students Registration"}
-              </span>
+              <label htmlFor="reg-role-select" className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                {language === 'es' ? 'Registrarme como:' : 'Register as:'}
+              </label>
               <span className="text-[10px] font-black uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
                 {language === "es" ? "EduMed Oficial" : "Official"}
               </span>
             </div>
-            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
-              {language === "es"
-                ? "Las cuentas para docentes y directivos son asignadas y habilitadas formalmente por la administración escolar de la I.E. Félix Henao Botero (sin registro directo). Si es docente, inicie sesión con sus credenciales institucionales o acérquese a Secretaría."
-                : "Faculty accounts are managed exclusively by the school administration. Please sign in with your assigned institutional credentials."}
-            </p>
+            <select
+              id="reg-role-select"
+              value={regRole}
+              onChange={(e) => {
+                const selectedRole = e.target.value as 'guardian' | 'student' | 'admin';
+                setRegRole(selectedRole);
+                if (selectedRole === 'guardian' && regDocType !== 'CC' && regDocType !== 'CE') {
+                  setRegDocType('CC');
+                }
+                clearAllErrors();
+              }}
+              className="w-full px-3 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs transition-all"
+            >
+              <option value="guardian">{language === 'es' ? '👨‍👩‍👦 Acudiente / Padre o Tutor de Familia' : 'Parent / Guardian'}</option>
+              <option value="student">{language === 'es' ? '🎓 Estudiante / Aspirante' : 'Student / Applicant'}</option>
+              <option value="admin">{language === 'es' ? '🏛️ Directivo / Personal Administrativo (Rector, Coordinador, Secretario)' : 'Administrative / Leadership Staff'}</option>
+            </select>
           </div>
-            <form onSubmit={handleRegister} className="space-y-3.5 text-left">
+
+          {regRole === 'admin' ? (
+            /* =========================================================================
+               FORMULARIO DE CREACIÓN DE CUENTAS ADMINISTRATIVAS Y DIRECTIVAS
+               Organizado en 4 secciones requeridas:
+               1. Datos personales (Nombres, Apellidos, Tipo doc, Núm doc, Teléfono, Correo)
+               2. Datos institucionales (Institución, Cargo desplegable, Código empleado, Usuario)
+               3. Datos de acceso (Contraseña, Confirmar contraseña, Mostrar/Ocultar)
+               4. Verificación (Código de verificación)
+               ========================================================================= */
+            <form onSubmit={handleAdminRegister} className="space-y-4 text-left">
               
-              {/* User Type Choice (Caja desplegable) */}
-              <div className="space-y-1">
-                <label htmlFor="reg-role-select" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'es' ? 'Registrarme como (Caja desplegable)' : 'Register as (Dropdown)'}
-                </label>
-                <select
-                  id="reg-role-select"
-                  value={regRole}
-                  onChange={(e) => {
-                    const selectedRole = e.target.value as 'guardian' | 'student';
-                    setRegRole(selectedRole);
-                    if (selectedRole === 'guardian' && regDocType !== 'CC' && regDocType !== 'CE') {
-                      setRegDocType('CC');
-                    }
-                    if (regFieldErrors.role) setRegFieldErrors(prev => ({ ...prev, role: undefined }));
-                  }}
-                  className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:ring-2 cursor-pointer transition-all ${
-                    regFieldErrors.role
-                      ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                      : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
-                  }`}
-                >
-                  <option value="guardian">{language === 'es' ? '👨‍👩‍👦 Acudiente / Padre o Tutor de Familia' : 'Parent / Guardian'}</option>
-                  <option value="student">{language === 'es' ? '🎓 Estudiante / Aspirante' : 'Student / Applicant'}</option>
-                </select>
-                <FieldError message={regFieldErrors.role} />
+              {/* Banner Oficial Institucional */}
+              <div className="p-3.5 rounded-2xl bg-teal-50/90 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-left space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                    {language === "es" ? "Portal de Creación de Cuentas Directivas y Administrativas" : "Leadership & Staff Account Registration"}
+                  </span>
+                  <span className="text-[10px] font-black uppercase text-teal-700 dark:text-teal-300 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-teal-300 dark:border-teal-700">
+                    I.E. Félix Henao Botero
+                  </span>
+                </div>
+                <p className="text-[11px] text-teal-800 dark:text-teal-300 leading-relaxed">
+                  {language === "es"
+                    ? "Formulario oficial de registro para Rectoría, Coordinación y Secretaría con asignación de funciones institucionales y permisos de gestión escolar."
+                    : "Official staff registration for Rector, Academic Coordinator, and Registry Secretary with role permissions."}
+                </p>
               </div>
+
+              {/* 1. SECCIÓN: DATOS PERSONALES */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3.5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">
+                  <User className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span>{language === 'es' ? 'Datos personales' : 'Personal Information'}</span>
+                </div>
+
+                {/* Nombres y Apellidos */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label 
+                      htmlFor="admin-first-name-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Nombres *' : 'First Name *'}
+                    </label>
+                    <input
+                      id="admin-first-name-input"
+                      type="text"
+                      required
+                      placeholder={language === 'es' ? 'Ingrese sus nombres' : 'First name'}
+                      value={adminFirstName}
+                      onChange={(e) => {
+                        setAdminFirstName(e.target.value);
+                        if (adminFieldErrors.firstName) setAdminFieldErrors(prev => ({ ...prev, firstName: undefined }));
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                        adminFieldErrors.firstName
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                      }`}
+                    />
+                    <FieldError message={adminFieldErrors.firstName} />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="admin-last-name-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Apellidos *' : 'Last Name *'}
+                    </label>
+                    <input
+                      id="admin-last-name-input"
+                      type="text"
+                      required
+                      placeholder={language === 'es' ? 'Ingrese sus apellidos' : 'Last name'}
+                      value={adminLastName}
+                      onChange={(e) => {
+                        setAdminLastName(e.target.value);
+                        if (adminFieldErrors.lastName) setAdminFieldErrors(prev => ({ ...prev, lastName: undefined }));
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                        adminFieldErrors.lastName
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                      }`}
+                    />
+                    <FieldError message={adminFieldErrors.lastName} />
+                  </div>
+                </div>
+
+                {/* Tipo de Documento y Número de Documento */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label 
+                      htmlFor="admin-doc-type-select" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Tipo de documento *' : 'ID Type *'}
+                    </label>
+                    <select
+                      id="admin-doc-type-select"
+                      value={adminDocType}
+                      onChange={(e) => setAdminDocType(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                    >
+                      <option value="CC">{language === 'es' ? 'C.C. – Cédula de Ciudadanía' : 'C.C. – Citizenship'}</option>
+                      <option value="CE">{language === 'es' ? 'C.E. – Cédula de Extranjería' : 'C.E. – Foreigner ID'}</option>
+                      <option value="Pasaporte">{language === 'es' ? 'Pasaporte' : 'Passport'}</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label 
+                      htmlFor="admin-doc-number-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Número de documento *' : 'Document Number *'}
+                    </label>
+                    <input
+                      id="admin-doc-number-input"
+                      type="text"
+                      required
+                      placeholder={language === 'es' ? 'Ej. 43981245' : 'ID Number'}
+                      value={adminDocNumber}
+                      onChange={(e) => {
+                        setAdminDocNumber(e.target.value);
+                        if (adminFieldErrors.docNumber) setAdminFieldErrors(prev => ({ ...prev, docNumber: undefined }));
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                        adminFieldErrors.docNumber || isAdminDocTaken
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                      }`}
+                    />
+                    <FieldError message={adminFieldErrors.docNumber} />
+                    {isAdminDocTaken && (
+                      <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{language === 'es' ? 'El documento ya se encuentra registrado previamente.' : 'Document is already registered.'}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Teléfono de Contacto y Correo Electrónico */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label 
+                      htmlFor="admin-phone-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Teléfono de contacto *' : 'Contact Phone *'}
+                    </label>
+                    <input
+                      id="admin-phone-input"
+                      type="tel"
+                      required
+                      placeholder={language === 'es' ? 'Ej. 300 456 7890' : 'Phone number'}
+                      value={adminPhone}
+                      onChange={(e) => {
+                        setAdminPhone(e.target.value);
+                        if (adminFieldErrors.phone) setAdminFieldErrors(prev => ({ ...prev, phone: undefined }));
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                        adminFieldErrors.phone
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                      }`}
+                    />
+                    <FieldError message={adminFieldErrors.phone} />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="admin-email-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Correo electrónico *' : 'Email Address *'}
+                    </label>
+                    <input
+                      id="admin-email-input"
+                      type="email"
+                      required
+                      placeholder={language === 'es' ? 'correo@edumed.edu.co' : 'email@institution.edu'}
+                      value={adminEmail}
+                      onChange={(e) => {
+                        setAdminEmail(e.target.value);
+                        if (adminFieldErrors.email) setAdminFieldErrors(prev => ({ ...prev, email: undefined }));
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                        adminFieldErrors.email || isAdminEmailTaken
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                      }`}
+                    />
+                    <FieldError message={adminFieldErrors.email} />
+                    {isAdminEmailTaken && (
+                      <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{language === 'es' ? 'El correo electrónico ya se encuentra registrado previamente en el sistema.' : 'Email is already registered.'}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. SECCIÓN: DATOS INSTITUCIONALES */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3.5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">
+                  <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span>{language === 'es' ? 'Datos institucionales' : 'Institutional Data'}</span>
+                </div>
+
+                {/* Institución Educativa (Solo lectura oficial) */}
+                <div>
+                  <label 
+                    htmlFor="admin-institution-input" 
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    {language === 'es' ? 'Institución educativa' : 'Educational Institution'}
+                  </label>
+                  <input
+                    id="admin-institution-input"
+                    type="text"
+                    readOnly
+                    value={adminInstitution}
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 font-medium cursor-not-allowed select-none"
+                  />
+                </div>
+
+                {/* Cargo (Lista desplegable con etiqueta "Seleccionar cargo") */}
+                <div>
+                  <label 
+                    htmlFor="admin-position-select" 
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    {language === 'es' ? 'Seleccionar cargo *' : 'Select position *'}
+                  </label>
+                  <select
+                    id="admin-position-select"
+                    required
+                    value={adminPosition}
+                    onChange={(e) => {
+                      const val = e.target.value as 'Rector' | 'Coordinador' | 'Secretario' | '';
+                      setAdminPosition(val);
+                      if (adminFieldErrors.position) setAdminFieldErrors(prev => ({ ...prev, position: undefined }));
+                      if (errorMsg) setErrorMsg(null);
+                    }}
+                    className={`w-full px-3 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 cursor-pointer transition-all ${
+                      adminFieldErrors.position
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                        : 'border border-slate-300 dark:border-slate-700 focus:ring-teal-500'
+                    }`}
+                  >
+                    <option value="">{language === 'es' ? 'Seleccionar cargo' : 'Select position'}</option>
+                    <option value="Rector">Rector — Dirección institucional.</option>
+                    <option value="Coordinador">Coordinador — Gestión académica.</option>
+                    <option value="Secretario">Secretario — Gestión documental.</option>
+                  </select>
+                  <FieldError message={adminFieldErrors.position} />
+
+                  {/* Resumen de funciones: Únicamente las expresiones de dos palabras especificadas */}
+                  {adminPosition && (
+                    <div className="mt-2 p-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/70 border border-teal-200 dark:border-teal-800 text-teal-900 dark:text-teal-200 text-xs font-bold flex items-center justify-between animate-in fade-in duration-150">
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                        <span>
+                          {adminPosition === 'Rector' && 'Rector: Dirección institucional.'}
+                          {adminPosition === 'Coordinador' && 'Coordinador: Gestión académica.'}
+                          {adminPosition === 'Secretario' && 'Secretario: Gestión documental.'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-black uppercase text-teal-700 dark:text-teal-300 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
+                        {language === 'es' ? 'Asignado' : 'Assigned'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Código de empleado e Identificación de usuario */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label 
+                      htmlFor="admin-employee-code-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Código de empleado o identificación institucional, si aplica' : 'Employee ID or institutional code, if applicable'}
+                    </label>
+                    <input
+                      id="admin-employee-code-input"
+                      type="text"
+                      placeholder={language === 'es' ? 'Ej. EMP-2026 (Opcional)' : 'EMP-2026 (Optional)'}
+                      value={adminEmployeeCode}
+                      onChange={(e) => setAdminEmployeeCode(e.target.value)}
+                      className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="admin-username-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Nombre de usuario *' : 'Username *'}
+                    </label>
+                    <input
+                      id="admin-username-input"
+                      type="text"
+                      required
+                      placeholder={language === 'es' ? 'Ej. rector.felix o claudia.admin' : 'username'}
+                      value={adminUsername}
+                      onChange={(e) => {
+                        setAdminUsername(e.target.value);
+                        if (adminFieldErrors.username) setAdminFieldErrors(prev => ({ ...prev, username: undefined }));
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                        adminFieldErrors.username || isAdminUsernameTaken
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                      }`}
+                    />
+                    <FieldError message={adminFieldErrors.username} />
+                    {isAdminUsernameTaken && (
+                      <p className="mt-1 text-[11px] text-rose-600 dark:text-rose-400 font-medium flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{language === 'es' ? 'El usuario ya se encuentra registrado previamente.' : 'Username already in use.'}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. SECCIÓN: DATOS DE ACCESO */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3.5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">
+                  <Lock className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span>{language === 'es' ? 'Datos de acceso' : 'Access Credentials'}</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label 
+                      htmlFor="admin-password-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Contraseña *' : 'Password *'}
+                    </label>
+                    <input
+                      id="admin-password-input"
+                      type={showAdminPassword ? 'text' : 'password'}
+                      required
+                      placeholder="••••••••"
+                      value={adminPassword}
+                      onChange={(e) => {
+                        setAdminPassword(e.target.value);
+                        if (adminFieldErrors.password) setAdminFieldErrors(prev => ({ ...prev, password: undefined }));
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                        adminFieldErrors.password
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                      }`}
+                    />
+                    <FieldError message={adminFieldErrors.password} />
+                  </div>
+
+                  <div>
+                    <label 
+                      htmlFor="admin-confirm-password-input" 
+                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                    >
+                      {language === 'es' ? 'Confirmar contraseña *' : 'Confirm Password *'}
+                    </label>
+                    <input
+                      id="admin-confirm-password-input"
+                      type={showAdminPassword ? 'text' : 'password'}
+                      required
+                      placeholder="••••••••"
+                      value={adminConfirmPassword}
+                      onChange={(e) => {
+                        setAdminConfirmPassword(e.target.value);
+                        if (adminFieldErrors.confirmPassword) setAdminFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
+                        if (errorMsg) setErrorMsg(null);
+                      }}
+                      className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                        adminFieldErrors.confirmPassword
+                          ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
+                          : 'border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
+                      }`}
+                    />
+                    <FieldError message={adminFieldErrors.confirmPassword} />
+                  </div>
+                </div>
+
+                {/* Opción para mostrar u ocultar la contraseña */}
+                <div className="flex items-center justify-between pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminPassword(!showAdminPassword)}
+                    className="text-xs text-teal-600 dark:text-teal-400 flex items-center gap-1.5 font-medium hover:underline cursor-pointer"
+                  >
+                    {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <span>{showAdminPassword ? (language === 'es' ? 'Ocultar contraseñas' : 'Hide passwords') : (language === 'es' ? 'Mostrar contraseñas' : 'Show passwords')}</span>
+                  </button>
+                  <span className="text-[11px] text-slate-400">
+                    {language === 'es' ? 'Mínimo 5 caracteres' : 'Min 5 characters'}
+                  </span>
+                </div>
+              </div>
+
+              {/* 4. SECCIÓN: VERIFICACIÓN */}
+              <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 space-y-3.5">
+                <div className="flex items-center justify-between pb-2 border-b border-amber-200 dark:border-amber-900/60 text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span>{language === 'es' ? 'Verificación' : 'Verification'}</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
+                    {language === 'es' ? 'Obligatorio' : 'Required'}
+                  </span>
+                </div>
+
+                <div>
+                  <label 
+                    htmlFor="admin-verification-code-input" 
+                    className="block text-xs font-bold text-amber-900 dark:text-amber-200 mb-1"
+                  >
+                    {language === 'es' ? 'Código de verificación *' : 'Verification Code *'}
+                  </label>
+                  <input
+                    id="admin-verification-code-input"
+                    type="text"
+                    required
+                    placeholder={language === 'es' ? 'Ej. DIR-2026, ADMIN-2026 o código institucional' : 'Institutional code'}
+                    value={adminVerificationCode}
+                    onChange={(e) => {
+                      setAdminVerificationCode(e.target.value);
+                      if (adminFieldErrors.verificationCode) setAdminFieldErrors(prev => ({ ...prev, verificationCode: undefined }));
+                      if (errorMsg) setErrorMsg(null);
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
+                      adminFieldErrors.verificationCode
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500'
+                        : 'border border-amber-300 dark:border-amber-800 focus:ring-amber-500'
+                    }`}
+                  />
+                  <FieldError message={adminFieldErrors.verificationCode} />
+                  <p className="mt-1.5 text-[11px] text-amber-900 dark:text-amber-300 leading-tight">
+                    {language === 'es'
+                      ? 'Sistema de verificación institucional (mismo sistema implementado para acudientes). Ingrese el código oficial asignado (ej. DIR-2026, ADMIN-2026, RECTOR-2026, COORD-2026, SEC-2026, 12345 o su documento registrado).'
+                      : 'Institutional verification system (same as guardians). Enter assigned code (e.g. DIR-2026, ADMIN-2026, RECTOR-2026, COORD-2026, SEC-2026, or your registered document).'}
+                  </p>
+                </div>
+
+                {/* Términos y Tratamiento de Datos */}
+                <div className="pt-1">
+                  <div className="flex items-start">
+                    <input
+                      id="accept-admin-terms-checkbox"
+                      type="checkbox"
+                      checked={acceptAdminTerms}
+                      onChange={(e) => {
+                        setAcceptAdminTerms(e.target.checked);
+                        if (adminFieldErrors.terms) setAdminFieldErrors(prev => ({ ...prev, terms: undefined }));
+                      }}
+                      className="w-4 h-4 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-slate-300 dark:border-slate-700 cursor-pointer"
+                    />
+                    <label htmlFor="accept-admin-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight cursor-pointer">
+                      {language === 'es'
+                        ? 'Certifico que ostento el cargo administrativo seleccionado en la I.E. Félix Henao Botero y autorizo el tratamiento de datos para funciones directivas conforme a la Ley 1581.'
+                        : 'I certify that I hold the selected position and authorize data processing for administrative purposes.'}
+                    </label>
+                  </div>
+                  <FieldError message={adminFieldErrors.terms} />
+                </div>
+              </div>
+
+              {/* Botón Enviar Registro Administrativo */}
+              <button
+                id="btn-submit-admin-register"
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-3.5 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-700/20 hover:shadow-teal-700/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>{language === 'es' ? 'Crear Cuenta Administrativa' : 'Create Administrative Account'}</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </>
+                )}
+              </button>
+            </form>
+          ) : (
+            /* FORMULARIO ESTUDIANTE / ACUDIENTE (CONSERVADO INTACTO) */
+            <>
+              {/* Institutional Guidance Notice for Teachers and Families */}
+              <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-left space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                    {language === "es" ? "Registro de Acudientes y Estudiantes" : "Guardians & Students Registration"}
+                  </span>
+                  <span className="text-[10px] font-black uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
+                    {language === "es" ? "EduMed Oficial" : "Official"}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {language === "es"
+                    ? "Complete los datos escolares para registrar la cuenta de acudiente o aspirante. Si es directivo institucional, seleccione 'Directivo' en el selector superior."
+                    : "Complete the fields to register as a student or guardian."}
+                </p>
+              </div>
+
+              <form onSubmit={handleRegister} className="space-y-3.5 text-left">
 
               {/* Sexo para Estudiantes */}
               {regRole === 'student' && (
@@ -1444,6 +2117,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 )}
               </button>
             </form>
+          </>
+        )}
 
             {/* Switch to Login link */}
           <div className="text-center pt-2">

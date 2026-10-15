@@ -139,6 +139,10 @@ export interface AuthUser {
   department?: string;
   institutionCode?: string;
   guardianValidationCode?: string;
+  username?: string;
+  employeeCode?: string;
+  positionSummary?: string;
+  permissions?: RolePermissions;
 }
 
 export interface AppNotification {
