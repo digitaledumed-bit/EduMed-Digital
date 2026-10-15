@@ -997,9 +997,10 @@ export const EnrollmentWizard: React.FC = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
                         >
-                          <option value="Masculino">Masculino (Hombre)</option>
-                          <option value="Femenino">Femenino (Mujer)</option>
-                          <option value="Otro">Otro / Prefiero no decir</option>
+                          <option value="Masculino">{language === 'es' ? 'Masculino' : 'Male'}</option>
+                          <option value="Femenino">{language === 'es' ? 'Femenino' : 'Female'}</option>
+                          <option value="LGBTIQ+">LGBTIQ+</option>
+                          <option value="Prefiero no decirlo">{language === 'es' ? 'Prefiero no decirlo' : 'Prefer not to say'}</option>
                         </select>
                       </div>
 

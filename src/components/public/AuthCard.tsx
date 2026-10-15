@@ -101,7 +101,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
   const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
-  const [regGender, setRegGender] = useState<'Masculino' | 'Femenino' | 'Neutro'>('Masculino');
+  const [regGender, setRegGender] = useState<'Masculino' | 'Femenino' | 'LGBTIQ+' | 'Prefiero no decirlo'>('Masculino');
   const [guardianValidationCode, setGuardianValidationCode] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(true);
 
@@ -1258,21 +1258,22 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 <FieldError message={regFieldErrors.role} />
               </div>
 
-              {/* Sexo / Género para Estudiantes (Asigna avatar de hombre o mujer) */}
+              {/* Sexo para Estudiantes */}
               {regRole === 'student' && (
                 <div className="space-y-1 p-2.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 animate-in fade-in duration-200">
                   <label htmlFor="reg-gender-select" className="block text-xs font-bold text-teal-900 dark:text-teal-200">
-                    {language === 'es' ? 'Sexo del Estudiante (Para tu avatar inicial):' : 'Student Gender (For your initial avatar):'}
+                    {language === 'es' ? 'Sexo:' : 'Sex:'}
                   </label>
                   <select
                     id="reg-gender-select"
                     value={regGender}
-                    onChange={(e) => setRegGender(e.target.value as 'Masculino' | 'Femenino' | 'Neutro')}
+                    onChange={(e) => setRegGender(e.target.value as 'Masculino' | 'Femenino' | 'LGBTIQ+' | 'Prefiero no decirlo')}
                     className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
                   >
-                    <option value="Masculino">♂ {language === 'es' ? 'Masculino (Avatar ilustrado de Chico)' : 'Male (Boy / Man Avatar)'}</option>
-                    <option value="Femenino">♀ {language === 'es' ? 'Femenino (Avatar ilustrada de Chica)' : 'Female (Girl / Woman Avatar)'}</option>
-                    <option value="Neutro">🎓 {language === 'es' ? 'No especificado / Neutro (Avatar ilustrado académico)' : 'Unspecified / Neutral (Academic Avatar)'}</option>
+                    <option value="Masculino">{language === 'es' ? 'Masculino' : 'Male'}</option>
+                    <option value="Femenino">{language === 'es' ? 'Femenino' : 'Female'}</option>
+                    <option value="LGBTIQ+">LGBTIQ+</option>
+                    <option value="Prefiero no decirlo">{language === 'es' ? 'Prefiero no decirlo' : 'Prefer not to say'}</option>
                   </select>
                   <p className="text-[10px] text-teal-700 dark:text-teal-300">
                     {language === 'es' 
