@@ -299,17 +299,12 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                 }}
               />
               
-              {/* Gender badge */}
-              <div className="absolute -bottom-2 -left-2 px-2.5 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-black shadow-md border border-slate-700">
-                {isMale ? '♂ Hombre' : isFemale ? '♀ Mujer' : '🎓 Neutro'}
-              </div>
-
               {/* Quick camera button */}
               <button
                 type="button"
                 onClick={() => setShowAvatarModal(true)}
                 className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-md transition-all hover:scale-110 cursor-pointer"
-                title="Cambiar foto de perfil"
+                title={isEs ? 'Cambiar foto de perfil' : 'Change profile photo'}
               >
                 <Camera className="w-4 h-4" />
               </button>
@@ -1069,6 +1064,144 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = ({
                 </div>
               </div>
             )}
+
+            {/* =========================================================================
+                C. ARCHIVOS SELECCIONADOS / RADICADOS Y SU ESTADO EN LA MATRÍCULA
+                ========================================================================= */}
+            <div className="p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200 dark:border-slate-700">
+                <div>
+                  <h4 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                    <FileText className="w-4 h-4 text-teal-600" />
+                    <span>{isEs ? 'Archivos Vinculados y su Estado en Matrícula' : 'Files Attached & Status in Enrollment'}</span>
+                  </h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {isEs 
+                      ? 'Visualización de cada archivo seleccionado y su dictamen de aprobación institucional' 
+                      : 'Display of each selected file and its institutional approval status'}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider inline-flex items-center gap-1.5 ${
+                    confirmationStatus === 'approved'
+                      ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700'
+                      : confirmationStatus === 'rejected'
+                      ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 border border-rose-300 dark:border-rose-700'
+                      : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700'
+                  }`}>
+                    {confirmationStatus === 'approved' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                    {confirmationStatus === 'rejected' && <XCircle className="w-3.5 h-3.5 text-rose-600" />}
+                    {confirmationStatus === 'pending' && <Clock className="w-3.5 h-3.5 text-amber-600" />}
+                    <span>
+                      {confirmationStatus === 'approved'
+                        ? (isEs ? 'Aprobado / Approved' : 'Approved')
+                        : confirmationStatus === 'rejected'
+                        ? (isEs ? 'No aprobado / Not Approved' : 'Not Approved')
+                        : (isEs ? 'Pendiente de revisión / Pending Review' : 'Pending Review')}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Lista de archivos en confirmación */}
+              {uploadedFilesList.length === 0 && selectedFiles.length === 0 ? (
+                <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
+                  {isEs 
+                    ? 'No se ha seleccionado ningún archivo todavía. Sube tus documentos con el botón "Adjuntar archivos" de arriba.' 
+                    : 'No files selected yet. Upload your documents using the "Attach Files" button above.'}
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {/* Archivos actualmente seleccionados en el dispositivo */}
+                  {selectedFiles.map(file => (
+                    <div 
+                      key={`conf-sel-${file.id}`}
+                      className="p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 flex items-center justify-center font-black text-xs shrink-0 uppercase">
+                          {file.extension.slice(0, 4)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate block">
+                            {file.name}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            {file.extension} • {file.sizeFormatted} • {isEs ? 'Seleccionado en este dispositivo (pendiente de radicar)' : 'Selected on device (pending submit)'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 self-start sm:self-auto">
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>{isEs ? 'Pendiente de radicar' : 'Pending submit'}</span>
+                      </span>
+                    </div>
+                  ))}
+
+                  {/* Archivos radicados oficialmente con estado institucional */}
+                  {uploadedFilesList.map(file => (
+                    <div 
+                      key={`conf-file-${file.id}`}
+                      className={`p-3 sm:p-3.5 rounded-xl bg-white dark:bg-slate-900 border flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs ${
+                        confirmationStatus === 'approved'
+                          ? 'border-emerald-200 dark:border-emerald-800'
+                          : confirmationStatus === 'rejected'
+                          ? 'border-rose-200 dark:border-rose-800'
+                          : 'border-slate-200 dark:border-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-black text-xs shrink-0 uppercase ${
+                          confirmationStatus === 'approved'
+                            ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
+                            : confirmationStatus === 'rejected'
+                            ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
+                            : 'bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300'
+                        }`}>
+                          {file.extension.slice(0, 4)}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate block">
+                            {file.name}
+                          </span>
+                          <span className="text-[11px] text-slate-400">
+                            {file.extension} • {file.sizeFormatted} • {file.uploadedAt}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Estado del archivo en matrícula */}
+                      <span className={`inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-lg self-start sm:self-auto ${
+                        confirmationStatus === 'approved'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
+                          : confirmationStatus === 'rejected'
+                          ? 'bg-rose-50 dark:bg-rose-950/70 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
+                          : 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800'
+                      }`}>
+                        {confirmationStatus === 'approved' && (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{isEs ? 'Aprobado / Approved' : 'Approved'}</span>
+                          </>
+                        )}
+                        {confirmationStatus === 'rejected' && (
+                          <>
+                            <XCircle className="w-3.5 h-3.5 text-rose-600" />
+                            <span>{isEs ? 'No aprobado / Not Approved' : 'Not Approved'}</span>
+                          </>
+                        )}
+                        {confirmationStatus === 'pending' && (
+                          <>
+                            <Clock className="w-3.5 h-3.5 text-amber-600" />
+                            <span>{isEs ? 'Pendiente de revisión / Pending Review' : 'Pending Review'}</span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Radicado y póliza institucional */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">

@@ -21,7 +21,9 @@ import {
   Info,
   Calendar,
   MapPin,
-  HeartPulse
+  HeartPulse,
+  Clock,
+  FileText
 } from 'lucide-react';
 
 interface MandatoryEnrollmentGateProps {
@@ -32,6 +34,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
   onEnrollmentCompleted
 }) => {
   const { currentUser, language, completeStudentEnrollment, submitNewEnrollment } = useApp();
+  const isEs = language === 'es';
 
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -799,7 +802,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   <div className="flex items-center gap-2 self-end sm:self-center">
                     <label className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/50 text-xs font-bold cursor-pointer transition-all shadow-xs inline-flex items-center gap-1.5">
                       <Upload className="w-3.5 h-3.5" />
-                      <span>{doc.uploaded ? 'Reemplazar' : 'Adjuntar Archivo'}</span>
+                      <span>{doc.uploaded ? (isEs ? 'Reemplazar' : 'Replace') : (isEs ? 'Adjuntar archivos' : 'Attach Files')}</span>
                       <input
                         type="file"
                         className="hidden"
@@ -852,9 +855,33 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
               </div>
 
               <div>
-                <span className="text-slate-400 block font-semibold">{isEs ? 'Documentación Adjunta:' : 'Attached Documentation:'}</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{isEs ? '4 de 4 Documentos Validados' : '4 of 4 Documents Validated'}</span>
-                <p className="text-slate-500">{isEs ? 'Listo para aprobación en SIMAT' : 'Ready for official SIMAT validation'}</p>
+                <span className="text-slate-400 block font-semibold">{isEs ? 'Estado de la Solicitud:' : 'Application Status:'}</span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300 border border-amber-300 dark:border-amber-700 mt-1">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>{isEs ? 'Pendiente de revisión / Pending Review' : 'Pending Review'}</span>
+                </span>
+                <p className="text-slate-500 mt-0.5">{isEs ? 'En espera de dictamen de secretaría académica' : 'Awaiting academic office decision'}</p>
+              </div>
+            </div>
+
+            {/* Lista detallada de archivos adjuntos en el paso de confirmación */}
+            <div className="p-4 rounded-2xl bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 space-y-2 text-xs">
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider block text-[11px]">
+                {isEs ? 'Archivos Seleccionados para Confirmación:' : 'Files Selected for Confirmation:'}
+              </span>
+              <div className="space-y-1.5">
+                {docs.map(d => (
+                  <div key={d.id} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                      <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">{d.name}</span>
+                      {d.fileName && <span className="text-[11px] text-slate-400">({d.fileName})</span>}
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                      {isEs ? 'Pendiente' : 'Pending'}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 

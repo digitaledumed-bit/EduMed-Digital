@@ -536,17 +536,17 @@ export const Navbar: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Student Name & Gender Label */}
+                    {/* Student Name & Clean Label */}
                     <div 
                       onClick={() => { setActiveRole('student'); setActiveTab('student-profile'); }}
                       className="text-left cursor-pointer hidden min-[400px]:block"
-                      title="Ver expediente del estudiante"
+                      title={language === 'es' ? 'Ver expediente del estudiante' : 'View student record'}
                     >
                       <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight truncate max-w-[90px] sm:max-w-[130px] md:max-w-[150px]">
                         {currentUser.name}
                       </p>
-                      <span className="text-[10px] sm:text-xs font-bold text-teal-700 dark:text-teal-400 block leading-tight truncate">
-                        {isMaleGender(currentUser.gender) ? (language === 'es' ? '♂ Hombre' : '♂ Male') : isFemaleGender(currentUser.gender) ? (language === 'es' ? '♀ Mujer' : '♀ Female') : (language === 'es' ? '🎓 Neutro' : '🎓 Neutral')}
+                      <span className="text-[10px] sm:text-xs font-semibold text-teal-700 dark:text-teal-400 block leading-tight truncate">
+                        {language === 'es' ? 'Estudiante' : 'Student'}
                       </span>
                     </div>
 

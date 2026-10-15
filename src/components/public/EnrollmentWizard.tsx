@@ -23,7 +23,8 @@ import {
   Search,
   Check,
   Shield,
-  FileCheck
+  FileCheck,
+  Clock
 } from 'lucide-react';
 
 export const EnrollmentWizard: React.FC = () => {
@@ -1501,6 +1502,60 @@ export const EnrollmentWizard: React.FC = () => {
                     <span className="text-2xl font-black text-teal-700 dark:text-teal-400 tracking-wider">
                       {generatedRadicado || '#MAT-2025-4581'}
                     </span>
+                  </div>
+
+                  {/* Estado Oficial de la Solicitud de Matrícula */}
+                  <div className="max-w-lg mx-auto p-5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border-2 border-amber-400 dark:border-amber-700 text-left space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+                        <span className="text-xs font-extrabold uppercase tracking-wider text-amber-900 dark:text-amber-200">
+                          {language === 'es' ? 'Estado de la Solicitud' : 'Application Status'}
+                        </span>
+                      </div>
+                      <span className="px-3 py-1 rounded-full text-xs font-black bg-amber-200 dark:bg-amber-900 text-amber-900 dark:text-amber-100 uppercase tracking-wider">
+                        {language === 'es' ? 'Pendiente de revisión / Pending Review' : 'Pending Review'}
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-950 dark:text-amber-200 font-medium leading-relaxed">
+                      {language === 'es'
+                        ? 'Tu solicitud de matrícula y los documentos adjuntos se encuentran en fila de espera para revisión por el personal autorizado de secretaría académica. El estado no cambia automáticamente a aprobado por adjuntar archivos.'
+                        : 'Your enrollment application and attached documents are queued for review by authorized academic personnel. Status does not automatically change to approved by attaching files.'}
+                    </p>
+                  </div>
+
+                  {/* Archivos Adjuntos Radicados */}
+                  <div className="max-w-lg mx-auto p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-left space-y-3">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-teal-600" />
+                        <span>{language === 'es' ? 'Archivos Adjuntos Radicados' : 'Attached Documents Filed'}</span>
+                      </span>
+                      <span className="text-xs font-semibold text-slate-500">
+                        {uploadedFiles.filter(f => f.fileName).length} {language === 'es' ? 'archivos' : 'files'}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {uploadedFiles.filter(f => f.fileName).map((fItem, fIdx) => (
+                        <div 
+                          key={`wiz-file-${fIdx}`}
+                          className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 text-xs"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <span className="font-bold text-slate-900 dark:text-white truncate block">
+                              {fItem.fileName}
+                            </span>
+                            <span className="text-[11px] text-slate-400">
+                              {(fItem.fileName.split('.').pop() || 'PDF').toUpperCase()} • {fItem.file ? `${(fItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB'}
+                            </span>
+                          </div>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                            {language === 'es' ? 'Pendiente' : 'Pending'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="flex flex-wrap items-center justify-center gap-3 pt-4">

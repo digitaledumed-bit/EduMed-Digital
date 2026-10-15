@@ -201,7 +201,7 @@ export const StudentProfileView: React.FC = () => {
                 </div>
 
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  {student.documentType} {student.documentNumber} • Grado {student.grade} • Jornada {student.shift}
+                  {student.documentType} {student.documentNumber} • {language === 'es' ? 'Grado' : 'Grade'} {student.grade} • {language === 'es' ? 'Jornada' : 'Shift'} {student.shift}
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-2 text-xs text-slate-400">
