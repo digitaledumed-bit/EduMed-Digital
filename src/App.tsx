@@ -180,32 +180,38 @@ const MainAppContent: React.FC = () => {
           </div>
         )}
 
-        {/* Institutional Global Footer */}
-        <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 py-6 px-4 sm:px-6">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-2.5">
-              <img 
-                src={customLogoUrl} 
-                alt="Escudo Institución Educativa" 
-                className="w-7 h-7 rounded-full object-cover border border-teal-600/50 bg-white shadow-xs"
-                onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
-                }}
-              />
-              <span className="font-bold text-slate-800 dark:text-slate-200">I.E. Félix Henao Botero</span>
-              <span>•</span>
-              <span>{language === 'es' ? 'Sistema Oficial de Matrícula y Gestión Escolar' : 'Official Enrollment & School Management System'}</span>
-            </div>
+        {/* Institutional Global Footer (rendered for internal views, wizard, status lookup, etc.) */}
+        {!(activeRole === 'public' && (activeTab === 'landing' || activeTab === 'home')) && (
+          <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 py-4 px-4 sm:px-6">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                <img 
+                  src={customLogoUrl} 
+                  alt="Escudo Institución Educativa Félix Henao Botero" 
+                  className="w-7 h-7 rounded-full object-cover border border-amber-400 bg-white shadow-2xs"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
+                  }}
+                />
+                <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">I.E. Félix Henao Botero</span>
+                <span className="text-slate-400">·</span>
+                <span className="text-slate-500 dark:text-slate-400 text-xs">
+                  {language === 'es' ? 'EduMed Digital · Sistema Oficial de Matrícula y Gestión Escolar' : 'EduMed Digital · Official School Management System'}
+                </span>
+              </div>
 
-            <div className="flex items-center gap-3 sm:gap-4 text-xs">
-              <span>DANE: 105001002345</span>
-              <span>•</span>
-              <span>Medellín, Antioquia</span>
-              <span>•</span>
-              <span>© {new Date().getFullYear()}</span>
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+                <span>DANE: <strong className="font-mono text-slate-700 dark:text-slate-300">105001002345</strong></span>
+                <span>·</span>
+                <span>NIT: <strong className="font-mono text-slate-700 dark:text-slate-300">890980123-1</strong></span>
+                <span>·</span>
+                <span>Medellín, Colombia</span>
+                <span>·</span>
+                <span>© {new Date().getFullYear()}</span>
+              </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        )}
 
         {/* User Profile Editing Modal */}
         <StudentEditProfileModal 
