@@ -1424,23 +1424,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             : 'The document number is already registered.'
         };
       }
-      const adminCode = (userData.guardianValidationCode || '').trim();
-      if (!adminCode) {
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'Por favor, complete los campos obligatorios.'
-            : 'Please complete the required fields.'
-        };
-      }
-      if (!validateAdminCode(adminCode) && !validateGuardianCode(adminCode)) {
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'El código de verificación no es válido o ha vencido. Por favor verifique el código institucional asignado.'
-            : 'The verification code is invalid or expired. Please check your assigned code.'
-        };
-      }
     }
 
     if (userData.role === 'guardian') {

@@ -71,7 +71,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     setActiveTab,
     customLogoUrl,
     validateGuardianCode,
-    validateAdminCode,
     requestPasswordResetCode,
     verifyPasswordResetCode,
     resetPasswordWithCode
@@ -125,7 +124,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [adminPassword, setAdminPassword] = useState('');
   const [adminConfirmPassword, setAdminConfirmPassword] = useState('');
   const [showAdminPassword, setShowAdminPassword] = useState(false);
-  const [adminVerificationCode, setAdminVerificationCode] = useState('');
   const [acceptAdminTerms, setAcceptAdminTerms] = useState(true);
 
   // Restringir tipo de documento para rol Acudiente a C.C. o C.E.
@@ -395,8 +393,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       !adminPosition || 
       !adminUsername.trim() || 
       !adminPassword || 
-      !adminConfirmPassword || 
-      !adminVerificationCode.trim();
+      !adminConfirmPassword;
 
     const newErrors: Record<string, string> = {};
 
@@ -409,7 +406,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     if (!adminUsername.trim()) newErrors.username = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
     if (!adminPassword) newErrors.password = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
     if (!adminConfirmPassword) newErrors.confirmPassword = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
-    if (!adminVerificationCode.trim()) newErrors.verificationCode = language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.';
 
     if (missingRequired) {
       setErrorMsg(language === 'es' ? 'Por favor, complete los campos obligatorios.' : 'Please complete the required fields.');
@@ -454,13 +450,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       return;
     }
 
-    const cleanCode = adminVerificationCode.trim();
-    if (!validateAdminCode(cleanCode) && !validateGuardianCode(cleanCode)) {
-      setErrorMsg(language === 'es' ? 'El código de verificación debe ser válido y no estar vencido.' : 'The verification code must be valid and not expired.');
-      setAdminFieldErrors({ verificationCode: language === 'es' ? 'El código de verificación debe ser válido y no estar vencido.' : 'Invalid or expired code.' });
-      return;
-    }
-
     if (!acceptAdminTerms) {
       setErrorMsg(language === 'es' ? 'Debe aceptar los términos institucionales y la política de tratamiento de datos.' : 'You must accept terms to continue.');
       setAdminFieldErrors({ terms: language === 'es' ? 'Debe aceptar los términos.' : 'Required.' });
@@ -484,8 +473,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
           : adminPosition === 'Coordinador' 
           ? 'Gestión Académica' 
           : 'Gestión Documental',
-        institutionCode: '105001002345',
-        guardianValidationCode: cleanCode
+        institutionCode: '105001002345'
       });
       setIsLoading(false);
 
@@ -1248,24 +1236,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                ========================================================================= */
             <form onSubmit={handleAdminRegister} className="space-y-4 text-left">
               
-              {/* Banner Oficial Institucional */}
-              <div className="p-3.5 rounded-2xl bg-teal-50/90 dark:bg-teal-950/60 border border-teal-200 dark:border-teal-800 text-left space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    {language === "es" ? "Portal de Creación de Cuentas Directivas y Administrativas" : "Leadership & Staff Account Registration"}
-                  </span>
-                  <span className="text-[10px] font-black uppercase text-teal-700 dark:text-teal-300 bg-white dark:bg-slate-900 px-2 py-0.5 rounded-full border border-teal-300 dark:border-teal-700">
-                    I.E. Félix Henao Botero
-                  </span>
-                </div>
-                <p className="text-[11px] text-teal-800 dark:text-teal-300 leading-relaxed">
-                  {language === "es"
-                    ? "Formulario oficial de registro para Rectoría, Coordinación y Secretaría con asignación de funciones institucionales y permisos de gestión escolar."
-                    : "Official staff registration for Rector, Academic Coordinator, and Registry Secretary with role permissions."}
-                </p>
-              </div>
-
               {/* 1. SECCIÓN: DATOS PERSONALES */}
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3.5">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">
@@ -1447,33 +1417,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                     )}
                   </div>
                 </div>
-              </div>
 
-              {/* 2. SECCIÓN: DATOS INSTITUCIONALES */}
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3.5">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">
-                  <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                  <span>{language === 'es' ? 'Datos institucionales' : 'Institutional Data'}</span>
-                </div>
-
-                {/* Institución Educativa (Solo lectura oficial) */}
-                <div>
-                  <label 
-                    htmlFor="admin-institution-input" 
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                  >
-                    {language === 'es' ? 'Institución educativa' : 'Educational Institution'}
-                  </label>
-                  <input
-                    id="admin-institution-input"
-                    type="text"
-                    readOnly
-                    value={adminInstitution}
-                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 font-medium cursor-not-allowed select-none"
-                  />
-                </div>
-
-                {/* Cargo (Lista desplegable con etiqueta "Seleccionar cargo") */}
+                {/* Cargo (Movido a Datos Personales): Lista desplegable con etiqueta "Seleccionar cargo" */}
                 <div>
                   <label 
                     htmlFor="admin-position-select" 
@@ -1520,6 +1465,31 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                       </span>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* 2. SECCIÓN: DATOS INSTITUCIONALES (Sin cargo duplicado) */}
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80 space-y-3.5">
+                <div className="flex items-center gap-2 pb-2 border-b border-slate-200 dark:border-slate-700 text-xs font-bold text-teal-800 dark:text-teal-300 uppercase tracking-wider">
+                  <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <span>{language === 'es' ? 'Datos institucionales' : 'Institutional Data'}</span>
+                </div>
+
+                {/* Institución Educativa (Solo lectura oficial) */}
+                <div>
+                  <label 
+                    htmlFor="admin-institution-input" 
+                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
+                    {language === 'es' ? 'Institución educativa' : 'Educational Institution'}
+                  </label>
+                  <input
+                    id="admin-institution-input"
+                    type="text"
+                    readOnly
+                    value={adminInstitution}
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 font-medium cursor-not-allowed select-none"
+                  />
                 </div>
 
                 {/* Código de empleado e Identificación de usuario */}
@@ -1655,71 +1625,26 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 </div>
               </div>
 
-              {/* 4. SECCIÓN: VERIFICACIÓN */}
-              <div className="p-4 rounded-2xl bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/60 space-y-3.5">
-                <div className="flex items-center justify-between pb-2 border-b border-amber-200 dark:border-amber-900/60 text-xs font-bold text-amber-900 dark:text-amber-200 uppercase tracking-wider">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                    <span>{language === 'es' ? 'Verificación' : 'Verification'}</span>
-                  </div>
-                  <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
-                    {language === 'es' ? 'Obligatorio' : 'Required'}
-                  </span>
-                </div>
-
-                <div>
-                  <label 
-                    htmlFor="admin-verification-code-input" 
-                    className="block text-xs font-bold text-amber-900 dark:text-amber-200 mb-1"
-                  >
-                    {language === 'es' ? 'Código de verificación *' : 'Verification Code *'}
-                  </label>
+              {/* Términos y Tratamiento de Datos */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/80">
+                <div className="flex items-start">
                   <input
-                    id="admin-verification-code-input"
-                    type="text"
-                    required
-                    placeholder={language === 'es' ? 'Ej. DIR-2026, ADMIN-2026 o código institucional' : 'Institutional code'}
-                    value={adminVerificationCode}
+                    id="accept-admin-terms-checkbox"
+                    type="checkbox"
+                    checked={acceptAdminTerms}
                     onChange={(e) => {
-                      setAdminVerificationCode(e.target.value);
-                      if (adminFieldErrors.verificationCode) setAdminFieldErrors(prev => ({ ...prev, verificationCode: undefined }));
-                      if (errorMsg) setErrorMsg(null);
+                      setAcceptAdminTerms(e.target.checked);
+                      if (adminFieldErrors.terms) setAdminFieldErrors(prev => ({ ...prev, terms: undefined }));
                     }}
-                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 transition-all ${
-                      adminFieldErrors.verificationCode
-                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500'
-                        : 'border border-amber-300 dark:border-amber-800 focus:ring-amber-500'
-                    }`}
+                    className="w-4 h-4 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-slate-300 dark:border-slate-700 cursor-pointer shrink-0"
                   />
-                  <FieldError message={adminFieldErrors.verificationCode} />
-                  <p className="mt-1.5 text-[11px] text-amber-900 dark:text-amber-300 leading-tight">
+                  <label htmlFor="accept-admin-terms-checkbox" className="ml-2.5 text-[11px] text-slate-600 dark:text-slate-400 leading-snug cursor-pointer">
                     {language === 'es'
-                      ? 'Sistema de verificación institucional (mismo sistema implementado para acudientes). Ingrese el código oficial asignado (ej. DIR-2026, ADMIN-2026, RECTOR-2026, COORD-2026, SEC-2026, 12345 o su documento registrado).'
-                      : 'Institutional verification system (same as guardians). Enter assigned code (e.g. DIR-2026, ADMIN-2026, RECTOR-2026, COORD-2026, SEC-2026, or your registered document).'}
-                  </p>
+                      ? 'Certifico que ostento el cargo administrativo seleccionado en la I.E. Félix Henao Botero y autorizo el tratamiento de datos para funciones directivas conforme a la Ley 1581.'
+                      : 'I certify that I hold the selected position and authorize data processing for administrative purposes.'}
+                  </label>
                 </div>
-
-                {/* Términos y Tratamiento de Datos */}
-                <div className="pt-1">
-                  <div className="flex items-start">
-                    <input
-                      id="accept-admin-terms-checkbox"
-                      type="checkbox"
-                      checked={acceptAdminTerms}
-                      onChange={(e) => {
-                        setAcceptAdminTerms(e.target.checked);
-                        if (adminFieldErrors.terms) setAdminFieldErrors(prev => ({ ...prev, terms: undefined }));
-                      }}
-                      className="w-4 h-4 mt-0.5 rounded text-teal-600 focus:ring-teal-500 border-slate-300 dark:border-slate-700 cursor-pointer"
-                    />
-                    <label htmlFor="accept-admin-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight cursor-pointer">
-                      {language === 'es'
-                        ? 'Certifico que ostento el cargo administrativo seleccionado en la I.E. Félix Henao Botero y autorizo el tratamiento de datos para funciones directivas conforme a la Ley 1581.'
-                        : 'I certify that I hold the selected position and authorize data processing for administrative purposes.'}
-                    </label>
-                  </div>
-                  <FieldError message={adminFieldErrors.terms} />
-                </div>
+                <FieldError message={adminFieldErrors.terms} />
               </div>
 
               {/* Botón Enviar Registro Administrativo */}
