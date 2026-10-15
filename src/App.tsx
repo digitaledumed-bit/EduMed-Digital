@@ -21,6 +21,7 @@ import { PortalConfigView } from './components/admin/PortalConfigView';
 import { MandatoryEnrollmentGate } from './components/student/MandatoryEnrollmentGate';
 import { StudentMainDashboard } from './components/student/StudentMainDashboard';
 import { GuardianMainDashboard } from './components/guardian/GuardianMainDashboard';
+import { TeacherMainDashboard } from './components/teacher/TeacherMainDashboard';
 import { StudentEditProfileModal } from './components/student/StudentEditProfileModal';
 import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
@@ -44,16 +45,27 @@ const MainAppContent: React.FC = () => {
     return <LoginScreen />;
   }
 
-  // Check mandatory enrollment status for students
+  // Check role authorization and mandatory gates
   const isStudent = currentUser.role === 'student';
   const isGuardian = currentUser.role === 'guardian';
+  const isTeacher = currentUser.role === 'teacher';
   const isAdmin = currentUser.role === 'admin';
   const isEnrollmentDone = isStudent ? isStudentEnrollmentCompleted(currentUser.id) : true;
 
+  // Configuration screens (portal-config, settings) must remain strictly hidden from navigation
+  React.useEffect(() => {
+    if (activeTab === 'portal-config' || activeTab === 'settings') {
+      setActiveTab('dashboard');
+    }
+  }, [activeTab, setActiveTab]);
+
   // Define admin-only views to enforce strict role isolation
-  const adminOnlyTabs = ['enrollments', 'students', 'link-guardian', 'parents', 'documents', 'settings', 'portal-config'];
-  const isUnauthorizedAdminTab = !isAdmin && adminOnlyTabs.includes(activeTab);
-  const isModuleAllowed = activeTab === 'dashboard' || isAdmin || isModuleEnabled(currentUser.role, activeTab);
+  const adminOnlyTabs = ['enrollments', 'link-guardian', 'parents', 'settings', 'portal-config'];
+  const isUnauthorizedAdminTab = !isAdmin && (
+    adminOnlyTabs.includes(activeTab) || 
+    (!isTeacher && (activeTab === 'students' || activeTab === 'documents'))
+  );
+  const isModuleAllowed = activeTab === 'dashboard' || isAdmin || isTeacher || isModuleEnabled(currentUser.role, activeTab);
   const isUnauthorized = isUnauthorizedAdminTab || !isModuleAllowed;
 
   return (
@@ -124,12 +136,27 @@ const MainAppContent: React.FC = () => {
                       <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} />
                     ) : isGuardian ? (
                       <GuardianMainDashboard />
+                    ) : isTeacher ? (
+                      <TeacherMainDashboard initialTab="courses" />
                     ) : (
                       <AdminDashboard />
                     )
                   )}
-                  {activeTab === 'enrollments' && <EnrollmentsTable />}
-                  {activeTab === 'students' && <StudentsList />}
+                  {activeTab === 'students' && (
+                    isTeacher ? (
+                      <TeacherMainDashboard initialTab="students" />
+                    ) : (
+                      <StudentsList />
+                    )
+                  )}
+                  {activeTab === 'documents' && (
+                    isTeacher ? (
+                      <TeacherMainDashboard initialTab="documents" />
+                    ) : (
+                      <DocumentsManagement />
+                    )
+                  )}
+                  {activeTab === 'enrollments' && isAdmin && <EnrollmentsTable />}
                   {activeTab === 'student-profile' && (
                     isStudent ? (
                       <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} />
@@ -137,11 +164,8 @@ const MainAppContent: React.FC = () => {
                       <StudentProfileView />
                     )
                   )}
-                  {activeTab === 'link-guardian' && <LinkGuardianView />}
-                  {activeTab === 'parents' && <ParentsList />}
-                  {activeTab === 'documents' && <DocumentsManagement />}
-                  {activeTab === 'portal-config' && <PortalConfigView />}
-                  {activeTab === 'settings' && <InstitutionalSettings />}
+                  {activeTab === 'link-guardian' && isAdmin && <LinkGuardianView />}
+                  {activeTab === 'parents' && isAdmin && <ParentsList />}
                   
                   {/* Direct views accessible to authorized users */}
                   {(activeTab === 'wizard') && <EnrollmentWizard />}

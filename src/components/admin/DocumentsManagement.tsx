@@ -67,6 +67,9 @@ export const DocumentsManagement: React.FC = () => {
     }
   };
 
+  const allPendingDocsCount = documents.filter((d) => d.status === 'in_review' || d.status === 'pending').length;
+  const allApprovedDocsCount = documents.filter((d) => d.status === 'approved').length;
+
   return (
     <div className="space-y-6">
       
@@ -84,11 +87,11 @@ export const DocumentsManagement: React.FC = () => {
         <div className="flex items-center gap-4 text-xs font-semibold">
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
             <Clock className="w-3.5 h-3.5" />
-            <span>42 {t.admin.documents.pendingCount}</span>
+            <span>{allPendingDocsCount} {t.admin.documents.pendingCount}</span>
           </div>
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
             <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>128 {t.admin.documents.completedCount}</span>
+            <span>{allApprovedDocsCount} {t.admin.documents.completedCount}</span>
           </div>
         </div>
       </div>

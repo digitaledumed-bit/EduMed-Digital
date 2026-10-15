@@ -1,7 +1,34 @@
 export type Language = 'es' | 'en';
 export type Theme = 'light' | 'dark';
 export type FontSize = 'normal' | 'large' | 'xlarge';
-export type UserRole = 'public' | 'admin' | 'guardian' | 'student';
+export type UserRole = 'public' | 'admin' | 'guardian' | 'student' | 'teacher';
+
+export interface TeacherCourseAssignment {
+  id: string;
+  teacherId: string;
+  courseName: string;
+  grade: string;
+  subject: string;
+  shift: string;
+  academicYear: string;
+  studentCount?: number;
+}
+
+export interface DocumentAuditEvent {
+  id: string;
+  documentId: string;
+  documentName: string;
+  studentId: string;
+  studentName: string;
+  action: 'create' | 'upload' | 'view' | 'download' | 'approve' | 'reject' | 'delete';
+  actionLabel: string;
+  actionLabelEn: string;
+  userRole: UserRole;
+  userName: string;
+  userEmail: string;
+  timestamp: string;
+  details?: string;
+}
 
 export type EnrollmentStatus = 'pending' | 'in_review' | 'approved' | 'rejected' | 'completed';
 export type DocumentStatus = 'pending' | 'in_review' | 'approved' | 'rejected';

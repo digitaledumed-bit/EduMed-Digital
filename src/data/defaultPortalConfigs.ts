@@ -71,27 +71,6 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         enabled: true,
         order: 6,
         iconName: 'FolderKanban'
-      },
-      {
-        id: 'portal-config',
-        label: 'Configuración de Portales',
-        labelEn: 'Portal Configuration',
-        description: 'Personalización de módulos, widgets y permisos por rol.',
-        descriptionEn: 'Customization of modules, widgets, and permissions per role.',
-        enabled: true,
-        order: 7,
-        iconName: 'Sliders',
-        isCore: true
-      },
-      {
-        id: 'settings',
-        label: 'Configuración Institucional',
-        labelEn: 'School Settings',
-        description: 'Parámetros del colegio, escudo, rectoría y ciclo lectivo.',
-        descriptionEn: 'School parameters, crest, leadership, and school cycle.',
-        enabled: true,
-        order: 8,
-        iconName: 'Settings'
       }
     ],
     widgets: [

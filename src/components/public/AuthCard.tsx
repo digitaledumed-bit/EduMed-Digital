@@ -88,9 +88,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   
-  // Register form type selector: standard (families/students) vs staff (teachers/administrators)
-  const [regFormType, setRegFormType] = useState<'standard' | 'staff'>('standard');
-
   // Register form state (Standard: Acudiente / Estudiante)
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
@@ -111,22 +108,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       setRegDocType('CC');
     }
   }, [regRole, regDocType]);
-
-  // Dedicated Staff Register form state (Docente / Personal Administrativo)
-  const [staffName, setStaffName] = useState('');
-  const [staffRoleType, setStaffRoleType] = useState<'docente' | 'administrativo'>('docente');
-  const [staffDocType, setStaffDocType] = useState('CC');
-  const [staffDocNumber, setStaffDocNumber] = useState('');
-  const [staffEmail, setStaffEmail] = useState('');
-  const [staffPhone, setStaffPhone] = useState('');
-  const [staffSubject, setStaffSubject] = useState('Matemáticas');
-  const [staffPosition, setStaffPosition] = useState('Coordinador');
-  const [staffDepartment, setStaffDepartment] = useState('Básica Secundaria y Media');
-  const [staffInstitutionCode, setStaffInstitutionCode] = useState('');
-  const [staffPassword, setStaffPassword] = useState('');
-  const [staffConfirmPassword, setStaffConfirmPassword] = useState('');
-  const [showStaffPassword, setShowStaffPassword] = useState(false);
-  const [staffAcceptTerms, setStaffAcceptTerms] = useState(true);
 
   // Recovery form state
   const [recoveryStep, setRecoveryStep] = useState<'request' | 'verify' | 'new-password'>('request');
@@ -155,17 +136,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     email?: string;
     phone?: string;
     guardianCode?: string;
-    password?: string;
-    confirmPassword?: string;
-    terms?: string;
-  }>({});
-
-  const [staffFieldErrors, setStaffFieldErrors] = useState<{
-    name?: string;
-    docNumber?: string;
-    email?: string;
-    phone?: string;
-    code?: string;
     password?: string;
     confirmPassword?: string;
     terms?: string;
@@ -223,13 +193,11 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     setSuccessMsg(null);
     setLoginFieldErrors({});
     setRegFieldErrors({});
-    setStaffFieldErrors({});
     setRecoveryFieldErrors({});
   };
 
   // Check in real-time if the email being registered already exists in the platform
   const isRegEmailTaken = regEmail.trim().length > 3 && regEmail.includes('@') && isEmailRegistered(regEmail.trim().toLowerCase());
-  const isStaffEmailTaken = staffEmail.trim().length > 3 && staffEmail.includes('@') && isEmailRegistered(staffEmail.trim().toLowerCase());
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -364,117 +332,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         }
       } else {
         setSuccessMsg(language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!');
-        if (onSuccess) onSuccess();
-      }
-    }, 450);
-  };
-
-  const handleStaffRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    clearAllErrors();
-    const newErrors: {
-      name?: string;
-      docNumber?: string;
-      email?: string;
-      phone?: string;
-      code?: string;
-      password?: string;
-      confirmPassword?: string;
-      terms?: string;
-    } = {};
-
-    if (!staffName.trim()) {
-      newErrors.name = language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.';
-    }
-
-    const docDigits = staffDocNumber.replace(/\D/g, '');
-    if (!staffDocNumber.trim()) {
-      newErrors.docNumber = language === 'es' ? 'Ingrese su número de documento de identidad.' : 'Please enter your document number.';
-    } else if (docDigits.length < 4) {
-      newErrors.docNumber = language === 'es' ? 'El documento debe contener al menos 4 números.' : 'Document must have at least 4 numbers.';
-    }
-
-    const cleanStaffEmail = staffEmail.trim().toLowerCase();
-    if (!cleanStaffEmail || !cleanStaffEmail.includes('@')) {
-      newErrors.email = language === 'es' ? 'Ingrese una dirección de correo institucional válida.' : 'Please enter a valid institutional email address.';
-    } else if (isEmailRegistered(cleanStaffEmail)) {
-      newErrors.email = language === 'es' 
-        ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado.' 
-        : 'This email is already registered in the system. Registration with a previously used email is not permitted.';
-    }
-
-    if (!staffPhone.trim()) {
-      newErrors.phone = language === 'es' ? 'Ingrese su número de celular para notificaciones y seguridad.' : 'Please enter your mobile phone number.';
-    }
-
-    // Código de habilitación institucional: 4 dígitos numéricos que deben ser los 4 primeros números de su documento
-    const expectedCode = docDigits.slice(0, 4);
-    const cleanCode = staffInstitutionCode.trim().replace(/\D/g, '');
-
-    if (!cleanCode) {
-      newErrors.code = language === 'es' 
-        ? 'Ingrese el código de habilitación de 4 dígitos (los 4 primeros números de su documento).' 
-        : 'Please enter the 4-digit authorization code (first 4 numbers of your document).';
-    } else if (cleanCode.length !== 4) {
-      newErrors.code = language === 'es' 
-        ? 'El código de habilitación debe tener exactamente 4 dígitos.' 
-        : 'The authorization code must have exactly 4 digits.';
-    } else if (docDigits.length < 4) {
-      newErrors.code = language === 'es' 
-        ? 'Ingrese primero un documento con al menos 4 números para validar el código.' 
-        : 'Enter a valid document with at least 4 numbers first.';
-    } else if (cleanCode !== expectedCode) {
-      newErrors.code = language === 'es' 
-        ? `El código no coincide con su documento. Deben ser los 4 primeros números de su documento (${expectedCode}).` 
-        : `The code does not match your document. It must be the first 4 numbers of your document (${expectedCode}).`;
-    }
-
-    if (!staffPassword || staffPassword.length < 5) {
-      newErrors.password = language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.';
-    }
-
-    if (staffPassword !== staffConfirmPassword) {
-      newErrors.confirmPassword = language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.';
-    }
-
-    if (!staffAcceptTerms) {
-      newErrors.terms = language === 'es' ? 'Debe aceptar los términos de custodia de información y normatividad docente.' : 'You must accept the terms.';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setStaffFieldErrors(newErrors);
-      return;
-    }
-
-    setIsLoading(true);
-    setTimeout(() => {
-      const fullPosition = staffRoleType === 'docente' 
-        ? `Docente de ${staffSubject}` 
-        : staffPosition;
-
-      const res = register({
-        name: staffName,
-        email: cleanStaffEmail,
-        password: staffPassword,
-        role: 'admin',
-        documentNumber: `${staffDocType} ${staffDocNumber}`,
-        phone: staffPhone,
-        position: fullPosition,
-        department: staffDepartment,
-        institutionCode: cleanCode
-      });
-      setIsLoading(false);
-
-      if (!res.success) {
-        if (res.message && res.message.toLowerCase().includes('correo')) {
-          setStaffFieldErrors({ email: res.message });
-        } else if (res.message && res.message.toLowerCase().includes('código')) {
-          setStaffFieldErrors({ code: res.message });
-        } else {
-          setErrorMsg(res.message || (language === 'es' ? 'Error al registrar funcionario institucional.' : 'Registration failed.'));
-        }
-      } else {
-        setSuccessMsg(language === 'es' ? '¡Cuenta docente/administrativa vinculada con éxito! Bienvenido al portal directivo.' : 'Institutional account created successfully!');
         if (onSuccess) onSuccess();
       }
     }, 450);
@@ -1186,48 +1043,23 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         /* TAB 2: CREAR UNA CUENTA */
         <div className="mt-5 space-y-4">
           
-          {/* Form Type Selector: Standard (Familias/Estudiantes) vs Staff (Docentes/Administrativos) */}
-          <div className="p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl grid grid-cols-2 gap-1 border border-slate-200 dark:border-slate-750">
-            <button
-              type="button"
-              id="reg-form-type-standard"
-              onClick={() => {
-                setRegFormType('standard');
-                clearAllErrors();
-              }}
-              className={`py-2 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                regFormType === 'standard'
-                  ? 'bg-white dark:bg-slate-700 text-teal-800 dark:text-teal-200 shadow-sm border border-slate-200 dark:border-slate-600'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Users className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
-              <span className="truncate">{language === 'es' ? 'Familias y Estudiantes' : 'Families & Students'}</span>
-            </button>
-
-            <button
-              type="button"
-              id="reg-form-type-staff"
-              onClick={() => {
-                setRegFormType('staff');
-                clearAllErrors();
-              }}
-              className={`py-2 px-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                regFormType === 'staff'
-                  ? 'bg-white dark:bg-slate-700 text-amber-800 dark:text-amber-200 shadow-sm border border-amber-300 dark:border-amber-700'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Briefcase className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <span className="truncate">{language === 'es' ? 'Docente / Directivo' : 'Teacher / Staff'}</span>
-              <span className="text-[9px] px-1 py-0.5 rounded bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 uppercase font-black shrink-0">
-                {language === 'es' ? 'Oficial' : 'Official'}
+          {/* Institutional Guidance Notice for Teachers and Families */}
+          <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-left space-y-1">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                {language === "es" ? "Registro de Acudientes y Estudiantes" : "Guardians & Students Registration"}
               </span>
-            </button>
+              <span className="text-[10px] font-black uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
+                {language === "es" ? "EduMed Oficial" : "Official"}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+              {language === "es"
+                ? "Las cuentas para docentes y directivos son asignadas y habilitadas formalmente por la administración escolar de la I.E. Félix Henao Botero (sin registro directo). Si es docente, inicie sesión con sus credenciales institucionales o acérquese a Secretaría."
+                : "Faculty accounts are managed exclusively by the school administration. Please sign in with your assigned institutional credentials."}
+            </p>
           </div>
-
-          {regFormType === 'standard' ? (
-            /* FORMULARIO 1: FAMILIAS Y ESTUDIANTES */
             <form onSubmit={handleRegister} className="space-y-3.5 text-left">
               
               {/* User Type Choice (Caja desplegable) */}
@@ -1612,456 +1444,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 )}
               </button>
             </form>
-          ) : (
-            /* FORMULARIO 2: FORMULARIO DIFERENCIADO PARA DOCENTES Y PERSONAL ADMINISTRATIVO */
-            <form onSubmit={handleStaffRegister} className="space-y-3.5 text-left animate-in fade-in duration-200">
-              
-              {/* Institutional Notice Card */}
-              <div className="p-3 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/70 text-amber-900 dark:text-amber-200">
-                <div className="flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-amber-700 dark:text-amber-400 shrink-0" />
-                  <span className="text-xs font-extrabold uppercase tracking-wide">
-                    {language === 'es' ? 'Registro Oficial de Funcionarios' : 'Official Staff Registration'}
-                  </span>
-                </div>
-                <p className="text-[11px] text-amber-800/90 dark:text-amber-300/80 mt-1 leading-relaxed">
-                  {language === 'es'
-                    ? 'Formulario exclusivo para docentes de cátedra, coordinadores y personal administrativo de la I.E. Félix Henao Botero.'
-                    : 'Exclusive portal for educators, coordinators, and administrative officers.'}
-                </p>
-              </div>
 
-              {/* Staff Role Type Choice (Docente vs Administrativo) */}
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  id="staff-type-docente-btn"
-                  onClick={() => setStaffRoleType('docente')}
-                  className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                    staffRoleType === 'docente'
-                      ? 'bg-teal-50 dark:bg-teal-950/50 border-teal-500 text-teal-800 dark:text-teal-200 shadow-xs'
-                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  <GraduationCap className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                  <span>{language === 'es' ? '👨‍🏫 Docente de Aula' : 'Classroom Teacher'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  id="staff-type-admin-btn"
-                  onClick={() => setStaffRoleType('administrativo')}
-                  className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all cursor-pointer ${
-                    staffRoleType === 'administrativo'
-                      ? 'bg-amber-50 dark:bg-amber-950/50 border-amber-500 text-amber-800 dark:text-amber-200 shadow-xs'
-                      : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                  <span>{language === 'es' ? '🏛️ Administrativo / Directivo' : 'Administrative / Leader'}</span>
-                </button>
-              </div>
-
-              {/* Full Name */}
-              <div>
-                <label 
-                  htmlFor="staff-name-input"
-                  className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                >
-                  {language === 'es' ? 'Nombres y Apellidos Completos del Funcionario' : 'Full Name'} *
-                </label>
-                <input
-                  id="staff-name-input"
-                  type="text"
-                  required
-                  placeholder={language === 'es' ? 'Nombres y apellidos completos' : 'Full name'}
-                  value={staffName}
-                  onChange={(e) => {
-                    setStaffName(e.target.value);
-                    if (staffFieldErrors.name) setStaffFieldErrors(prev => ({ ...prev, name: undefined }));
-                  }}
-                  className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                    staffFieldErrors.name
-                      ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                      : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
-                  }`}
-                />
-                <FieldError message={staffFieldErrors.name} />
-              </div>
-
-              {/* Document Type & Number */}
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <label 
-                    htmlFor="staff-doctype-select"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                  >
-                    Tipo
-                  </label>
-                  <select
-                    id="staff-doctype-select"
-                    value={staffDocType}
-                    onChange={(e) => setStaffDocType(e.target.value)}
-                    className="w-full px-2 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                  >
-                    <option value="CC">C.C.</option>
-                    <option value="CE">C.E.</option>
-                  </select>
-                </div>
-
-                <div className="col-span-2">
-                  <label 
-                    htmlFor="staff-docnum-input"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                  >
-                    Cédula / Documento Oficial *
-                  </label>
-                  <input
-                    id="staff-docnum-input"
-                    type="text"
-                    required
-                    placeholder={language === 'es' ? 'Número de documento de identidad' : 'Document number'}
-                    value={staffDocNumber}
-                    onChange={(e) => {
-                      setStaffDocNumber(e.target.value);
-                      if (staffFieldErrors.docNumber) setStaffFieldErrors(prev => ({ ...prev, docNumber: undefined }));
-                    }}
-                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      staffFieldErrors.docNumber
-                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
-                    }`}
-                  />
-                  <FieldError message={staffFieldErrors.docNumber} />
-                </div>
-              </div>
-
-              {/* Conditional Role-Specific Fields */}
-              {staffRoleType === 'docente' ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div>
-                    <label 
-                      htmlFor="staff-subject-select"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                    >
-                      {language === 'es' ? 'Área / Asignatura Principal' : 'Primary Subject'} *
-                    </label>
-                    <select
-                      id="staff-subject-select"
-                      value={staffSubject}
-                      onChange={(e) => setStaffSubject(e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                    >
-                      <option value="Matemáticas">Matemáticas y Geometría</option>
-                      <option value="Ciencias Naturales y Química">Ciencias Naturales / Biología / Química</option>
-                      <option value="Lengua Castellana">Lengua Castellana y Humanidades</option>
-                      <option value="Ciencias Sociales e Historia">Ciencias Sociales e Historia</option>
-                      <option value="Inglés">Inglés / Idioma Extranjero</option>
-                      <option value="Tecnología e Informática">Tecnología e Informática</option>
-                      <option value="Educación Física">Educación Física y Deportes</option>
-                      <option value="Educación Artística">Educación Artística</option>
-                      <option value="Filosofía y Ética">Filosofía, Ética y Valores</option>
-                      <option value="Básica Primaria Integral">Básica Primaria Integral</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label 
-                      htmlFor="staff-department-select"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                    >
-                      {language === 'es' ? 'Nivel Académico' : 'Academic Level'} *
-                    </label>
-                    <select
-                      id="staff-department-select"
-                      value={staffDepartment}
-                      onChange={(e) => setStaffDepartment(e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                    >
-                      <option value="Básica Secundaria y Media">Básica Secundaria y Media (Grados 6° a 11°)</option>
-                      <option value="Básica Primaria">Básica Primaria (Grados 1° a 5°)</option>
-                      <option value="Transición y Preescolar">Transición y Preescolar</option>
-                    </select>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <div>
-                    <label 
-                      htmlFor="staff-position-select"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                    >
-                      {language === 'es' ? 'Cargo Institucional' : 'Institutional Position'} *
-                    </label>
-                    <select
-                      id="staff-position-select"
-                      value={staffPosition}
-                      onChange={(e) => setStaffPosition(e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                    >
-                      <option value="Coordinador">{language === 'es' ? 'Coordinador' : 'Coordinator'}</option>
-                      <option value="Rector">{language === 'es' ? 'Rector' : 'Rector'}</option>
-                      <option value="Secretaria">{language === 'es' ? 'Secretaria' : 'Secretary'}</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label 
-                      htmlFor="staff-admin-dept-select"
-                      className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                    >
-                      {language === 'es' ? 'Dependencia / Área' : 'Department'} *
-                    </label>
-                    <select
-                      id="staff-admin-dept-select"
-                      value={staffDepartment}
-                      onChange={(e) => setStaffDepartment(e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 cursor-pointer"
-                    >
-                      <option value="Gestión Directiva">Gestión Directiva</option>
-                      <option value="Secretaría y Admisiones">Secretaría y Registro</option>
-                      <option value="Convivencia y Bienestar">Convivencia y Bienestar</option>
-                      <option value="Sistemas y Tecnología">Sistemas y Tecnología</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Institutional Email & Phone */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label 
-                    htmlFor="staff-email-input"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                  >
-                    {language === 'es' ? 'Correo Institucional / Laboral *' : 'Institutional / Work Email *'}
-                  </label>
-                  <input
-                    id="staff-email-input"
-                    type="email"
-                    required
-                    placeholder={language === 'es' ? 'Correo institucional o laboral' : 'Institutional email'}
-                    value={staffEmail}
-                    onChange={(e) => {
-                      setStaffEmail(e.target.value);
-                      if (staffFieldErrors.email) setStaffFieldErrors(prev => ({ ...prev, email: undefined }));
-                      if (errorMsg) setErrorMsg(null);
-                    }}
-                    className={`w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      isStaffEmailTaken || staffFieldErrors.email
-                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/50 dark:bg-rose-950/20'
-                        : 'border-slate-200 dark:border-slate-700 focus:ring-amber-500'
-                    }`}
-                  />
-                  <FieldError message={staffFieldErrors.email} />
-                  {isStaffEmailTaken && (
-                    <div className="mt-1.5 p-2 rounded-xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800/80 text-rose-800 dark:text-rose-200 text-left animate-in fade-in duration-150 shadow-xs">
-                      <div className="flex items-center gap-1.5 font-bold text-[11px] text-rose-700 dark:text-rose-300">
-                        <AlertCircle className="w-3.5 h-3.5 shrink-0 text-rose-600" />
-                        <span>{language === 'es' ? 'Este correo ya se encuentra registrado' : 'Email already registered'}</span>
-                      </div>
-                      <p className="text-[10px] text-slate-600 dark:text-slate-300 mt-0.5 leading-tight">
-                        {language === 'es' 
-                          ? 'No está permitido registrarse con un correo que ya se haya utilizado.' 
-                          : 'Registration with an existing email is not permitted.'}
-                      </p>
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setLoginIdentifier(staffEmail.trim().toLowerCase());
-                            setMode('login');
-                            clearAllErrors();
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-[10px] shadow-xs cursor-pointer transition-colors"
-                        >
-                          {language === 'es' ? 'Iniciar Sesión' : 'Log In'}
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label 
-                    htmlFor="staff-phone-input"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                  >
-                    {language === 'es' ? 'Celular de Contacto *' : 'Cell Phone *'}
-                  </label>
-                  <input
-                    id="staff-phone-input"
-                    type="tel"
-                    required
-                    placeholder={language === 'es' ? 'Número de celular de contacto' : 'Cell phone number'}
-                    value={staffPhone}
-                    onChange={(e) => {
-                      setStaffPhone(e.target.value);
-                      if (staffFieldErrors.phone) setStaffFieldErrors(prev => ({ ...prev, phone: undefined }));
-                    }}
-                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      staffFieldErrors.phone
-                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
-                    }`}
-                  />
-                  <FieldError message={staffFieldErrors.phone} />
-                </div>
-              </div>
-
-              {/* Institutional Authorization Secret Code */}
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/70 border border-slate-200 dark:border-slate-700">
-                <div className="flex items-center justify-between mb-1">
-                  <label 
-                    htmlFor="staff-code-input"
-                    className="block text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5"
-                  >
-                    <KeyRound className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                    <span>{language === 'es' ? 'Código de Habilitación Institucional (4 dígitos) *' : 'Institutional Auth Code (4 digits) *'}</span>
-                  </label>
-                </div>
-                <input
-                  id="staff-code-input"
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={4}
-                  required
-                  placeholder={language === 'es' ? '4 primeros números de su documento' : 'First 4 digits of ID document'}
-                  value={staffInstitutionCode}
-                  onChange={(e) => {
-                    const numeric = e.target.value.replace(/\D/g, '').slice(0, 4);
-                    setStaffInstitutionCode(numeric);
-                    if (staffFieldErrors.code) setStaffFieldErrors(prev => ({ ...prev, code: undefined }));
-                  }}
-                  className={`w-full px-3 py-2 text-xs sm:text-sm font-mono tracking-widest text-center bg-white dark:bg-slate-900 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                    staffFieldErrors.code
-                      ? 'border border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                      : 'border border-slate-300 dark:border-slate-600 focus:ring-amber-500'
-                  }`}
-                />
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
-                  {language === 'es' 
-                    ? 'Código de habilitación: 4 dígitos correspondientes a los 4 primeros números de su documento de identidad.' 
-                    : '4-digit authorization code matching the first 4 numbers of your identity document.'}
-                </p>
-                <FieldError message={staffFieldErrors.code} />
-              </div>
-
-              {/* Passwords */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <div>
-                  <label 
-                    htmlFor="staff-password-input"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                  >
-                    {language === 'es' ? 'Crear Contraseña Institucional *' : 'Create Password *'}
-                  </label>
-                  <input
-                    id="staff-password-input"
-                    type={showStaffPassword ? 'text' : 'password'}
-                    required
-                    placeholder={language === 'es' ? 'Contraseña institucional' : 'Password'}
-                    value={staffPassword}
-                    onChange={(e) => {
-                      setStaffPassword(e.target.value);
-                      if (staffFieldErrors.password) setStaffFieldErrors(prev => ({ ...prev, password: undefined }));
-                    }}
-                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      staffFieldErrors.password
-                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
-                    }`}
-                  />
-                  <FieldError message={staffFieldErrors.password} />
-                </div>
-
-                <div>
-                  <label 
-                    htmlFor="staff-confirm-password-input"
-                    className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
-                  >
-                    {language === 'es' ? 'Confirmar Contraseña *' : 'Confirm Password *'}
-                  </label>
-                  <input
-                    id="staff-confirm-password-input"
-                    type={showStaffPassword ? 'text' : 'password'}
-                    required
-                    placeholder={language === 'es' ? 'Confirmar contraseña institucional' : 'Confirm password'}
-                    value={staffConfirmPassword}
-                    onChange={(e) => {
-                      setStaffConfirmPassword(e.target.value);
-                      if (staffFieldErrors.confirmPassword) setStaffFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
-                    }}
-                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      staffFieldErrors.confirmPassword
-                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-amber-500'
-                    }`}
-                  />
-                  <FieldError message={staffFieldErrors.confirmPassword} />
-                </div>
-              </div>
-
-              {/* Toggle show password */}
-              <div className="flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setShowStaffPassword(!showStaffPassword)}
-                  className="text-[11px] text-amber-700 dark:text-amber-400 flex items-center gap-1 font-medium cursor-pointer"
-                >
-                  {showStaffPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                  <span>{showStaffPassword ? 'Ocultar contraseñas' : 'Ver contraseñas'}</span>
-                </button>
-              </div>
-
-              {/* Official Custody Terms Checkbox */}
-              <div className="space-y-1 pt-1">
-                <div className="flex items-start">
-                  <input
-                    id="staff-accept-terms-checkbox"
-                    type="checkbox"
-                    checked={staffAcceptTerms}
-                    onChange={(e) => {
-                      setStaffAcceptTerms(e.target.checked);
-                      if (staffFieldErrors.terms) setStaffFieldErrors(prev => ({ ...prev, terms: undefined }));
-                    }}
-                    className="w-4 h-4 mt-0.5 rounded text-amber-600 focus:ring-amber-500 border-slate-300 dark:border-slate-700 cursor-pointer"
-                  />
-                  <label htmlFor="staff-accept-terms-checkbox" className="ml-2 text-[11px] text-slate-600 dark:text-slate-400 leading-tight">
-                    {language === 'es'
-                      ? 'Declaro mi vinculación institucional con la I.E. Félix Henao Botero y acepto el deber de confidencialidad y custodia de calificaciones e información académica (Decreto 1290 / Ley 1581).'
-                      : 'I declare official affiliation with the institution and accept confidentiality requirements.'}
-                  </label>
-                </div>
-                <FieldError message={staffFieldErrors.terms} />
-              </div>
-
-              {/* Submit Staff register button */}
-              <button
-                id="btn-submit-staff-register"
-                type="submit"
-                disabled={isLoading || isStaffEmailTaken}
-                className="w-full py-3 px-4 rounded-xl bg-amber-600 hover:bg-amber-700 dark:bg-amber-600 dark:hover:bg-amber-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-amber-600/20 hover:shadow-amber-600/30 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : isStaffEmailTaken ? (
-                  <>
-                    <AlertCircle className="w-4 h-4 text-rose-200" />
-                    <span>{language === 'es' ? 'Correo ya Utilizado - Registro no Permitido' : 'Email Already Used - Registration Not Allowed'}</span>
-                  </>
-                ) : (
-                  <>
-                    <BadgeCheck className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Vincular y Crear Cuenta Institucional' : 'Link & Create Staff Account'}</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
-                  </>
-                )}
-              </button>
-            </form>
-          )}
-
-          {/* Switch to Login link */}
+            {/* Switch to Login link */}
           <div className="text-center pt-2">
             <p className="text-xs text-slate-600 dark:text-slate-400">
               {language === 'es' ? '¿Ya tiene una cuenta creada?' : 'Already have an account?'}{' '}

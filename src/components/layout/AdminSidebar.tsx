@@ -41,7 +41,7 @@ export const AdminSidebar: React.FC = () => {
 
   const pendingDocsCount = documents.filter(d => d.status === 'in_review' || d.status === 'pending').length;
 
-  const role = (currentUser?.role as 'admin' | 'guardian' | 'student') || 'admin';
+  const role = (currentUser?.role as 'admin' | 'guardian' | 'student' | 'teacher') || 'admin';
 
   // Icon lookup for dynamic role modules
   const iconLookup: Record<string, React.ElementType> = {
@@ -51,8 +51,6 @@ export const AdminSidebar: React.FC = () => {
     parents: UserCheck,
     'link-guardian': UserCog,
     documents: FolderKanban,
-    'portal-config': Sliders,
-    settings: Settings,
     'student-profile': GraduationCap,
     status: Search,
     wizard: FilePlus,
@@ -63,10 +61,34 @@ export const AdminSidebar: React.FC = () => {
 
   // Build role-specific menu items dynamically respecting the administrator's configuration and order
   const getMenuItems = () => {
-    const roleConfig = portalConfigs[role];
+    // Dedicated Teacher Navigation: strictly limited to authorized scope
+    if (role === 'teacher') {
+      return [
+        {
+          id: 'dashboard',
+          label: language === 'es' ? 'Portal Docente' : 'Teacher Portal',
+          icon: LayoutDashboard,
+          badge: null
+        },
+        {
+          id: 'students',
+          label: language === 'es' ? 'Mis Estudiantes' : 'My Students',
+          icon: Users,
+          badge: null
+        },
+        {
+          id: 'documents',
+          label: language === 'es' ? 'Documentos de Área' : 'Course Documents',
+          icon: FolderKanban,
+          badge: null
+        }
+      ];
+    }
+
+    const roleConfig = portalConfigs[role as 'admin' | 'guardian' | 'student'];
     if (roleConfig && roleConfig.modules) {
       return roleConfig.modules
-        .filter(m => m.enabled)
+        .filter(m => m.enabled && m.id !== 'portal-config' && m.id !== 'settings')
         .map(m => {
           let badge: string | null = null;
           if (m.id === 'documents' && pendingDocsCount > 0) {
@@ -107,6 +129,13 @@ export const AdminSidebar: React.FC = () => {
         title: 'EduMed',
         accent: language === 'es' ? 'Alumnos' : 'Students',
         subtitle: language === 'es' ? 'Portal del Estudiante' : 'Student Portal'
+      };
+    }
+    if (role === 'teacher') {
+      return {
+        title: 'EduMed',
+        accent: 'Docentes',
+        subtitle: language === 'es' ? 'Portal Docente' : 'Faculty Portal'
       };
     }
     return {
@@ -237,7 +266,7 @@ export const AdminSidebar: React.FC = () => {
       <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
         <div className="flex items-center justify-between">
           <div 
-            onClick={() => setActiveTab(currentUser?.role === 'student' ? 'student-profile' : 'settings')}
+            onClick={() => setActiveTab(currentUser?.role === 'student' ? 'student-profile' : 'dashboard')}
             className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
           >
             {currentUser?.role === 'student' ? (

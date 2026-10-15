@@ -1194,18 +1194,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
     }
 
-    if (userData.role === 'admin') {
-      const docDigits = (userData.documentNumber || '').replace(/\D/g, '');
-      const expectedCode = docDigits.slice(0, 4);
-      const cleanCode = (userData.institutionCode || '').replace(/\D/g, '');
-      if (cleanCode.length !== 4 || cleanCode !== expectedCode) {
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'El código de habilitación debe tener 4 dígitos y corresponder a los primeros 4 números de su documento.'
-            : 'The authorization code must be 4 digits matching the first 4 numbers of your document.'
-        };
-      }
+    // Strict requirement: Teachers and administrative personnel cannot register directly
+    if (userData.role === 'teacher' || (userData.role as string) === 'docente' || userData.role === 'admin') {
+      return {
+        success: false,
+        message: language === 'es'
+          ? 'El registro directo de docentes o directivos no está permitido. El acceso debe ser asignado y autorizado previamente por la administración de la I.E. Félix Henao Botero.'
+          : 'Direct registration for teachers or staff is not permitted. Access must be assigned by the school administration.'
+      };
     }
 
     if (userData.role === 'guardian') {
