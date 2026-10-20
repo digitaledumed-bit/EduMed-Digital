@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   X, 
@@ -6,97 +6,74 @@ import {
   Phone, 
   Mail, 
   MapPin, 
-  Check, 
-  AlertCircle, 
-  Save, 
-  Sparkles,
-  ShieldCheck
+  Lock, 
+  ShieldCheck,
+  GraduationCap,
+  Clock,
+  Sun,
+  AlertCircle,
+  Camera,
+  CheckCircle2
 } from 'lucide-react';
 import { getDefaultAvatarByGender } from '../../utils/avatarUtils';
 
 interface StudentEditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onProfileUpdated?: () => void;
+  onOpenAvatarModal?: () => void;
 }
 
 export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = ({
   isOpen,
   onClose,
-  onProfileUpdated
+  onOpenAvatarModal
 }) => {
-  const { currentUser, updateStudentProfile, language } = useApp();
-
-  const [fullName, setFullName] = useState(currentUser?.name || '');
-  const [phone, setPhone] = useState(currentUser?.phone || '');
-  const [email, setEmail] = useState(currentUser?.email || '');
-  const [gender, setGender] = useState<'Masculino' | 'Femenino' | 'Neutro'>(
-    (currentUser?.gender as any) || 'Masculino'
-  );
-  const [address, setAddress] = useState('Calle 50 # 40-20');
-  const [neighborhood, setNeighborhood] = useState('Boston');
-  const [feedback, setFeedback] = useState<string | null>(null);
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  // Sync when opened
-  React.useEffect(() => {
-    if (isOpen && currentUser) {
-      setFullName(currentUser.name || '');
-      setPhone(currentUser.phone || '');
-      setEmail(currentUser.email || '');
-      setGender((currentUser.gender as any) || 'Masculino');
-      setFeedback(null);
-      setIsSuccess(false);
-    }
-  }, [isOpen, currentUser]);
+  const { currentUser, language, students } = useApp();
+  const isEs = language === 'es';
 
   if (!isOpen || !currentUser) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!fullName.trim() || fullName.trim().length < 3) {
-      setFeedback(language === 'es' ? 'Por favor ingrese un nombre completo válido.' : 'Please enter a valid full name.');
-      return;
-    }
-
-    if (updateStudentProfile) {
-      updateStudentProfile({
-        name: fullName.trim(),
-        phone: phone.trim(),
-        email: email.trim(),
-        gender: gender,
-        address: address.trim(),
-        neighborhood: neighborhood.trim()
-      });
-    }
-
-    setIsSuccess(true);
-    setFeedback(language === 'es' ? '¡Perfil actualizado con éxito!' : 'Profile updated successfully!');
-    if (onProfileUpdated) onProfileUpdated();
-
-    setTimeout(() => {
-      onClose();
-    }, 800);
+  // Find linked student record if available
+  const student = students.find(
+    s => s.id === currentUser.id ||
+         (currentUser.documentNumber && s.documentNumber === currentUser.documentNumber) ||
+         (currentUser.email && s.email?.toLowerCase() === currentUser.email.toLowerCase()) ||
+         (currentUser.name && s.fullName.toLowerCase().includes(currentUser.name.toLowerCase()))
+  ) || {
+    id: currentUser.id || 'std-current',
+    fullName: currentUser.name || 'Estudiante EduMed',
+    documentType: 'TI',
+    documentNumber: currentUser.documentNumber || '1035982147',
+    gender: currentUser.gender || 'Masculino',
+    grade: '10°A',
+    shift: 'Mañana',
+    birthDate: '12/04/2008',
+    phone: currentUser.phone || '315 987 6543',
+    email: currentUser.email || 'estudiante@edumed.edu.co',
+    address: 'Calle 45 # 12-34',
+    neighborhood: 'Boston'
   };
 
+  const currentAvatar = currentUser.avatarUrl || getDefaultAvatarByGender(student.gender);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/80 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
       <div 
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 md:p-7 shadow-2xl relative text-slate-900 dark:text-white my-auto"
+        className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 sm:p-7 shadow-2xl relative text-slate-900 dark:text-white my-auto space-y-5"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center">
-              <User className="w-5 h-5 text-teal-600 dark:text-teal-400" />
+              <ShieldCheck className="w-5 h-5 text-teal-600 dark:text-teal-400" />
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                {language === 'es' ? 'Editar Perfil del Estudiante' : 'Edit Student Profile'}
+                {isEs ? 'Ficha Oficial del Estudiante' : 'Official Student Record'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {language === 'es' ? 'Actualiza tu información personal y datos de contacto' : 'Update your personal and contact details'}
+                {isEs ? 'Expediente institucional verificado ante el SIMAT' : 'Institutional record verified in SIMAT'}
               </p>
             </div>
           </div>
@@ -109,126 +86,173 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
           </button>
         </div>
 
-        {feedback && (
-          <div className={`my-4 p-3 rounded-xl text-xs flex items-center gap-2 ${
-            isSuccess 
-              ? 'bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-bold' 
-              : 'bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-300'
-          }`}>
-            {isSuccess ? <Check className="w-4 h-4 text-emerald-600" /> : <AlertCircle className="w-4 h-4 text-rose-600" />}
-            <span>{feedback}</span>
+        {/* Protection Notice Banner: Non-editable info rule */}
+        <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/80 text-amber-900 dark:text-amber-200 text-xs space-y-1.5 shadow-2xs">
+          <div className="flex items-center gap-2 font-black text-amber-950 dark:text-amber-100">
+            <Lock className="w-4 h-4 text-amber-600 shrink-0" />
+            <span>{isEs ? 'Información Institucional Protegida (Solo Lectura)' : 'Protected Institutional Record (Read-Only)'}</span>
           </div>
-        )}
+          <p className="leading-relaxed text-amber-800 dark:text-amber-300 font-medium">
+            {isEs 
+              ? 'Por políticas institucionales y del Ministerio de Educación, la información personal, datos de matrícula, grado y jornada están protegidos contra modificaciones por parte del estudiante. Cualquier rectificación debe tramitarse presencialmente en Secretaría Académica.'
+              : 'By institutional policy, student personal data, grade, and shift cannot be modified by the student. Any corrections must be processed with the Academic Office.'}
+          </p>
+          <div className="pt-1 text-[11px] font-bold text-teal-700 dark:text-teal-300 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+            <span>{isEs ? 'Única acción autorizada: Cambiar tu foto de perfil.' : 'Only allowed action: Change your profile photo.'}</span>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 my-4">
-          {/* Full Name */}
+        {/* Student Identity Overview */}
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+          <img 
+            src={currentAvatar} 
+            alt={currentUser.name} 
+            className="w-16 h-16 rounded-2xl object-cover ring-2 ring-teal-500 shadow-md bg-white dark:bg-slate-700 shrink-0"
+          />
+          <div className="min-w-0 flex-1">
+            <h3 className="text-base font-black text-slate-900 dark:text-white truncate">
+              {currentUser.name}
+            </h3>
+            <p className="text-xs font-mono text-slate-500 dark:text-slate-400 mt-0.5">
+              {student.documentType} {student.documentNumber}
+            </p>
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <span className="px-2 py-0.5 rounded-lg bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 text-[11px] font-bold">
+                {isEs ? 'Grado:' : 'Grade:'} {student.grade}
+              </span>
+              <span className="px-2 py-0.5 rounded-lg bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 text-[11px] font-bold">
+                {isEs ? 'Jornada:' : 'Shift:'} {student.shift}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Read-Only Information Fields */}
+        <div className="space-y-3">
+          {/* Nombre completo */}
           <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {language === 'es' ? 'Nombre Completo del Estudiante:' : 'Full Student Name:'}
+            <label className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+              <span className="flex items-center gap-1">
+                <User className="w-3.5 h-3.5 text-slate-400" />
+                {isEs ? 'Nombre Completo del Estudiante:' : 'Full Student Name:'}
+              </span>
+              <span className="text-[10px] text-slate-400 font-normal flex items-center gap-0.5">
+                <Lock className="w-2.5 h-2.5" /> {isEs ? 'Bloqueado' : 'Locked'}
+              </span>
             </label>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-              placeholder="Ej: Juan David Pérez"
-              required
-            />
+            <div className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-semibold text-slate-800 dark:text-slate-200 cursor-not-allowed select-none">
+              {currentUser.name}
+            </div>
           </div>
 
-          {/* Gender */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-              {language === 'es' ? 'Sexo del Estudiante (Asigna tu avatar ilustrado inicial):' : 'Student Gender:'}
-            </label>
-            <select
-              value={gender}
-              onChange={(e) => setGender(e.target.value as any)}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white cursor-pointer"
-            >
-              <option value="Masculino">♂ {language === 'es' ? 'Masculino (Avatar ilustrado de hombre)' : 'Male (Illustrated boy avatar)'}</option>
-              <option value="Femenino">♀ {language === 'es' ? 'Femenino (Avatar ilustrada de mujer)' : 'Female (Illustrated girl avatar)'}</option>
-              <option value="Neutro">🎓 {language === 'es' ? 'No especificado / Neutro (Avatar ilustrado académico)' : 'Neutral / Unspecified'}</option>
-            </select>
-          </div>
-
-          {/* Phone & Email */}
+          {/* Grado y Jornada asignada */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {language === 'es' ? 'Teléfono de Contacto:' : 'Phone Number:'}
+              <label className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                <span className="flex items-center gap-1">
+                  <GraduationCap className="w-3.5 h-3.5 text-teal-600" />
+                  {isEs ? 'Grado Asignado:' : 'Assigned Grade:'}
+                </span>
+                <span className="text-[10px] text-slate-400 font-normal flex items-center gap-0.5">
+                  <Lock className="w-2.5 h-2.5" /> {isEs ? 'Bloqueado' : 'Locked'}
+                </span>
               </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-                placeholder="315 987 6543"
-              />
+              <div className="w-full px-3.5 py-2.5 rounded-xl bg-teal-50 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 text-sm font-black text-teal-900 dark:text-teal-200 cursor-not-allowed select-none">
+                {student.grade} (Educación Media)
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {language === 'es' ? 'Correo Electrónico:' : 'Email Address:'}
+              <label className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                <span className="flex items-center gap-1">
+                  <Sun className="w-3.5 h-3.5 text-amber-500" />
+                  {isEs ? 'Jornada Asignada:' : 'Assigned Shift:'}
+                </span>
+                <span className="text-[10px] text-slate-400 font-normal flex items-center gap-0.5">
+                  <Lock className="w-2.5 h-2.5" /> {isEs ? 'Bloqueado' : 'Locked'}
+                </span>
               </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-                placeholder="estudiante@edumed.edu.co"
-              />
+              <div className="w-full px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-sm font-black text-amber-900 dark:text-amber-200 cursor-not-allowed select-none">
+                {isEs ? `Jornada ${student.shift}` : `${student.shift} Shift`}
+              </div>
             </div>
           </div>
 
-          {/* Address & Neighborhood */}
+          {/* Contacto: Teléfono y Correo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {language === 'es' ? 'Dirección de Residencia:' : 'Home Address:'}
+              <label className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                <span className="flex items-center gap-1">
+                  <Phone className="w-3.5 h-3.5 text-slate-400" />
+                  {isEs ? 'Teléfono Registrado:' : 'Registered Phone:'}
+                </span>
+                <span className="text-[10px] text-slate-400 font-normal flex items-center gap-0.5">
+                  <Lock className="w-2.5 h-2.5" /> {isEs ? 'Bloqueado' : 'Locked'}
+                </span>
               </label>
-              <input
-                type="text"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-                placeholder="Calle 50 # 40-20"
-              />
+              <div className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-not-allowed select-none">
+                {currentUser.phone || student.phone || '315 987 6543'}
+              </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {language === 'es' ? 'Barrio / Comuna:' : 'Neighborhood:'}
+              <label className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+                <span className="flex items-center gap-1">
+                  <Mail className="w-3.5 h-3.5 text-slate-400" />
+                  {isEs ? 'Correo Institucional:' : 'School Email:'}
+                </span>
+                <span className="text-[10px] text-slate-400 font-normal flex items-center gap-0.5">
+                  <Lock className="w-2.5 h-2.5" /> {isEs ? 'Bloqueado' : 'Locked'}
+                </span>
               </label>
-              <input
-                type="text"
-                value={neighborhood}
-                onChange={(e) => setNeighborhood(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-                placeholder="Boston, Laureles..."
-              />
+              <div className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-not-allowed select-none truncate">
+                {currentUser.email || student.email || 'estudiante@edumed.edu.co'}
+              </div>
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3">
+          {/* Dirección */}
+          <div>
+            <label className="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                {isEs ? 'Dirección y Barrio:' : 'Address & Neighborhood:'}
+              </span>
+              <span className="text-[10px] text-slate-400 font-normal flex items-center gap-0.5">
+                <Lock className="w-2.5 h-2.5" /> {isEs ? 'Bloqueado' : 'Locked'}
+              </span>
+            </label>
+            <div className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 cursor-not-allowed select-none">
+              {student.address} • Barrio {student.neighborhood}
+            </div>
+          </div>
+        </div>
+
+        {/* Modal Action Buttons: Only Change Photo allowed or Close */}
+        <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="min-h-[44px] px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer flex items-center justify-center"
+          >
+            {isEs ? 'Cerrar Ficha' : 'Close Record'}
+          </button>
+
+          {onOpenAvatarModal && (
             <button
               type="button"
-              onClick={onClose}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer flex items-center justify-center"
+              onClick={() => {
+                onClose();
+                onOpenAvatarModal();
+              }}
+              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              {language === 'es' ? 'Cancelar' : 'Cancel'}
+              <Camera className="w-4 h-4" />
+              <span>{isEs ? 'Cambiar Foto de Perfil' : 'Change Profile Photo'}</span>
             </button>
-
-            <button
-              type="submit"
-              disabled={isSuccess}
-              className="min-h-[44px] px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-            >
-              <Save className="w-4 h-4" />
-              <span>{language === 'es' ? 'Guardar Cambios' : 'Save Changes'}</span>
-            </button>
-          </div>
-        </form>
+          )}
+        </div>
       </div>
     </div>
   );

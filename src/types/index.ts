@@ -113,6 +113,10 @@ export interface StudentDocument {
   status: DocumentStatus;
   rejectionReason?: string;
   fileUrl?: string;
+  fileType?: string;
+  fileData?: string;
+  uploadedBy?: string;
+  studentName?: string;
 }
 
 export interface ActivityItem {

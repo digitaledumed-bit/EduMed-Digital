@@ -24,8 +24,11 @@ import {
   Check,
   Shield,
   FileCheck,
-  Clock
+  Clock,
+  Eye
 } from 'lucide-react';
+import { DocumentViewerModal } from '../common/DocumentViewerModal';
+import { StudentDocument } from '../../types';
 
 export const EnrollmentWizard: React.FC = () => {
   const { t, language, submitNewEnrollment, setActiveTab, currentUser } = useApp();
@@ -112,6 +115,7 @@ export const EnrollmentWizard: React.FC = () => {
     required: boolean; 
     file: File | null; 
     fileName: string;
+    fileData?: string;
   }>([
     { id: 'doc-ti', name: 'Documento de Identidad del Estudiante', required: true, file: null, fileName: '' },
     { id: 'doc-cc-guard', name: 'Documento de Identidad del Acudiente', required: true, file: null, fileName: '' },
@@ -119,6 +123,8 @@ export const EnrollmentWizard: React.FC = () => {
     { id: 'doc-grades', name: 'Certificado de Calificaciones Año Anterior', required: true, file: null, fileName: '' },
     { id: 'doc-pazysalvo', name: 'Paz y Salvo Institución Anterior', required: false, file: null, fileName: '' }
   ]);
+
+  const [previewDoc, setPreviewDoc] = useState<StudentDocument | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -139,13 +145,20 @@ export const EnrollmentWizard: React.FC = () => {
   const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      setUploadedFiles((prev) =>
-        prev.map((item, i) =>
-          i === index
-            ? { ...item, file, fileName: file.name }
-            : item
-        )
-      );
+
+      // Read file to base64 Data URL for instant user verification
+      const reader = new FileReader();
+      reader.onload = () => {
+        const fileData = reader.result as string;
+        setUploadedFiles((prev) =>
+          prev.map((item, i) =>
+            i === index
+              ? { ...item, file, fileName: file.name, fileData }
+              : item
+          )
+        );
+      };
+      reader.readAsDataURL(file);
 
       // Clear document error
       if (errors[`file_${index}`] || errors['documents']) {
@@ -424,7 +437,7 @@ export const EnrollmentWizard: React.FC = () => {
           email: formData.guardianEmail,
           address: `${formData.guardianAddress}, ${formData.guardianNeighborhood}`
         },
-        documents: uploadedFiles.map(f => ({ name: f.name, file: f.file }))
+        documents: uploadedFiles.map(f => ({ name: f.name, file: f.file, fileData: f.fileData }))
       });
 
       setGeneratedRadicado(rad);
@@ -1332,17 +1345,44 @@ export const EnrollmentWizard: React.FC = () => {
 
                             <div className="flex items-center gap-2 self-start sm:self-auto">
                               {isAttached && (
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setUploadedFiles(prev => prev.map((item, i) => i === idx ? { ...item, file: null, fileName: '' } : item));
-                                  }}
-                                  className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-800 transition-colors flex items-center gap-1 cursor-pointer"
-                                  title={language === 'es' ? 'Eliminar archivo' : 'Remove file'}
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  <span>{language === 'es' ? 'Eliminar' : 'Remove'}</span>
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setPreviewDoc({
+                                        id: `wiz-${idx}`,
+                                        studentId: 'new',
+                                        studentName: `${formData.studentFirstNames} ${formData.studentLastNames}`.trim() || 'Estudiante Solicitante',
+                                        name: docItem.name,
+                                        category: docItem.name.toLowerCase().includes('médico') || docItem.name.toLowerCase().includes('eps') ? 'health' : 'identity',
+                                        fileName: docItem.fileName,
+                                        fileSize: docItem.file ? `${(docItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB',
+                                        fileType: docItem.file?.type || (docItem.fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+                                        fileData: docItem.fileData,
+                                        uploadDate: 'Hoy',
+                                        uploadedBy: `${formData.guardianFirstNames} ${formData.guardianLastNames}`.trim() || 'Acudiente Solicitante',
+                                        status: 'pending'
+                                      });
+                                    }}
+                                    className="px-3 py-2 rounded-xl text-xs font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/70 hover:bg-teal-100 dark:hover:bg-teal-900 border border-teal-200 dark:border-teal-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                                    title={language === 'es' ? 'Visualizar archivo montado' : 'Preview mounted file'}
+                                  >
+                                    <Eye className="w-3.5 h-3.5 text-teal-600" />
+                                    <span>{language === 'es' ? 'Visualizar' : 'Preview'}</span>
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setUploadedFiles(prev => prev.map((item, i) => i === idx ? { ...item, file: null, fileName: '', fileData: undefined } : item));
+                                    }}
+                                    className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-800 transition-colors flex items-center gap-1 cursor-pointer"
+                                    title={language === 'es' ? 'Eliminar archivo' : 'Remove file'}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    <span>{language === 'es' ? 'Eliminar' : 'Remove'}</span>
+                                  </button>
+                                </>
                               )}
 
                               <label className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs ${
@@ -1551,9 +1591,35 @@ export const EnrollmentWizard: React.FC = () => {
                               {(fItem.fileName.split('.').pop() || 'PDF').toUpperCase()} • {fItem.file ? `${(fItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB'}
                             </span>
                           </div>
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
-                            {language === 'es' ? 'Pendiente' : 'Pending'}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPreviewDoc({
+                                  id: `wiz-filed-${fIdx}`,
+                                  studentId: 'new',
+                                  studentName: `${formData.studentFirstNames} ${formData.studentLastNames}`.trim() || 'Estudiante Solicitante',
+                                  name: fItem.name,
+                                  category: 'identity',
+                                  fileName: fItem.fileName,
+                                  fileSize: fItem.file ? `${(fItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB',
+                                  fileType: fItem.file?.type || (fItem.fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
+                                  fileData: fItem.fileData,
+                                  uploadDate: 'Hoy',
+                                  uploadedBy: `${formData.guardianFirstNames} ${formData.guardianLastNames}`.trim() || 'Acudiente Solicitante',
+                                  status: 'pending'
+                                });
+                              }}
+                              className="px-2.5 py-1 rounded-lg text-xs font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 flex items-center gap-1 border border-teal-200 dark:border-teal-800 transition-colors cursor-pointer"
+                              title={language === 'es' ? 'Visualizar archivo' : 'Preview file'}
+                            >
+                              <Eye className="w-3.5 h-3.5 text-teal-600" />
+                              <span>{language === 'es' ? 'Ver' : 'Preview'}</span>
+                            </button>
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                              {language === 'es' ? 'Pendiente' : 'Pending'}
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1734,6 +1800,13 @@ export const EnrollmentWizard: React.FC = () => {
 
         </div>
 
+      {/* Universal Document Preview Modal */}
+      <DocumentViewerModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+        isAdmin={false}
+      />
       </div>
     </div>
   );

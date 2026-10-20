@@ -23,8 +23,11 @@ import {
   MapPin,
   HeartPulse,
   Clock,
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
+import { DocumentViewerModal } from '../common/DocumentViewerModal';
+import { StudentDocument } from '../../types';
 
 interface MandatoryEnrollmentGateProps {
   onEnrollmentCompleted: () => void;
@@ -80,12 +83,21 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
   });
 
   // Step 5: Required Documents
-  const [docs, setDocs] = useState([
+  const [docs, setDocs] = useState<{
+    id: string;
+    name: string;
+    required: boolean;
+    uploaded: boolean;
+    fileName: string;
+    fileData?: string;
+  }>([
     { id: 'doc-ti', name: 'Documento de Identidad del Estudiante (TI/CC/RC)', required: true, uploaded: true, fileName: 'Documento_Identidad_Estudiante.pdf' },
     { id: 'doc-guard', name: 'Documento de Identidad del Acudiente (CC/CE)', required: true, uploaded: true, fileName: 'Cedula_Acudiente_Padre.pdf' },
     { id: 'doc-eps', name: 'Certificado de Afiliación a EPS (Vigente)', required: true, uploaded: true, fileName: 'Certificado_EPS_Sura.pdf' },
     { id: 'doc-grades', name: 'Certificado de Notas o Calificaciones Año Anterior', required: true, uploaded: false, fileName: '' }
   ]);
+
+  const [previewDoc, setPreviewDoc] = useState<StudentDocument | null>(null);
 
   const stepConfig = ENROLLMENT_STEPS_CONFIG.find(s => s.stepNumber === currentStep) || ENROLLMENT_STEPS_CONFIG[0];
   const progressPercent = Math.round((currentStep / TOTAL_ENROLLMENT_STEPS) * 100);
@@ -114,7 +126,13 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
   const handleFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setDocs(prev => prev.map((d, i) => i === index ? { ...d, uploaded: true, fileName: file.name } : d));
+      const reader = new FileReader();
+      reader.onload = () => {
+        const fileData = reader.result as string;
+        setDocs(prev => prev.map((d, i) => i === index ? { ...d, uploaded: true, fileName: file.name, fileData } : d));
+      };
+      reader.readAsDataURL(file);
+
       if (errors[`doc_${index}`] || errors.documents) {
         setErrors(prev => {
           const next = { ...prev };
@@ -800,6 +818,32 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-center">
+                    {doc.uploaded && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewDoc({
+                            id: doc.id,
+                            studentId: currentUser?.id || 'std-current',
+                            studentName: `${formData.firstNames} ${formData.lastNames}`.trim() || currentUser?.name || 'Estudiante',
+                            name: doc.name,
+                            category: doc.name.toLowerCase().includes('médico') || doc.name.toLowerCase().includes('eps') ? 'health' : 'identity',
+                            fileName: doc.fileName,
+                            fileSize: '1.4 MB',
+                            fileType: doc.fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
+                            fileData: doc.fileData,
+                            uploadDate: 'Hoy',
+                            uploadedBy: currentUser?.name || 'Estudiante',
+                            status: 'pending'
+                          });
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/70 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                        title="Visualizar archivo montado"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-teal-600" />
+                        <span>Visualizar</span>
+                      </button>
+                    )}
                     <label className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/50 text-xs font-bold cursor-pointer transition-all shadow-xs inline-flex items-center gap-1.5">
                       <Upload className="w-3.5 h-3.5" />
                       <span>{doc.uploaded ? (isEs ? 'Reemplazar' : 'Replace') : (isEs ? 'Adjuntar archivos' : 'Attach Files')}</span>
@@ -954,6 +998,13 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
           </button>
         </div>
 
+      {/* Universal Document Preview Modal */}
+      <DocumentViewerModal
+        isOpen={Boolean(previewDoc)}
+        onClose={() => setPreviewDoc(null)}
+        document={previewDoc}
+        isAdmin={false}
+      />
       </div>
     </div>
   );

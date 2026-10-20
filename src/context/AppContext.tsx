@@ -84,11 +84,13 @@ interface AppContextType {
   activities: ActivityItem[];
 
   updateDocumentStatus: (docId: string, status: DocumentStatus, rejectionReason?: string) => void;
+  addStudentDocument: (doc: Omit<StudentDocument, 'id'>) => StudentDocument;
+  removeStudentDocument: (docId: string) => void;
   updateEnrollmentStatus: (enrollmentId: string, status: EnrollmentStatus) => void;
   addStudent: (student: Omit<Student, 'id'>) => string;
   addGuardian: (guardian: Omit<Guardian, 'id'>) => string;
   linkGuardianToStudent: (studentId: string, guardianData: { name: string; relationship: string; phone: string; email: string; isPrimary: boolean; livesWithStudent: boolean }) => void;
-  submitNewEnrollment: (data: { student: Partial<Student>; guardian: Partial<Guardian>; documents: { name: string; file: File | null }[] }) => string;
+  submitNewEnrollment: (data: { student: Partial<Student>; guardian: Partial<Guardian>; documents: { name: string; file: File | null; fileData?: string }[] }) => string;
   notifications: AppNotification[];
   markNotificationsAsRead: () => void;
   unreadCount: number;
@@ -615,6 +617,30 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const addStudentDocument = (doc: Omit<StudentDocument, 'id'>): StudentDocument => {
+    const newDoc: StudentDocument = {
+      ...doc,
+      id: 'doc-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
+    };
+    setDocuments((prev) => [newDoc, ...prev]);
+
+    const newActivity: ActivityItem = {
+      id: 'act-' + Date.now(),
+      timeAgo: 'Justo ahora',
+      timeAgoEn: 'Just now',
+      description: `Documento "${newDoc.name}" cargado por ${newDoc.uploadedBy || 'Usuario'}`,
+      descriptionEn: `Document "${newDoc.name}" uploaded by ${newDoc.uploadedBy || 'User'}`,
+      type: 'review',
+      studentName: newDoc.studentName
+    };
+    setActivities((prev) => [newActivity, ...prev]);
+    return newDoc;
+  };
+
+  const removeStudentDocument = (docId: string) => {
+    setDocuments((prev) => prev.filter(d => d.id !== docId));
+  };
+
   const updateEnrollmentStatus = (enrollmentId: string, status: EnrollmentStatus) => {
     setEnrollments((prev) =>
       prev.map((e) =>
@@ -693,7 +719,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const submitNewEnrollment = (data: {
     student: Partial<Student>;
     guardian: Partial<Guardian>;
-    documents: { name: string; file: File | null }[];
+    documents: { name: string; file: File | null; fileData?: string }[];
   }): string => {
     const radicado = `#MAT-2024-${Math.floor(1000 + Math.random() * 9000)}`;
     const newStudentId = 'std-' + (students.length + 1);
@@ -753,11 +779,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newDocs: StudentDocument[] = (data.documents || []).map((doc, idx) => ({
       id: 'doc-new-' + Date.now() + '-' + idx,
       studentId: newStudentId,
+      studentName: newStudent.fullName,
       name: doc.name,
-      category: 'identity',
+      category: doc.name.toLowerCase().includes('médico') || doc.name.toLowerCase().includes('eps') 
+        ? 'health' 
+        : doc.name.toLowerCase().includes('notas') || doc.name.toLowerCase().includes('calificaciones') 
+        ? 'academic' 
+        : 'identity',
       fileName: doc.file ? doc.file.name : `${doc.name.replace(/\s+/g, '_')}.pdf`,
-      fileSize: '1.5 MB',
-      uploadDate: 'Hoy',
+      fileSize: doc.file ? `${(doc.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.5 MB',
+      fileType: doc.file?.type || (doc.file?.name.endsWith('.pdf') ? 'application/pdf' : 'application/pdf'),
+      fileData: doc.fileData,
+      uploadedBy: data.guardian.fullName || 'Acudiente Solicitante',
+      uploadDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }),
       status: 'in_review',
       fileUrl: '#'
     }));
@@ -1926,6 +1960,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         documents,
         activities,
         updateDocumentStatus,
+        addStudentDocument,
+        removeStudentDocument,
         updateEnrollmentStatus,
         addStudent,
         addGuardian,
