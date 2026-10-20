@@ -56,7 +56,6 @@ interface AppContextType {
   resetStudentEnrollment: (studentId: string) => void;
   login: (identifier: string, pass: string, preferredRole?: UserRole) => { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
   validateGuardianCode: (code: string) => boolean;
-  validateAdminCode: (code: string) => boolean;
   register: (userData: { 
     name: string; 
     email: string; 
@@ -69,13 +68,8 @@ interface AppContextType {
     department?: string;
     institutionCode?: string;
     guardianValidationCode?: string;
-    username?: string;
-    employeeCode?: string;
-    permissions?: RolePermissions;
   }) => { success: boolean; message?: string };
   isEmailRegistered: (email: string) => boolean;
-  isUsernameRegistered: (username: string) => boolean;
-  isDocumentRegistered: (docNumber: string) => boolean;
   logout: () => void;
   requestPasswordResetCode: (email: string) => Promise<{ success: boolean; message?: string }>;
   verifyPasswordResetCode: (email: string, code: string) => Promise<{ success: boolean; message?: string }>;
@@ -556,65 +550,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return widget ? widget.enabled : true;
   };
 
-  const getPermissionsForAdminPosition = (position?: string): RolePermissions => {
-    const pos = (position || '').trim().toLowerCase();
-    if (pos.includes('rector')) {
-      return {
-        canDownloadCertificates: true,
-        canEditProfile: true,
-        canUploadAvatar: true,
-        canEnrollStudents: true,
-        canAuditDocuments: true,
-        canManageUsers: true,
-        canExportReports: true,
-        canViewAcademicRecords: true,
-        canConfigurePortals: true
-      };
-    }
-    if (pos.includes('coordinador')) {
-      return {
-        canDownloadCertificates: true,
-        canEditProfile: true,
-        canUploadAvatar: true,
-        canEnrollStudents: true,
-        canAuditDocuments: true,
-        canManageUsers: false,
-        canExportReports: true,
-        canViewAcademicRecords: true,
-        canConfigurePortals: false
-      };
-    }
-    if (pos.includes('secretari')) {
-      return {
-        canDownloadCertificates: true,
-        canEditProfile: true,
-        canUploadAvatar: true,
-        canEnrollStudents: true,
-        canAuditDocuments: true,
-        canManageUsers: false,
-        canExportReports: true,
-        canViewAcademicRecords: true,
-        canConfigurePortals: false
-      };
-    }
-    return {
-      canDownloadCertificates: true,
-      canEditProfile: true,
-      canUploadAvatar: true,
-      canEnrollStudents: true,
-      canAuditDocuments: true,
-      canManageUsers: true,
-      canExportReports: true,
-      canViewAcademicRecords: true,
-      canConfigurePortals: true
-    };
-  };
-
   const hasPermission = (role: UserRole, permissionKey: keyof RolePermissions): boolean => {
     if (role === 'public') return false;
-    if (currentUser && currentUser.role === role && currentUser.permissions) {
-      return Boolean(currentUser.permissions[permissionKey]);
-    }
     const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
     if (!config || !config.permissions) return false;
     return Boolean(config.permissions[permissionKey]);
@@ -902,13 +839,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const foundRegistered = registered.find((u: any) => {
       const uEmail = u.email?.toLowerCase();
       const uName = u.name?.toLowerCase();
-      const uUsername = u.username?.toLowerCase();
       const uDoc = u.documentNumber ? u.documentNumber.toLowerCase() : '';
       const uDocDigits = uDoc.replace(/\D/g, '');
 
       return (
         uEmail === cleanId ||
-        uUsername === cleanId ||
         uName === cleanId ||
         uDoc === cleanId ||
         (rawIdDigits && uDocDigits && rawIdDigits === uDocDigits)
@@ -975,10 +910,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                              (!isDefaultIllustratedAvatar(foundRegistered.avatarUrl) ? foundRegistered.avatarUrl : null);
         const effectiveAvatar = customAvatar || (foundRegistered.role === 'student' ? getDefaultAvatarByGender(userGender) : undefined);
 
-        const adminPerms = foundRegistered.role === 'admin' 
-          ? (foundRegistered.permissions || getPermissionsForAdminPosition(foundRegistered.position)) 
-          : undefined;
-
         authUser = {
           id: foundRegistered.id,
           name: foundRegistered.name,
@@ -990,11 +921,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           phone: foundRegistered.phone,
           position: foundRegistered.position,
           department: foundRegistered.department,
-          institutionCode: foundRegistered.institutionCode,
-          username: foundRegistered.username,
-          employeeCode: foundRegistered.employeeCode,
-          positionSummary: foundRegistered.positionSummary || (foundRegistered.position === 'Rector' ? 'Dirección institucional.' : foundRegistered.position === 'Coordinador' ? 'Gestión académica.' : foundRegistered.position === 'Secretario' ? 'Gestión documental.' : undefined),
-          permissions: adminPerms
+          institutionCode: foundRegistered.institutionCode
         };
       }
     } else if (isAdminMatch) {
@@ -1170,103 +1097,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return false;
   };
 
-  const validateAdminCode = (inputCode: string): boolean => {
-    if (!inputCode) return false;
-    const cleanInput = inputCode.trim().toUpperCase();
-    const cleanAlphaNum = cleanInput.replace(/[\s\.-]/g, '');
-    if (!cleanAlphaNum) return false;
-
-    // 1. Official institutional administrative validation codes
-    const officialAdminCodes = [
-      'DIR-2026', 'ADMIN-2026', 'RECTOR-2026', 'COORD-2026', 'SEC-2026',
-      'IEFB-2026', 'MED-2026', 'FENIX-2026', '12345',
-      'DIR2026', 'ADMIN2026', 'RECTOR2026', 'COORD2026', 'SEC2026',
-      'IEFB2026', 'MED2026', 'FENIX2026'
-    ];
-
-    // 2. Pre-existing admin employee or document numbers
-    const adminDocs = ['43981245', 'DANE-105001002345', '105001002345', 'EMP-2026', 'EMP-8942'];
-
-    // 3. Custom admin codes stored in localStorage
-    const savedAdminCodes: string[] = JSON.parse(localStorage.getItem('edumed_admin_codes') || '[]');
-
-    const allAdminCodes = [...officialAdminCodes, ...adminDocs, ...savedAdminCodes];
-
-    return allAdminCodes.some(code => {
-      const cleanDb = code.trim().toUpperCase();
-      const cleanDbAlphaNum = cleanDb.replace(/[\s\.-]/g, '');
-      return cleanInput === cleanDb || 
-             cleanAlphaNum === cleanDbAlphaNum || 
-             (cleanAlphaNum.length >= 4 && cleanDbAlphaNum === cleanAlphaNum);
-    });
-  };
-
-  const isUsernameRegistered = (username: string): boolean => {
-    const clean = username.trim().toLowerCase();
-    if (!clean) return false;
-
-    // 1. Registered users in localStorage
-    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    if (registered.some((u: any) => u.username && u.username.toLowerCase().trim() === clean)) {
-      return true;
-    }
-
-    // 2. Predefined system accounts
-    const systemUsernames = [
-      'admin',
-      'rector',
-      'rectoria',
-      'coordinador',
-      'coordinacion',
-      'secretaria',
-      'secretario',
-      'mateo',
-      'maria'
-    ];
-    if (systemUsernames.includes(clean)) {
-      return true;
-    }
-
-    return false;
-  };
-
-  const isDocumentRegistered = (docNumber: string): boolean => {
-    const rawDigits = docNumber.replace(/\D/g, '');
-    const cleanDoc = docNumber.trim().toLowerCase();
-    if (!rawDigits && !cleanDoc) return false;
-
-    // 1. Registered users
-    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    if (registered.some((u: any) => {
-      const uDoc = (u.documentNumber || '').toLowerCase().trim();
-      const uDigits = (u.documentNumber || '').replace(/\D/g, '');
-      return (cleanDoc && uDoc === cleanDoc) || (rawDigits && uDigits === rawDigits);
-    })) {
-      return true;
-    }
-
-    // 2. Pre-configured admin doc
-    if (rawDigits === '43981245' || cleanDoc.includes('43981245')) return true;
-
-    // 3. Students
-    if (students.some(s => {
-      const sDigits = (s.documentNumber || '').replace(/\D/g, '');
-      return rawDigits && sDigits === rawDigits;
-    })) {
-      return true;
-    }
-
-    // 4. Guardians
-    if (guardians.some(g => {
-      const gDigits = (g.documentNumber || '').replace(/\D/g, '');
-      return rawDigits && gDigits === rawDigits;
-    })) {
-      return true;
-    }
-
-    return false;
-  };
-
   const validateGuardianCode = (inputCode: string): boolean => {
     if (!inputCode) return false;
     const cleanInput = inputCode.trim().toUpperCase();
@@ -1332,31 +1162,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     department?: string;
     institutionCode?: string;
     guardianValidationCode?: string;
-    username?: string;
-    employeeCode?: string;
-    permissions?: RolePermissions;
   }): { success: boolean; message?: string } => {
-    if (!userData.name?.trim() || !userData.email?.trim()) {
-      return { 
-        success: false, 
-        message: language === 'es' 
-          ? 'Por favor, complete los campos obligatorios.' 
-          : 'Please complete the required fields.' 
-      };
+    if (!userData.name.trim()) {
+      return { success: false, message: language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.' };
+    }
+    if (!userData.email.trim() || !userData.email.includes('@')) {
+      return { success: false, message: language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.' };
     }
 
     const cleanEmail = userData.email.trim().toLowerCase();
-    if (!cleanEmail.includes('@')) {
-      return { success: false, message: language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.' };
-    }
     
     // Strict block: Do not permit registration with any previously used or registered email
     if (isEmailRegistered(cleanEmail)) {
       return {
         success: false,
         message: language === 'es'
-          ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado.'
-          : 'This email is already registered in the system.'
+          ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado. Por favor inicie sesión o recupere su contraseña.'
+          : 'This email is already registered in the system. Registration with a previously used email is not permitted.'
       };
     }
 
@@ -1364,66 +1186,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { 
         success: false, 
         message: language === 'es' 
-          ? 'Por favor, complete los campos obligatorios.' 
-          : 'Please complete the required fields.' 
+          ? 'Por favor ingrese su número de teléfono o celular de contacto.' 
+          : 'Please enter your contact phone number.' 
       };
     }
     if (!userData.password || userData.password.length < 5) {
       return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
     }
 
-    // Direct registration for teachers is not permitted
-    if (userData.role === 'teacher' || (userData.role as string) === 'docente') {
+    // Strict requirement: Teachers and administrative personnel cannot register directly
+    if (userData.role === 'teacher' || (userData.role as string) === 'docente' || userData.role === 'admin') {
       return {
         success: false,
         message: language === 'es'
-          ? 'El registro directo de docentes no está permitido. El acceso debe ser asignado y autorizado previamente por la secretaría de la I.E. Félix Henao Botero.'
-          : 'Direct registration for teachers is not permitted.'
+          ? 'El registro directo de docentes o directivos no está permitido. El acceso debe ser asignado y autorizado previamente por la administración de la I.E. Félix Henao Botero.'
+          : 'Direct registration for teachers or staff is not permitted. Access must be assigned by the school administration.'
       };
-    }
-
-    // Role-specific administrative validations
-    if (userData.role === 'admin') {
-      if (!userData.position?.trim()) {
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'Por favor, complete los campos obligatorios.'
-            : 'Please complete the required fields.'
-        };
-      }
-      if (!userData.username?.trim()) {
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'Por favor, complete los campos obligatorios.'
-            : 'Please complete the required fields.'
-        };
-      }
-      if (isUsernameRegistered(userData.username.trim())) {
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'El nombre de usuario ya se encuentra registrado previamente.'
-            : 'The username is already registered.'
-        };
-      }
-      if (!userData.documentNumber?.trim()) {
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'Por favor, complete los campos obligatorios.'
-            : 'Please complete the required fields.'
-        };
-      }
-      if (isDocumentRegistered(userData.documentNumber.trim())) {
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'El número de documento ya se encuentra registrado previamente.'
-            : 'The document number is already registered.'
-        };
-      }
     }
 
     if (userData.role === 'guardian') {
@@ -1466,20 +1244,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ? getDefaultAvatarByGender(studentGender)
       : undefined;
 
-    const adminPerms = userData.role === 'admin'
-      ? (userData.permissions || getPermissionsForAdminPosition(userData.position))
-      : undefined;
-
-    const posSummary = userData.position === 'Rector' 
-      ? 'Dirección institucional.' 
-      : userData.position === 'Coordinador' 
-      ? 'Gestión académica.' 
-      : userData.position === 'Secretario' 
-      ? 'Gestión documental.' 
-      : undefined;
-
     const newUser: AuthUser & { password?: string } = {
-      id: userData.role === 'admin' ? ('usr-admin-' + Date.now()) : ('usr-' + Date.now()),
+      id: 'usr-' + Date.now(),
       name: userData.name.trim(),
       email: cleanEmail,
       role: userData.role || 'guardian',
@@ -1488,13 +1254,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       documentNumber: userData.documentNumber?.trim(),
       phone: userData.phone?.trim(),
       position: userData.position?.trim(),
-      department: userData.department?.trim() || (userData.position === 'Rector' ? 'Dirección Institucional' : userData.position === 'Coordinador' ? 'Gestión Académica' : userData.position === 'Secretario' ? 'Gestión Documental' : undefined),
-      institutionCode: userData.institutionCode?.trim() || '105001002345',
-      guardianValidationCode: userData.guardianValidationCode?.trim(),
-      username: userData.username?.trim(),
-      employeeCode: userData.employeeCode?.trim(),
-      positionSummary: posSummary,
-      permissions: adminPerms
+      department: userData.department?.trim(),
+      institutionCode: userData.institutionCode?.trim(),
+      guardianValidationCode: userData.guardianValidationCode?.trim()
     };
 
     registered.push({ ...newUser, password: userData.password });
@@ -1562,7 +1324,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('dashboard');
 
     const roleName = newUser.role === 'admin' 
-      ? (language === 'es' ? `Directivo (${newUser.position || 'Administración'})` : 'Administrative / Staff') 
+      ? (language === 'es' ? 'Personal Administrativo y Directivo' : 'Administrative / Staff') 
       : newUser.role === 'student' 
         ? 'Estudiante' 
         : 'Acudiente';
@@ -1580,11 +1342,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev
     ]);
 
-    const successMessage = newUser.role === 'admin'
-      ? (language === 'es' ? `¡Cuenta administrativa creada exitosamente! Bienvenido al portal directivo de la I.E. Félix Henao Botero como ${newUser.position || 'Directivo'}.` : 'Administrative account created successfully!')
-      : (language === 'es' ? '¡Cuenta creada con éxito! Bienvenido a EduMed Digital.' : 'Account created successfully!');
-
-    return { success: true, message: successMessage };
+    return { success: true, message: language === 'es' ? '¡Cuenta creada con éxito! Bienvenido a EduMed Digital.' : 'Account created successfully!' };
   };
 
   const requestPasswordResetCode = async (email: string): Promise<{ success: boolean; message?: string }> => {
@@ -2154,11 +1912,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         resetStudentEnrollment,
         login,
         validateGuardianCode,
-        validateAdminCode,
         register,
         isEmailRegistered,
-        isUsernameRegistered,
-        isDocumentRegistered,
         logout,
         requestPasswordResetCode,
         verifyPasswordResetCode,

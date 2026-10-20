@@ -1526,7 +1526,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
             if (e.target === e.currentTarget) setIsAuthModalOpen(false);
           }}
         >
-          <div className={`relative w-full ${preselectedRole === 'admin' ? 'max-w-2xl' : 'max-w-md'} my-8 animate-in zoom-in-95 duration-200`}>
+          <div className="relative w-full max-w-md my-8 animate-in zoom-in-95 duration-200">
             {/* Close button */}
             <button
               type="button"
@@ -1540,7 +1540,6 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
             {/* Auth Card embedded inside modal */}
             <AuthCard 
               defaultMode={authModalMode}
-              initialRole={preselectedRole}
               onSuccess={() => {
                 setIsAuthModalOpen(false);
               }}
