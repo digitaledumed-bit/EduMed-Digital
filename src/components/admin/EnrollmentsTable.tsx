@@ -20,7 +20,7 @@ export const EnrollmentsTable: React.FC = () => {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [yearFilter, setYearFilter] = useState<string>('2024 - 2025');
+  const [yearFilter, setYearFilter] = useState<string>('2026');
 
   const filteredEnrollments = enrollments.filter((item) => {
     const matchesSearch = 
@@ -107,8 +107,8 @@ export const EnrollmentsTable: React.FC = () => {
             onChange={(e) => setYearFilter(e.target.value)}
             className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
           >
-            <option value="2024 - 2025">2024 - 2025</option>
-            <option value="2023 - 2024">2023 - 2024</option>
+            <option value="2026">{language === 'es' ? 'Año Lectivo 2026' : 'School Year 2026'}</option>
+            <option value="2025">{language === 'es' ? 'Año Lectivo 2025' : 'School Year 2025'}</option>
             <option value="all">{language === 'es' ? 'Todos los Años' : 'All Years'}</option>
           </select>
         </div>

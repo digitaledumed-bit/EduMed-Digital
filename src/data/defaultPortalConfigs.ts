@@ -201,13 +201,23 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         iconName: 'GraduationCap'
       },
       {
+        id: 'documents',
+        label: 'Expediente y Documentos',
+        labelEn: 'Files & Documents',
+        description: 'Consulta, vista previa y subida de documentos al expediente escolar.',
+        descriptionEn: 'Review, preview, and upload official student documents.',
+        enabled: true,
+        order: 3,
+        iconName: 'FolderKanban'
+      },
+      {
         id: 'status',
         label: 'Estado SIMAT',
         labelEn: 'SIMAT Status',
         description: 'Consulta oficial del estado del radicado de matrícula.',
         descriptionEn: 'Official enrollment docket lookup.',
         enabled: true,
-        order: 3,
+        order: 4,
         iconName: 'Search'
       },
       {
@@ -217,7 +227,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         description: 'Formulario paso a paso de registro de matrícula.',
         descriptionEn: 'Step-by-step enrollment registration.',
         enabled: true,
-        order: 4,
+        order: 5,
         iconName: 'FilePlus'
       },
       {

@@ -7,7 +7,7 @@ export const translations = {
       adminPanel: "Panel Administrativo",
       studentPortal: "Portal Estudiantil",
       parentPortal: "Portal de Acudientes",
-      copyright: "© 2024 Institución Educativa Félix Henao Botero - EduMed Digital. Todos los derechos reservados."
+      copyright: "© 2026 Institución Educativa Félix Henao Botero - EduMed Digital. Todos los derechos reservados."
     },
     nav: {
       home: "Inicio",
@@ -39,7 +39,7 @@ export const translations = {
       language: "Idioma"
     },
     landing: {
-      badgeOpen: "Proceso 2024-2025 Abierto",
+      badgeOpen: "Proceso 2026 Abierto",
       heroTitle: "Matricúlate fácil, rápido y seguro",
       heroSubtitle: "Plataforma oficial de la Institución Educativa Félix Henao Botero. Centralizamos y simplificamos el proceso de inscripción y matrícula para garantizar la educación de tus hijos con total transparencia y seguridad.",
       startEnrollment: "Iniciar matrícula",
@@ -130,7 +130,7 @@ export const translations = {
     statusLookup: {
       title: "Consulta de Estado de Matrícula",
       subtitle: "Ingrese el documento de identidad o el código de radicado para verificar el avance del proceso de inscripción.",
-      inputPlaceholder: "Ej. 1020304050 o #MAT-2024-8932",
+      inputPlaceholder: "Ej. 1020304050 o #MAT-2026-8932",
       searchBtn: "Consultar Estado",
       radicado: "Radicado",
       student: "Estudiante",
@@ -221,7 +221,7 @@ export const translations = {
       dashboard: {
         title: "Panel Administrativo",
         subtitle: "Resumen del proceso de matrícula institucional",
-        period: "Periodo Académico 2024-2025 - Primer Semestre",
+        period: "Periodo Académico 2026 - Primer Semestre",
         kpiTotalStudents: "Total estudiantes",
         kpiInProcess: "Matrículas en proceso",
         kpiCompleted: "Matrículas completadas",
@@ -419,7 +419,7 @@ export const translations = {
       step3: "Completado",
       trackingSuccess: "Tu proceso de matrícula ha finalizado exitosamente. No se requieren acciones adicionales.",
       guardianWelcome: "Hola, María",
-      guardianWelcomeSub: "Resumen del proceso de matrícula para el año lectivo 2024-2025.",
+      guardianWelcomeSub: "Resumen del proceso de matrícula para el año lectivo 2026.",
       continueStep4: "Continuar paso 4",
       completeEnrollment: "Completar matrícula",
       viewDocuments: "Ver documentos",
@@ -499,7 +499,7 @@ export const translations = {
       adminPanel: "Administrative Panel",
       studentPortal: "Student Portal",
       parentPortal: "Guardian Portal",
-      copyright: "© 2024 Félix Henao Botero Educational Institution - EduMed Digital. All rights reserved."
+      copyright: "© 2026 Félix Henao Botero Educational Institution - EduMed Digital. All rights reserved."
     },
     nav: {
       home: "Home",
@@ -531,7 +531,7 @@ export const translations = {
       language: "Language"
     },
     landing: {
-      badgeOpen: "2024-2025 Enrollment Open",
+      badgeOpen: "2026 Enrollment Open",
       heroTitle: "Enroll easily, quickly, and securely",
       heroSubtitle: "Official platform of Félix Henao Botero Educational Institution. We centralize and streamline the application and enrollment process to guarantee quality education for your children with complete transparency.",
       startEnrollment: "Start Enrollment",
@@ -622,7 +622,7 @@ export const translations = {
     statusLookup: {
       title: "Enrollment Status Lookup",
       subtitle: "Enter the student's ID number or application code to track admission progress.",
-      inputPlaceholder: "E.g. 1020304050 or #MAT-2024-8932",
+      inputPlaceholder: "E.g. 1020304050 or #MAT-2026-8932",
       searchBtn: "Check Status",
       radicado: "Application Code",
       student: "Student",
@@ -713,7 +713,7 @@ export const translations = {
       dashboard: {
         title: "Administrative Dashboard",
         subtitle: "Institutional enrollment process overview",
-        period: "Academic Year 2024-2025 - First Semester",
+        period: "Academic Year 2026 - First Semester",
         kpiTotalStudents: "Total students",
         kpiInProcess: "Enrollments in progress",
         kpiCompleted: "Completed enrollments",
@@ -911,7 +911,7 @@ export const translations = {
       step3: "Completed",
       trackingSuccess: "Your enrollment process has concluded successfully. No further action is required.",
       guardianWelcome: "Hello, Maria",
-      guardianWelcomeSub: "Enrollment summary for the 2024-2025 school year.",
+      guardianWelcomeSub: "Enrollment summary for the 2026 school year.",
       continueStep4: "Continue step 4",
       completeEnrollment: "Complete enrollment",
       viewDocuments: "View documents",

@@ -63,7 +63,8 @@ const MainAppContent: React.FC = () => {
   const adminOnlyTabs = ['enrollments', 'link-guardian', 'parents', 'settings', 'portal-config'];
   const isUnauthorizedAdminTab = !isAdmin && (
     adminOnlyTabs.includes(activeTab) || 
-    (!isTeacher && (activeTab === 'students' || activeTab === 'documents'))
+    (!isTeacher && activeTab === 'students') ||
+    (!isTeacher && !isGuardian && activeTab === 'documents')
   );
   const isModuleAllowed = activeTab === 'dashboard' || isAdmin || isTeacher || isModuleEnabled(currentUser.role, activeTab);
   const isUnauthorized = isUnauthorizedAdminTab || !isModuleAllowed;
@@ -213,11 +214,13 @@ const MainAppContent: React.FC = () => {
           </footer>
         )}
 
-        {/* User Profile Editing Modal */}
-        <StudentEditProfileModal 
-          isOpen={isProfileModalOpen} 
-          onClose={() => setIsProfileModalOpen(false)} 
-        />
+        {/* User Profile Editing Modal (Disabled for students as per institutional policy) */}
+        {currentUser?.role !== 'student' && (
+          <StudentEditProfileModal 
+            isOpen={isProfileModalOpen} 
+            onClose={() => setIsProfileModalOpen(false)} 
+          />
+        )}
 
       </div>
   );

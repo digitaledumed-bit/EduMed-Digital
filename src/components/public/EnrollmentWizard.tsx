@@ -27,8 +27,7 @@ import {
   Clock,
   Eye
 } from 'lucide-react';
-import { DocumentViewerModal } from '../common/DocumentViewerModal';
-import { StudentDocument } from '../../types';
+import { DocumentPreviewModal } from '../common/DocumentPreviewModal';
 
 export const EnrollmentWizard: React.FC = () => {
   const { t, language, submitNewEnrollment, setActiveTab, currentUser } = useApp();
@@ -43,7 +42,15 @@ export const EnrollmentWizard: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [topBannerError, setTopBannerError] = useState<string | null>(null);
 
-  // Form State
+  // Document preview modal state
+  const [previewModalDoc, setPreviewModalDoc] = useState<{
+    name: string;
+    fileName: string;
+    file: File | null;
+    previewUrl?: string;
+  } | null>(null);
+
+  // Form State: Initialized completely clean without any pre-selected or example data
   const [formData, setFormData] = useState({
     // Step 1: Guardian
     guardianDocType: 'CC',
@@ -54,7 +61,7 @@ export const EnrollmentWizard: React.FC = () => {
     guardianEmail: '',
     guardianAddress: '',
     guardianNeighborhood: '',
-    guardianRelationship: 'Padre',
+    guardianRelationship: '',
 
     // Step 2: Student
     studentDocType: 'TI',
@@ -62,10 +69,10 @@ export const EnrollmentWizard: React.FC = () => {
     studentFirstNames: '',
     studentLastNames: '',
     studentBirthDate: '',
-    studentGender: 'Femenino',
-    studentBloodType: 'O+',
-    studentGrade: '10°',
-    studentShift: 'Mañana',
+    studentGender: '',
+    studentBloodType: '',
+    studentGrade: '',
+    studentShift: '',
     studentAddress: '',
     studentNeighborhood: '',
     studentPhone: '',
@@ -76,37 +83,8 @@ export const EnrollmentWizard: React.FC = () => {
     medicalNotes: ''
   });
 
-  // Pre-fill user data depending on role
-  useEffect(() => {
-    if (currentUser) {
-      if (currentUser.role === 'student') {
-        const parts = currentUser.name.trim().split(' ');
-        const first = parts[0] || '';
-        const last = parts.slice(1).join(' ') || '';
-        setFormData(prev => ({
-          ...prev,
-          studentDocNumber: prev.studentDocNumber || currentUser.documentNumber || '',
-          studentFirstNames: prev.studentFirstNames || first,
-          studentLastNames: prev.studentLastNames || last,
-          studentEmail: prev.studentEmail || currentUser.email || '',
-          studentPhone: prev.studentPhone || currentUser.phone || '',
-          studentGender: prev.studentGender || currentUser.gender || 'Masculino'
-        }));
-      } else if (currentUser.role === 'guardian') {
-        const parts = currentUser.name.trim().split(' ');
-        const first = parts[0] || '';
-        const last = parts.slice(1).join(' ') || '';
-        setFormData(prev => ({
-          ...prev,
-          guardianDocNumber: prev.guardianDocNumber || currentUser.documentNumber || '',
-          guardianFirstNames: prev.guardianFirstNames || first,
-          guardianLastNames: prev.guardianLastNames || last,
-          guardianEmail: prev.guardianEmail || currentUser.email || '',
-          guardianPhone: prev.guardianPhone || currentUser.phone || ''
-        }));
-      }
-    }
-  }, [currentUser]);
+  // Form is kept strictly clean and empty on initial load as requested
+  // No pre-filled example or user values to ensure pristine step-by-step entry
 
   // Step 4: Uploaded Files
   const [uploadedFiles, setUploadedFiles] = useState<{ 
@@ -115,7 +93,7 @@ export const EnrollmentWizard: React.FC = () => {
     required: boolean; 
     file: File | null; 
     fileName: string;
-    fileData?: string;
+    previewUrl?: string;
   }>([
     { id: 'doc-ti', name: 'Documento de Identidad del Estudiante', required: true, file: null, fileName: '' },
     { id: 'doc-cc-guard', name: 'Documento de Identidad del Acudiente', required: true, file: null, fileName: '' },
@@ -123,8 +101,6 @@ export const EnrollmentWizard: React.FC = () => {
     { id: 'doc-grades', name: 'Certificado de Calificaciones Año Anterior', required: true, file: null, fileName: '' },
     { id: 'doc-pazysalvo', name: 'Paz y Salvo Institución Anterior', required: false, file: null, fileName: '' }
   ]);
-
-  const [previewDoc, setPreviewDoc] = useState<StudentDocument | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -145,20 +121,22 @@ export const EnrollmentWizard: React.FC = () => {
   const handleFileChange = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      const previewUrl = URL.createObjectURL(file);
+      setUploadedFiles((prev) =>
+        prev.map((item, i) =>
+          i === index
+            ? { ...item, file, fileName: file.name, previewUrl }
+            : item
+        )
+      );
 
-      // Read file to base64 Data URL for instant user verification
-      const reader = new FileReader();
-      reader.onload = () => {
-        const fileData = reader.result as string;
-        setUploadedFiles((prev) =>
-          prev.map((item, i) =>
-            i === index
-              ? { ...item, file, fileName: file.name, fileData }
-              : item
-          )
-        );
-      };
-      reader.readAsDataURL(file);
+      // Open live preview modal immediately so user can verify document being uploaded
+      setPreviewModalDoc({
+        name: uploadedFiles[index]?.name || 'Documento Adjunto',
+        fileName: file.name,
+        file,
+        previewUrl
+      });
 
       // Clear document error
       if (errors[`file_${index}`] || errors['documents']) {
@@ -437,7 +415,7 @@ export const EnrollmentWizard: React.FC = () => {
           email: formData.guardianEmail,
           address: `${formData.guardianAddress}, ${formData.guardianNeighborhood}`
         },
-        documents: uploadedFiles.map(f => ({ name: f.name, file: f.file, fileData: f.fileData }))
+        documents: uploadedFiles.map(f => ({ name: f.name, file: f.file }))
       });
 
       setGeneratedRadicado(rad);
@@ -514,7 +492,7 @@ export const EnrollmentWizard: React.FC = () => {
             </div>
 
             <div className="text-right text-[11px] text-slate-400">
-              <span className="font-semibold text-teal-600 dark:text-teal-400">I.E. Félix Henao Botero</span> • Año 2025
+              <span className="font-semibold text-teal-600 dark:text-teal-400">I.E. Félix Henao Botero</span> • {language === 'es' ? 'Año 2026' : 'Year 2026'}
             </div>
           </div>
         )}
@@ -649,7 +627,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="guardianDocNumber"
                           value={formData.guardianDocNumber}
                           onChange={handleInputChange}
-                          placeholder={t.wizard.placeholders.docNumber}
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.guardianDocNumber
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -673,7 +651,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="guardianFirstNames"
                           value={formData.guardianFirstNames}
                           onChange={handleInputChange}
-                          placeholder={t.wizard.placeholders.names}
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.guardianFirstNames
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -697,7 +675,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="guardianLastNames"
                           value={formData.guardianLastNames}
                           onChange={handleInputChange}
-                          placeholder={t.wizard.placeholders.lastNames}
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.guardianLastNames
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -730,7 +708,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="guardianPhone"
                           value={formData.guardianPhone}
                           onChange={handleInputChange}
-                          placeholder="Ej: 310 123 4567"
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.guardianPhone
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -754,7 +732,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="guardianEmail"
                           value={formData.guardianEmail}
                           onChange={handleInputChange}
-                          placeholder="acudiente@correo.com"
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.guardianEmail
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -778,7 +756,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="guardianAddress"
                           value={formData.guardianAddress}
                           onChange={handleInputChange}
-                          placeholder="Ej: Calle 50 # 40-20 Apto 302"
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.guardianAddress
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -802,7 +780,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="guardianNeighborhood"
                           value={formData.guardianNeighborhood}
                           onChange={handleInputChange}
-                          placeholder="Ej: Boston, Laureles, Belén..."
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.guardianNeighborhood
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -827,13 +805,13 @@ export const EnrollmentWizard: React.FC = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
                         >
+                          <option value="">{language === 'es' ? 'Seleccione parentesco...' : 'Select relationship...'}</option>
                           <option value="Padre">Padre</option>
                           <option value="Madre">Madre</option>
                           <option value="Tutor Legal">Tutor Legal</option>
                           <option value="Abuelo/a">Abuelo / Abuela</option>
                           <option value="Tío/a">Tío / Tía</option>
                           <option value="Hermano/a Mayor">Hermano(a) Mayor</option>
-                          <option value="Otro">Otro parentesco familiar</option>
                         </select>
                       </div>
                     </div>
@@ -914,7 +892,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="studentDocNumber"
                           value={formData.studentDocNumber}
                           onChange={handleInputChange}
-                          placeholder={t.wizard.placeholders.docNumber}
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.studentDocNumber
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -938,7 +916,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="studentFirstNames"
                           value={formData.studentFirstNames}
                           onChange={handleInputChange}
-                          placeholder={t.wizard.placeholders.names}
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.studentFirstNames
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -962,7 +940,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="studentLastNames"
                           value={formData.studentLastNames}
                           onChange={handleInputChange}
-                          placeholder={t.wizard.placeholders.lastNames}
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.studentLastNames
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -1010,6 +988,7 @@ export const EnrollmentWizard: React.FC = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
                         >
+                          <option value="">{language === 'es' ? 'Seleccione sexo / género...' : 'Select gender...'}</option>
                           <option value="Masculino">{language === 'es' ? 'Masculino' : 'Male'}</option>
                           <option value="Femenino">{language === 'es' ? 'Femenino' : 'Female'}</option>
                           <option value="LGBTIQ+">LGBTIQ+</option>
@@ -1027,6 +1006,7 @@ export const EnrollmentWizard: React.FC = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
                         >
+                          <option value="">{language === 'es' ? 'Seleccione grupo y RH...' : 'Select blood type...'}</option>
                           <option value="O+">O Positivo (O+)</option>
                           <option value="O-">O Negativo (O-)</option>
                           <option value="A+">A Positivo (A+)</option>
@@ -1057,6 +1037,7 @@ export const EnrollmentWizard: React.FC = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none font-bold"
                         >
+                          <option value="">{language === 'es' ? 'Seleccione el grado escolar...' : 'Select grade...'}</option>
                           <option value="Transición">Transición (Preescolar)</option>
                           <option value="1°">Primero (1°)</option>
                           <option value="2°">Segundo (2°)</option>
@@ -1082,6 +1063,7 @@ export const EnrollmentWizard: React.FC = () => {
                           onChange={handleInputChange}
                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
                         >
+                          <option value="">{language === 'es' ? 'Seleccione la jornada escolar...' : 'Select shift...'}</option>
                           <option value="Mañana">Jornada Mañana (6:30 AM - 12:30 PM)</option>
                           <option value="Tarde">Jornada Tarde (12:30 PM - 6:30 PM)</option>
                           <option value="Única">Jornada Única</option>
@@ -1106,7 +1088,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="studentAddress"
                           value={formData.studentAddress}
                           onChange={handleInputChange}
-                          placeholder="Ej: Calle 45 # 12-34"
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.studentAddress
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -1130,7 +1112,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="studentNeighborhood"
                           value={formData.studentNeighborhood}
                           onChange={handleInputChange}
-                          placeholder="Ej: Boston, Prado Centro, Laureles..."
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.studentNeighborhood
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -1154,7 +1136,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="studentPhone"
                           value={formData.studentPhone}
                           onChange={handleInputChange}
-                          placeholder="Ej: 315 987 6543"
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.studentPhone
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -1178,7 +1160,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="studentEmail"
                           value={formData.studentEmail}
                           onChange={handleInputChange}
-                          placeholder="estudiante@edumed.edu.co"
+                          placeholder=""
                           className={`w-full px-3 py-2.5 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.studentEmail
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -1215,7 +1197,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="previousSchool"
                           value={formData.previousSchool}
                           onChange={handleInputChange}
-                          placeholder={language === 'es' ? 'Ej: I.E. San José o "Primera vez escolar / Preescolar"' : t.wizard.placeholders.previousSchool}
+                          placeholder=""
                           className={`w-full px-3.5 py-3 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.previousSchool
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -1239,7 +1221,7 @@ export const EnrollmentWizard: React.FC = () => {
                           name="medicalNotes"
                           value={formData.medicalNotes}
                           onChange={handleInputChange}
-                          placeholder={language === 'es' ? 'Ej: EPS Sura. Ninguna alergia reportada. No requiere medicación especial.' : t.wizard.placeholders.writeHere}
+                          placeholder=""
                           className={`w-full px-3.5 py-3 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                             errors.medicalNotes
                               ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20 focus:ring-rose-500'
@@ -1263,151 +1245,146 @@ export const EnrollmentWizard: React.FC = () => {
 
               {/* STEP 4: DOCUMENT UPLOADS */}
               {currentStep === 4 && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-2 flex items-center gap-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-teal-600" />
-                      {language === 'es' ? 'Documentación Obligatoria Requerida' : t.wizard.sections.documentsList}
+                <div className="space-y-6 max-w-full overflow-hidden">
+                  <div className="p-4 sm:p-5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800/70 space-y-2 overflow-hidden">
+                    <h2 className="text-xs sm:text-sm font-bold text-teal-950 dark:text-teal-200 uppercase tracking-wider flex items-center gap-2 break-words">
+                      <span className="w-2.5 h-2.5 rounded-full bg-teal-600 shrink-0" />
+                      <span>{language === 'es' ? 'Documentación Obligatoria Requerida' : t.wizard.sections.documentsList}</span>
                     </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                    <p className="text-xs sm:text-sm text-teal-900/80 dark:text-teal-300/90 leading-relaxed break-words">
                       {language === 'es' 
-                        ? 'Adjunte los archivos requeridos en formato PDF o imagen nítida (JPG/PNG). Si no adjunta los documentos requeridos marcados con asterisco (*), no se le permitirá ingresar al paso de radicación final.' 
-                        : 'Attach the required files in PDF or crisp image format (JPG/PNG).'}
+                        ? 'Adjunte los archivos requeridos en formato PDF o imagen nítida (JPG/PNG). Si no adjunta los documentos obligatorios marcados con asterisco (*), no se le permitirá ingresar al paso de radicación final.' 
+                        : 'Attach the required files in PDF or crisp image format (JPG/PNG). All required items marked with (*) must be attached.'}
                     </p>
+                  </div>
 
-                    <div className="space-y-4">
-                      {uploadedFiles.map((docItem, idx) => {
-                        const hasError = Boolean(errors[`file_${idx}`]);
-                        const isAttached = Boolean(docItem.fileName);
+                  <div className="space-y-4 max-w-full">
+                    {uploadedFiles.map((docItem, idx) => {
+                      const hasError = Boolean(errors[`file_${idx}`]);
+                      const isAttached = Boolean(docItem.fileName);
 
-                        return (
-                          <div
-                            key={idx}
-                            className={`p-4 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                              hasError
-                                ? 'bg-rose-50/50 dark:bg-rose-950/20 border-2 border-rose-500'
-                                : isAttached
-                                ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
-                                : 'bg-slate-50/50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
-                            }`}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
-                                isAttached
-                                  ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
-                                  : hasError
-                                  ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300'
-                                  : 'bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300'
-                              }`}>
-                                <FileText className="w-5 h-5" />
-                              </div>
-                              <div>
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
-                                    {docItem.name}
-                                  </span>
-                                  {docItem.required ? (
-                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-extrabold border border-rose-200 dark:border-rose-800">
-                                      {language === 'es' ? 'Obligatorio *' : 'Required *'}
-                                    </span>
-                                  ) : (
-                                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-semibold">
-                                      {language === 'es' ? 'Opcional' : 'Optional'}
-                                    </span>
-                                  )}
-                                </div>
+                      return (
+                        <div
+                          key={idx}
+                          className={`w-full max-w-full p-4 sm:p-5 rounded-2xl border transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 overflow-hidden box-border ${
+                            hasError
+                              ? 'bg-rose-50/60 dark:bg-rose-950/25 border-2 border-rose-500 shadow-xs'
+                              : isAttached
+                              ? 'bg-emerald-50/40 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
+                              : 'bg-slate-50/60 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {/* Document Info Column */}
+                          <div className="flex items-start gap-3.5 min-w-0 flex-1 w-full overflow-hidden">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                              isAttached
+                                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300'
+                                : hasError
+                                ? 'bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300'
+                                : 'bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300'
+                            }`}>
+                              <FileText className="w-5 h-5" />
+                            </div>
 
-                                {isAttached ? (
-                                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                                    <span className="text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1 font-bold">
-                                      <CheckCircle className="w-3.5 h-3.5" />
-                                      <span>{docItem.fileName}</span>
-                                    </span>
-                                    <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">
-                                      {(docItem.fileName.split('.').pop() || 'PDF').toUpperCase()}
-                                    </span>
-                                    <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                                      • {docItem.file ? `${(docItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB'}
-                                    </span>
-                                  </div>
-                                ) : hasError ? (
-                                  <span className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-1 font-bold">
-                                    <AlertCircle className="w-3.5 h-3.5" />
-                                    <span>{errors[`file_${idx}`]}</span>
+                            <div className="min-w-0 flex-1 w-full space-y-1.5 overflow-hidden">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white break-words leading-snug">
+                                  {docItem.name}
+                                </h3>
+                                {docItem.required ? (
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-extrabold border border-rose-200 dark:border-rose-800 shrink-0">
+                                    {language === 'es' ? 'Obligatorio *' : 'Required *'}
                                   </span>
                                 ) : (
-                                  <span className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1 mt-1">
-                                    {language === 'es' ? 'No se ha seleccionado ningún archivo.' : 'No file selected.'}
+                                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 font-semibold shrink-0">
+                                    {language === 'es' ? 'Opcional' : 'Optional'}
                                   </span>
                                 )}
                               </div>
-                            </div>
 
-                            <div className="flex items-center gap-2 self-start sm:self-auto">
-                              {isAttached && (
-                                <>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setPreviewDoc({
-                                        id: `wiz-${idx}`,
-                                        studentId: 'new',
-                                        studentName: `${formData.studentFirstNames} ${formData.studentLastNames}`.trim() || 'Estudiante Solicitante',
-                                        name: docItem.name,
-                                        category: docItem.name.toLowerCase().includes('médico') || docItem.name.toLowerCase().includes('eps') ? 'health' : 'identity',
-                                        fileName: docItem.fileName,
-                                        fileSize: docItem.file ? `${(docItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB',
-                                        fileType: docItem.file?.type || (docItem.fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
-                                        fileData: docItem.fileData,
-                                        uploadDate: 'Hoy',
-                                        uploadedBy: `${formData.guardianFirstNames} ${formData.guardianLastNames}`.trim() || 'Acudiente Solicitante',
-                                        status: 'pending'
-                                      });
-                                    }}
-                                    className="px-3 py-2 rounded-xl text-xs font-bold text-teal-800 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/70 hover:bg-teal-100 dark:hover:bg-teal-900 border border-teal-200 dark:border-teal-800 transition-colors flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                                    title={language === 'es' ? 'Visualizar archivo montado' : 'Preview mounted file'}
-                                  >
-                                    <Eye className="w-3.5 h-3.5 text-teal-600" />
-                                    <span>{language === 'es' ? 'Visualizar' : 'Preview'}</span>
-                                  </button>
-
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setUploadedFiles(prev => prev.map((item, i) => i === idx ? { ...item, file: null, fileName: '', fileData: undefined } : item));
-                                    }}
-                                    className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-800 transition-colors flex items-center gap-1 cursor-pointer"
-                                    title={language === 'es' ? 'Eliminar archivo' : 'Remove file'}
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    <span>{language === 'es' ? 'Eliminar' : 'Remove'}</span>
-                                  </button>
-                                </>
+                              {isAttached ? (
+                                <div className="flex flex-wrap items-center gap-2 pt-0.5 text-xs w-full min-w-0 break-words">
+                                  <span className="text-xs text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-bold min-w-0 max-w-full">
+                                    <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                                    <span className="truncate max-w-[200px] sm:max-w-xs">{docItem.fileName}</span>
+                                  </span>
+                                  <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 shrink-0">
+                                    {(docItem.fileName.split('.').pop() || 'PDF').toUpperCase()}
+                                  </span>
+                                  <span className="text-[11px] text-slate-500 dark:text-slate-400 shrink-0">
+                                    • {docItem.file ? `${(docItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB'}
+                                  </span>
+                                </div>
+                              ) : hasError ? (
+                                <p className="text-xs text-rose-600 dark:text-rose-400 flex items-center gap-1.5 mt-1 font-bold break-words leading-tight">
+                                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                  <span>{errors[`file_${idx}`]}</span>
+                                </p>
+                              ) : (
+                                <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1.5 mt-0.5 break-words">
+                                  <span>{language === 'es' ? 'Sin archivo seleccionado. Formatos permitidos: PDF, JPG, PNG.' : 'No file selected. Allowed: PDF, JPG, PNG.'}</span>
+                                </p>
                               )}
-
-                              <label className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs ${
-                                isAttached
-                                  ? 'bg-white dark:bg-slate-700 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50'
-                                  : hasError
-                                  ? 'bg-rose-600 hover:bg-rose-700 text-white'
-                                  : 'bg-teal-700 hover:bg-teal-800 text-white shadow-xs'
-                              }`}>
-                                <Upload className="w-3.5 h-3.5" />
-                                <span>
-                                  {language === 'es' ? 'Adjuntar archivos' : 'Attach Files'}
-                                </span>
-                                <input
-                                  type="file"
-                                  accept=".pdf,image/png,image/jpeg,image/webp"
-                                  className="hidden"
-                                  onChange={(e) => handleFileChange(idx, e)}
-                                />
-                              </label>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
+
+                          {/* Action Buttons Column */}
+                          <div className="flex flex-wrap items-center gap-2 shrink-0 self-start md:self-center w-full md:w-auto justify-start md:justify-end pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60 dark:border-slate-700/60">
+                            {isAttached && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewModalDoc({
+                                    name: docItem.name,
+                                    fileName: docItem.fileName,
+                                    file: docItem.file,
+                                    previewUrl: docItem.previewUrl
+                                  })}
+                                  className="px-3 py-2 rounded-xl text-xs font-bold text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/40 border border-teal-300 dark:border-teal-700 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
+                                  title={language === 'es' ? 'Ver vista previa del documento' : 'Preview document'}
+                                >
+                                  <Eye className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="whitespace-nowrap">{language === 'es' ? 'Vista previa' : 'Preview'}</span>
+                                </button>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setUploadedFiles(prev => prev.map((item, i) => i === idx ? { ...item, file: null, fileName: '', previewUrl: undefined } : item));
+                                  }}
+                                  className="px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-rose-200 dark:border-rose-800 transition-colors flex items-center gap-1 cursor-pointer shrink-0"
+                                  title={language === 'es' ? 'Eliminar archivo' : 'Remove file'}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                                  <span className="whitespace-nowrap">{language === 'es' ? 'Eliminar' : 'Remove'}</span>
+                                </button>
+                              </>
+                            )}
+
+                            <label className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-2 cursor-pointer transition-colors shadow-2xs shrink-0 whitespace-nowrap ${
+                              isAttached
+                                ? 'bg-white dark:bg-slate-700 border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-50'
+                                : hasError
+                                ? 'bg-rose-600 hover:bg-rose-700 text-white'
+                                : 'bg-teal-700 hover:bg-teal-800 text-white shadow-xs'
+                            }`}>
+                              <Upload className="w-3.5 h-3.5 shrink-0" />
+                              <span>
+                                {isAttached 
+                                  ? (language === 'es' ? 'Cambiar archivo' : 'Change file')
+                                  : (language === 'es' ? 'Adjuntar archivo' : 'Attach file')}
+                              </span>
+                              <input
+                                type="file"
+                                accept=".pdf,image/png,image/jpeg,image/webp"
+                                className="hidden"
+                                onChange={(e) => handleFileChange(idx, e)}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -1442,7 +1419,7 @@ export const EnrollmentWizard: React.FC = () => {
                             Grado {formData.studentGrade} - Jornada {formData.studentShift}
                           </span>
                           <span className="text-slate-500 dark:text-slate-400 block text-xs mt-0.5">
-                            Periodo Académico: 2025 • I.E. Félix Henao Botero
+                            Periodo Académico: 2026 • I.E. Félix Henao Botero
                           </span>
                           <span className="text-slate-500 dark:text-slate-400 block text-xs">
                             Institución previa: {formData.previousSchool}
@@ -1541,7 +1518,7 @@ export const EnrollmentWizard: React.FC = () => {
                       {language === 'es' ? 'Número de Radicado Oficial' : t.statusLookup.radicado}
                     </span>
                     <span className="text-2xl font-black text-teal-700 dark:text-teal-400 tracking-wider">
-                      {generatedRadicado || '#MAT-2025-4581'}
+                      {generatedRadicado || '#MAT-2026-4581'}
                     </span>
                   </div>
 
@@ -1591,35 +1568,9 @@ export const EnrollmentWizard: React.FC = () => {
                               {(fItem.fileName.split('.').pop() || 'PDF').toUpperCase()} • {fItem.file ? `${(fItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB'}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setPreviewDoc({
-                                  id: `wiz-filed-${fIdx}`,
-                                  studentId: 'new',
-                                  studentName: `${formData.studentFirstNames} ${formData.studentLastNames}`.trim() || 'Estudiante Solicitante',
-                                  name: fItem.name,
-                                  category: 'identity',
-                                  fileName: fItem.fileName,
-                                  fileSize: fItem.file ? `${(fItem.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.45 MB',
-                                  fileType: fItem.file?.type || (fItem.fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg'),
-                                  fileData: fItem.fileData,
-                                  uploadDate: 'Hoy',
-                                  uploadedBy: `${formData.guardianFirstNames} ${formData.guardianLastNames}`.trim() || 'Acudiente Solicitante',
-                                  status: 'pending'
-                                });
-                              }}
-                              className="px-2.5 py-1 rounded-lg text-xs font-bold text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950/60 hover:bg-teal-100 flex items-center gap-1 border border-teal-200 dark:border-teal-800 transition-colors cursor-pointer"
-                              title={language === 'es' ? 'Visualizar archivo' : 'Preview file'}
-                            >
-                              <Eye className="w-3.5 h-3.5 text-teal-600" />
-                              <span>{language === 'es' ? 'Ver' : 'Preview'}</span>
-                            </button>
-                            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
-                              {language === 'es' ? 'Pendiente' : 'Pending'}
-                            </span>
-                          </div>
+                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 shrink-0">
+                            {language === 'es' ? 'Pendiente' : 'Pending'}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -1636,7 +1587,7 @@ export const EnrollmentWizard: React.FC = () => {
 
                     <button
                       onClick={() => {
-                        const receiptContent = `I.E. FÉLIX HENAO BOTERO\nCOMPROBANTE OFICIAL DE RADICACIÓN DE MATRÍCULA\nRadicado: ${generatedRadicado || '#MAT-2025-4581'}\nEstudiante: ${formData.studentFirstNames} ${formData.studentLastNames} (${formData.studentDocType} ${formData.studentDocNumber})\nGrado: ${formData.studentGrade} - Jornada ${formData.studentShift}\nAcudiente: ${formData.guardianFirstNames} ${formData.guardianLastNames}\nFecha: ${new Date().toLocaleDateString('es-CO')}\nEstado: EN REVISIÓN DOCUMENTAL\nMedellín, Antioquia`;
+                        const receiptContent = `I.E. FÉLIX HENAO BOTERO\nCOMPROBANTE OFICIAL DE RADICACIÓN DE MATRÍCULA\nRadicado: ${generatedRadicado || '#MAT-2026-4581'}\nEstudiante: ${formData.studentFirstNames} ${formData.studentLastNames} (${formData.studentDocType} ${formData.studentDocNumber})\nGrado: ${formData.studentGrade} - Jornada ${formData.studentShift}\nAcudiente: ${formData.guardianFirstNames} ${formData.guardianLastNames}\nFecha: ${new Date().toLocaleDateString('es-CO')}\nEstado: EN REVISIÓN DOCUMENTAL\nMedellín, Antioquia`;
                         const blob = new Blob([receiptContent], { type: 'text/plain;charset=utf-8' });
                         const url = URL.createObjectURL(blob);
                         const link = document.createElement('a');
@@ -1800,13 +1751,22 @@ export const EnrollmentWizard: React.FC = () => {
 
         </div>
 
-      {/* Universal Document Preview Modal */}
-      <DocumentViewerModal
-        isOpen={Boolean(previewDoc)}
-        onClose={() => setPreviewDoc(null)}
-        document={previewDoc}
-        isAdmin={false}
-      />
+        {/* Document Preview Modal for Uploaded Files */}
+        {previewModalDoc && (
+          <DocumentPreviewModal
+            isOpen={Boolean(previewModalDoc)}
+            onClose={() => setPreviewModalDoc(null)}
+            documentName={previewModalDoc.name}
+            fileName={previewModalDoc.fileName}
+            file={previewModalDoc.file}
+            fileUrl={previewModalDoc.previewUrl}
+            studentName={`${formData.studentFirstNames} ${formData.studentLastNames}`.trim() || undefined}
+            studentGrade={formData.studentGrade ? `Grado ${formData.studentGrade}` : undefined}
+            studentDoc={formData.studentDocNumber || undefined}
+            status="preview"
+          />
+        )}
+
       </div>
     </div>
   );

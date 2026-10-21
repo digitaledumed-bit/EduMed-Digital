@@ -357,7 +357,7 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto">
               <span className="px-3 py-1 text-xs font-bold text-teal-700 dark:text-teal-300">
-                {isEs ? 'Periodo 2024 - 2025' : 'Period 2024 - 2025'}
+                {isEs ? 'Periodo Académico 2026' : 'Academic Period 2026'}
               </span>
             </div>
           </div>

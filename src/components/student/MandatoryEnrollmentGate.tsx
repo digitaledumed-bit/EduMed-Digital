@@ -278,7 +278,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
 
           <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shrink-0 shadow-xs">
             <span className="text-[10px] font-bold text-slate-400 block uppercase">{isEs ? 'Año Lectivo' : 'Academic Year'}</span>
-            <span className="text-base font-black text-teal-700 dark:text-teal-400">2025</span>
+            <span className="text-base font-black text-teal-700 dark:text-teal-400">2026</span>
           </div>
         </div>
       </div>
@@ -397,7 +397,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
                       : 'bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:ring-teal-500'
                   }`}
-                  placeholder="Ej: 1035982147"
+                  placeholder=""
                 />
                 {errors.docNumber && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.docNumber}</p>}
               </div>
@@ -416,7 +416,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
                       : 'bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:ring-teal-500'
                   }`}
-                  placeholder="Ej: Mateo"
+                  placeholder=""
                 />
                 {errors.firstNames && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.firstNames}</p>}
               </div>
@@ -435,7 +435,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
                       : 'bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:ring-teal-500'
                   }`}
-                  placeholder="Ej: Restrepo"
+                  placeholder=""
                 />
                 {errors.lastNames && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.lastNames}</p>}
               </div>
@@ -500,7 +500,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  placeholder="315 987 6543"
+                  placeholder=""
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.phone 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -519,7 +519,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="mateo.restrepo@edumed.edu.co"
+                  placeholder=""
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.email 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -538,7 +538,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder="Calle 45 # 12-34"
+                  placeholder=""
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.address 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -557,7 +557,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="neighborhood"
                   value={formData.neighborhood}
                   onChange={handleInputChange}
-                  placeholder="Boston, Laureles, Belén..."
+                  placeholder=""
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.neighborhood 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -593,7 +593,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="previousSchool"
                   value={formData.previousSchool}
                   onChange={handleInputChange}
-                  placeholder="Ej: Colegio San José o Misma Institución"
+                  placeholder=""
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
                 {errors.previousSchool && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.previousSchool}</p>}
@@ -645,7 +645,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="eps"
                   value={formData.eps}
                   onChange={handleInputChange}
-                  placeholder="Ej: SURA, Savia Salud, Sanitas..."
+                  placeholder=""
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
                 {errors.eps && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.eps}</p>}
@@ -661,7 +661,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   value={formData.medicalConditions}
                   onChange={handleInputChange}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  placeholder="Describa si el estudiante tiene alguna condición médica especial..."
+                  placeholder=""
                 />
               </div>
             </div>
@@ -691,7 +691,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="guardianFullName"
                   value={formData.guardianFullName}
                   onChange={handleInputChange}
-                  placeholder="Ej: Carlos Eduardo Ramírez"
+                  placeholder=""
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.guardianFullName 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -710,7 +710,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="guardianDocNumber"
                   value={formData.guardianDocNumber}
                   onChange={handleInputChange}
-                  placeholder="Ej: 1034567890"
+                  placeholder=""
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.guardianDocNumber 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -748,7 +748,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="guardianPhone"
                   value={formData.guardianPhone}
                   onChange={handleInputChange}
-                  placeholder="300 123 4567"
+                  placeholder=""
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.guardianPhone 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 

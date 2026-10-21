@@ -84,13 +84,20 @@ interface AppContextType {
   activities: ActivityItem[];
 
   updateDocumentStatus: (docId: string, status: DocumentStatus, rejectionReason?: string) => void;
-  addStudentDocument: (doc: Omit<StudentDocument, 'id'>) => StudentDocument;
-  removeStudentDocument: (docId: string) => void;
   updateEnrollmentStatus: (enrollmentId: string, status: EnrollmentStatus) => void;
   addStudent: (student: Omit<Student, 'id'>) => string;
   addGuardian: (guardian: Omit<Guardian, 'id'>) => string;
   linkGuardianToStudent: (studentId: string, guardianData: { name: string; relationship: string; phone: string; email: string; isPrimary: boolean; livesWithStudent: boolean }) => void;
-  submitNewEnrollment: (data: { student: Partial<Student>; guardian: Partial<Guardian>; documents: { name: string; file: File | null; fileData?: string }[] }) => string;
+  submitNewEnrollment: (data: { student: Partial<Student>; guardian: Partial<Guardian>; documents: { name: string; file: File | null }[] }) => string;
+  addStudentDocument: (docData: {
+    studentId: string;
+    name: string;
+    category?: 'identity' | 'health' | 'academic' | 'other';
+    fileName: string;
+    fileSize: string;
+    fileUrl?: string;
+    file?: File | null;
+  }) => string;
   notifications: AppNotification[];
   markNotificationsAsRead: () => void;
   unreadCount: number;
@@ -225,8 +232,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     },
     {
       id: 'notif-adm-4',
-      title: 'Cierre de Auditoría SIMAT 2025',
-      titleEn: 'SIMAT 2025 Audit Closing Notice',
+      title: 'Cierre de Auditoría SIMAT 2026',
+      titleEn: 'SIMAT 2026 Audit Closing Notice',
       message: 'Recordatorio oficial: Plazo de consolidación de cupos escolares ante Secretaría de Educación de Medellín.',
       messageEn: 'Official reminder: Deadline for consolidating school quotas with the Medellín Education Secretariat.',
       date: 'Ayer',
@@ -303,8 +310,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: 'notif-std-2',
       title: 'Horario y Asignación de Grupo',
       titleEn: 'Schedule & Classroom Assignment',
-      message: 'Tu salón y directores de área para el periodo 2025 ya están disponibles en tu expediente escolar.',
-      messageEn: 'Your classroom and subject teachers for the 2025 school year are now available in your portal.',
+      message: 'Tu salón y directores de área para el periodo 2026 ya están disponibles en tu expediente escolar.',
+      messageEn: 'Your classroom and subject teachers for the 2026 school year are now available in your portal.',
       date: 'Hace 2 horas',
       dateEn: '2 hours ago',
       read: false,
@@ -339,8 +346,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 4. Circular Institucional General
     {
       id: 'notif-gen-1',
-      title: 'Calendario Escolar y Recesos 2025',
-      titleEn: '2025 School Calendar & Holidays',
+      title: 'Calendario Escolar y Recesos 2026',
+      titleEn: '2026 School Calendar & Holidays',
       message: 'Publicado el cronograma oficial de semanas pedagógicas, evaluaciones institucionales y actos cívicos.',
       messageEn: 'The official schedule of pedagogical weeks, term exams, and civic assemblies is now published.',
       date: 'Esta semana',
@@ -617,30 +624,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const addStudentDocument = (doc: Omit<StudentDocument, 'id'>): StudentDocument => {
-    const newDoc: StudentDocument = {
-      ...doc,
-      id: 'doc-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7)
-    };
-    setDocuments((prev) => [newDoc, ...prev]);
-
-    const newActivity: ActivityItem = {
-      id: 'act-' + Date.now(),
-      timeAgo: 'Justo ahora',
-      timeAgoEn: 'Just now',
-      description: `Documento "${newDoc.name}" cargado por ${newDoc.uploadedBy || 'Usuario'}`,
-      descriptionEn: `Document "${newDoc.name}" uploaded by ${newDoc.uploadedBy || 'User'}`,
-      type: 'review',
-      studentName: newDoc.studentName
-    };
-    setActivities((prev) => [newActivity, ...prev]);
-    return newDoc;
-  };
-
-  const removeStudentDocument = (docId: string) => {
-    setDocuments((prev) => prev.filter(d => d.id !== docId));
-  };
-
   const updateEnrollmentStatus = (enrollmentId: string, status: EnrollmentStatus) => {
     setEnrollments((prev) =>
       prev.map((e) =>
@@ -719,9 +702,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const submitNewEnrollment = (data: {
     student: Partial<Student>;
     guardian: Partial<Guardian>;
-    documents: { name: string; file: File | null; fileData?: string }[];
+    documents: { name: string; file: File | null }[];
   }): string => {
-    const radicado = `#MAT-2024-${Math.floor(1000 + Math.random() * 9000)}`;
+    const radicado = `#MAT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const newStudentId = 'std-' + (students.length + 1);
 
     const newStudent: Student = {
@@ -762,7 +745,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       studentId: newStudentId,
       studentName: newStudent.fullName,
       studentDoc: newStudent.documentNumber,
-      academicYear: '2024 - 2025',
+      academicYear: '2026',
       grade: newStudent.grade,
       submissionDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
       status: 'in_review',
@@ -779,21 +762,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const newDocs: StudentDocument[] = (data.documents || []).map((doc, idx) => ({
       id: 'doc-new-' + Date.now() + '-' + idx,
       studentId: newStudentId,
-      studentName: newStudent.fullName,
       name: doc.name,
-      category: doc.name.toLowerCase().includes('médico') || doc.name.toLowerCase().includes('eps') 
-        ? 'health' 
-        : doc.name.toLowerCase().includes('notas') || doc.name.toLowerCase().includes('calificaciones') 
-        ? 'academic' 
-        : 'identity',
+      category: 'identity',
       fileName: doc.file ? doc.file.name : `${doc.name.replace(/\s+/g, '_')}.pdf`,
-      fileSize: doc.file ? `${(doc.file.size / (1024 * 1024)).toFixed(2)} MB` : '1.5 MB',
-      fileType: doc.file?.type || (doc.file?.name.endsWith('.pdf') ? 'application/pdf' : 'application/pdf'),
-      fileData: doc.fileData,
-      uploadedBy: data.guardian.fullName || 'Acudiente Solicitante',
-      uploadDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      fileSize: '1.5 MB',
+      uploadDate: 'Hoy',
       status: 'in_review',
-      fileUrl: '#'
+      fileUrl: doc.file ? URL.createObjectURL(doc.file) : '#'
     }));
 
     setStudents((prev) => [newStudent, ...prev]);
@@ -816,6 +791,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ]);
 
     return radicado;
+  };
+
+  const addStudentDocument = (docData: {
+    studentId: string;
+    name: string;
+    category?: 'identity' | 'health' | 'academic' | 'other';
+    fileName: string;
+    fileSize: string;
+    fileUrl?: string;
+    file?: File | null;
+  }): string => {
+    const newId = 'doc-upload-' + Date.now();
+    const generatedUrl = docData.fileUrl || (docData.file ? URL.createObjectURL(docData.file) : '#');
+    const newDoc: StudentDocument = {
+      id: newId,
+      studentId: docData.studentId,
+      name: docData.name,
+      category: docData.category || 'other',
+      fileName: docData.fileName,
+      fileSize: docData.fileSize,
+      uploadDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      status: 'in_review',
+      fileUrl: generatedUrl
+    };
+
+    setDocuments((prev) => [newDoc, ...prev]);
+
+    const std = students.find((s) => s.id === docData.studentId);
+    setActivities((prev) => [
+      {
+        id: 'act-' + Date.now(),
+        timeAgo: 'Justo ahora',
+        timeAgoEn: 'Just now',
+        description: `Nuevo documento "${docData.name}" subido para el estudiante ${std?.fullName || docData.studentId}`,
+        descriptionEn: `New document "${docData.name}" uploaded for student ${std?.fullName || docData.studentId}`,
+        type: 'review'
+      },
+      ...prev
+    ]);
+
+    return newId;
   };
 
   const lookupEnrollmentStatus = (query: string): EnrollmentRecord | null => {
@@ -1960,13 +1976,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         documents,
         activities,
         updateDocumentStatus,
-        addStudentDocument,
-        removeStudentDocument,
         updateEnrollmentStatus,
         addStudent,
         addGuardian,
         linkGuardianToStudent,
         submitNewEnrollment,
+        addStudentDocument,
         lookupEnrollmentStatus,
         notifications: userNotifications,
         markNotificationsAsRead,
