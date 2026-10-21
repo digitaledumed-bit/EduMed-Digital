@@ -88,7 +88,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   
-  // Register form state (Standard: Acudiente / Estudiante)
+  // Register form state (Standard: Acudiente / Estudiante / Administrativo)
   const [regName, setRegName] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regDocType, setRegDocType] = useState('CC');
@@ -97,14 +97,19 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
-  const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
+  const [regRole, setRegRole] = useState<'guardian' | 'student' | 'admin'>(
+    initialRole === 'admin' || initialRole === 'student' ? initialRole : 'guardian'
+  );
+  const [regAdminPosition, setRegAdminPosition] = useState('Personal Administrativo');
   const [regGender, setRegGender] = useState<'Masculino' | 'Femenino' | 'LGBTIQ+' | 'Prefiero no decirlo'>('Masculino');
   const [guardianValidationCode, setGuardianValidationCode] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(true);
 
-  // Restringir tipo de documento para rol Acudiente a C.C. o C.E.
+  // Restringir tipo de documento para rol Acudiente y Administrativo
   React.useEffect(() => {
     if (regRole === 'guardian' && regDocType !== 'CC' && regDocType !== 'CE') {
+      setRegDocType('CC');
+    } else if (regRole === 'admin' && regDocType !== 'CC' && regDocType !== 'CE' && regDocType !== 'PAS') {
       setRegDocType('CC');
     }
   }, [regRole, regDocType]);
@@ -291,6 +296,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
           ? 'El código de validación no coincide con los registros de la base de datos institucional. Verifique el código asignado.'
           : 'The validation code does not match institutional database records.';
       }
+    } else if (regRole === 'admin') {
+      if (!regDocType || (regDocType !== 'CC' && regDocType !== 'CE' && regDocType !== 'PAS')) {
+        newErrors.docNumber = language === 'es'
+          ? 'Para personal administrativo, el tipo de documento debe ser C.C., C.E. o Pasaporte.'
+          : 'For administrative staff, document type must be C.C., C.E., or Passport.';
+      }
     }
 
     if (!regPassword || regPassword.length < 5) {
@@ -320,6 +331,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         gender: regRole === 'student' ? regGender : undefined,
         documentNumber: `${regDocType} ${regDocNumber}`,
         phone: regPhone,
+        position: regRole === 'admin' ? regAdminPosition : undefined,
+        department: regRole === 'admin' ? 'Administración y Secretaría Escolar' : undefined,
+        institutionCode: regRole === 'admin' ? 'DANE 105001002345' : undefined,
         guardianValidationCode: regRole === 'guardian' ? guardianValidationCode.trim() : undefined
       });
       setIsLoading(false);
@@ -1043,12 +1057,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         /* TAB 2: CREAR UNA CUENTA */
         <div className="mt-5 space-y-4">
           
-          {/* Institutional Guidance Notice for Teachers and Families */}
+          {/* Institutional Guidance Notice for Teachers, Staff, and Families */}
           <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-left space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                {language === "es" ? "Registro de Acudientes y Estudiantes" : "Guardians & Students Registration"}
+                {language === "es" ? "Registro de Acudientes, Estudiantes y Administrativos" : "Guardians, Students & Administrative Registration"}
               </span>
               <span className="text-[10px] font-black uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
                 {language === "es" ? "EduMed Oficial" : "Official"}
@@ -1056,8 +1070,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               {language === "es"
-                ? "Las cuentas para docentes y directivos son asignadas y habilitadas formalmente por la administración escolar de la I.E. Félix Henao Botero (sin registro directo). Si es docente, inicie sesión con sus credenciales institucionales o acérquese a Secretaría."
-                : "Faculty accounts are managed exclusively by the school administration. Please sign in with your assigned institutional credentials."}
+                ? "Selecciona tu rol en la caja desplegable para crear tu cuenta (Acudiente, Estudiante o Administrativo). Para docentes, el acceso se asigna y habilita formalmente mediante credenciales institucionales otorgadas por Secretaría."
+                : "Select your role in the dropdown to create your account (Guardian, Student, or Administrative). Teacher accounts are managed and assigned with institutional credentials."}
             </p>
           </div>
             <form onSubmit={handleRegister} className="space-y-3.5 text-left">
@@ -1071,9 +1085,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   id="reg-role-select"
                   value={regRole}
                   onChange={(e) => {
-                    const selectedRole = e.target.value as 'guardian' | 'student';
+                    const selectedRole = e.target.value as 'guardian' | 'student' | 'admin';
                     setRegRole(selectedRole);
-                    if (selectedRole === 'guardian' && regDocType !== 'CC' && regDocType !== 'CE') {
+                    if ((selectedRole === 'guardian' || selectedRole === 'admin') && regDocType !== 'CC' && regDocType !== 'CE' && regDocType !== 'PAS') {
                       setRegDocType('CC');
                     }
                     if (regFieldErrors.role) setRegFieldErrors(prev => ({ ...prev, role: undefined }));
@@ -1086,9 +1100,42 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 >
                   <option value="guardian">{language === 'es' ? '👨‍👩‍👦 Acudiente / Padre o Tutor de Familia' : 'Parent / Guardian'}</option>
                   <option value="student">{language === 'es' ? '🎓 Estudiante / Aspirante' : 'Student / Applicant'}</option>
+                  <option value="admin">{language === 'es' ? '💼 Administrativo / Personal Directivo y Secretaría' : 'Administrative / Staff & Management'}</option>
                 </select>
                 <FieldError message={regFieldErrors.role} />
               </div>
+
+              {/* Rol Administrativo: Selección de Cargo o Función */}
+              {regRole === 'admin' && (
+                <div className="space-y-2 p-3 rounded-xl bg-teal-50/80 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800 animate-in fade-in duration-200 text-left">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="reg-admin-position-select" className="block text-xs font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
+                      <Briefcase className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                      {language === 'es' ? 'Cargo o Función Administrativa:' : 'Administrative Position:'}
+                    </label>
+                    <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-900/60 px-2 py-0.5 rounded-full border border-teal-300 dark:border-teal-700">
+                      {language === 'es' ? 'Gestión Escolar' : 'School Staff'}
+                    </span>
+                  </div>
+                  <select
+                    id="reg-admin-position-select"
+                    value={regAdminPosition}
+                    onChange={(e) => setRegAdminPosition(e.target.value)}
+                    className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
+                  >
+                    <option value="Personal Administrativo">{language === 'es' ? 'Personal Administrativo General' : 'General Administrative Staff'}</option>
+                    <option value="Secretaría Académica">{language === 'es' ? 'Secretaría Académica y Matrículas' : 'Academic Registrar & Admissions'}</option>
+                    <option value="Coordinación">{language === 'es' ? 'Coordinación Académica y Convivencia' : 'Academic Coordination'}</option>
+                    <option value="Rectoría / Directivo">{language === 'es' ? 'Rectoría / Equipo Directivo' : 'Principal / Leadership Team'}</option>
+                    <option value="Auxiliar Administrativo">{language === 'es' ? 'Auxiliar Administrativo y Archivo' : 'Administrative Assistant'}</option>
+                  </select>
+                  <p className="text-[10px] text-teal-800 dark:text-teal-300 leading-tight">
+                    {language === 'es'
+                      ? 'Tu cuenta administrativa tendrá acceso al panel de gestión, auditoría documental, matrículas y reportes SIMAT.'
+                      : 'Your admin account will access enrollment auditing, doc approvals, and institutional reports.'}
+                  </p>
+                </div>
+              )}
 
               {/* Sexo para Estudiantes */}
               {regRole === 'student' && (
@@ -1161,6 +1208,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                       <>
                         <option value="CC">{language === 'es' ? 'C.C. – Cédula de Ciudadanía' : 'C.C. – Citizenship Card'}</option>
                         <option value="CE">{language === 'es' ? 'C.E. – Cédula de Extranjería' : 'C.E. – Foreigner ID'}</option>
+                      </>
+                    ) : regRole === 'admin' ? (
+                      <>
+                        <option value="CC">{language === 'es' ? 'C.C. – Cédula de Ciudadanía' : 'C.C. – Citizenship Card'}</option>
+                        <option value="CE">{language === 'es' ? 'C.E. – Cédula de Extranjería' : 'C.E. – Foreigner ID'}</option>
+                        <option value="PAS">{language === 'es' ? 'PAS – Pasaporte' : 'PAS – Passport'}</option>
                       </>
                     ) : (
                       <>

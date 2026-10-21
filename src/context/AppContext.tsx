@@ -1244,13 +1244,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
     }
 
-    // Strict requirement: Teachers and administrative personnel cannot register directly
-    if (userData.role === 'teacher' || (userData.role as string) === 'docente' || userData.role === 'admin') {
+    // Strict requirement: Teachers cannot register directly (assigned institutional accounts)
+    if (userData.role === 'teacher' || (userData.role as string) === 'docente') {
       return {
         success: false,
         message: language === 'es'
-          ? 'El registro directo de docentes o directivos no está permitido. El acceso debe ser asignado y autorizado previamente por la administración de la I.E. Félix Henao Botero.'
-          : 'Direct registration for teachers or staff is not permitted. Access must be assigned by the school administration.'
+          ? 'El registro directo de docentes no está permitido. El acceso debe ser asignado y autorizado previamente por la administración escolar de la I.E. Félix Henao Botero.'
+          : 'Direct registration for teachers is not permitted. Access must be assigned by the school administration.'
       };
     }
 
@@ -1303,9 +1303,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       avatarUrl: studentAvatar,
       documentNumber: userData.documentNumber?.trim(),
       phone: userData.phone?.trim(),
-      position: userData.position?.trim(),
-      department: userData.department?.trim(),
-      institutionCode: userData.institutionCode?.trim(),
+      position: userData.position?.trim() || (userData.role === 'admin' ? 'Personal Administrativo' : undefined),
+      department: userData.department?.trim() || (userData.role === 'admin' ? 'Administración y Secretaría Escolar' : undefined),
+      institutionCode: userData.institutionCode?.trim() || (userData.role === 'admin' ? 'DANE 105001002345' : undefined),
       guardianValidationCode: userData.guardianValidationCode?.trim()
     };
 
