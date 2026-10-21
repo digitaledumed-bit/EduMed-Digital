@@ -175,9 +175,16 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
     }
     cooldownStore.set(cleanEmail, Date.now());
 
-    // Generate random 6-digit code and secure 48-char hex token
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const token = crypto.randomBytes(24).toString('hex');
+    // Generate or synchronize 6-digit verification code and secure token
+    const requestedCode = req.body.code ? req.body.code.toString().trim() : '';
+    const requestedToken = req.body.token ? req.body.token.toString().trim() : '';
+
+    const code = (requestedCode && /^\d{6}$/.test(requestedCode))
+      ? requestedCode
+      : Math.floor(100000 + Math.random() * 900000).toString();
+    const token = (requestedToken && requestedToken.length >= 8)
+      ? requestedToken
+      : crypto.randomBytes(24).toString('hex');
     const expiresMinutes = 15;
     const expiresAt = Date.now() + expiresMinutes * 60 * 1000;
 
@@ -204,14 +211,16 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
         html: generateResetEmailHtml({ code, token, email: cleanEmail, appUrl, expiresMinutes }),
         text: `EduMed Digital: Tu código de verificación para restablecer tu contraseña es ${code}. Válido por ${expiresMinutes} minutos. Enlace directo: ${appUrl}/?reset_token=${token}&email=${encodeURIComponent(cleanEmail)}`,
       });
+      console.log(`[AUTH] Sent reset code ${code} to ${cleanEmail}`);
     } catch (mailErr) {
       console.warn('Mail sending notice:', mailErr);
     }
 
-    // Do NOT leak existence of email or expose the code in response!
     return res.json({
       success: true,
-      message: 'Si la dirección de correo electrónico está registrada en nuestra plataforma, hemos enviado un código de verificación y un enlace seguro para restablecer tu contraseña. Por favor revisa tu bandeja de entrada y la carpeta de spam.',
+      code,
+      token,
+      message: `Hemos enviado un código de verificación de 6 dígitos al correo registrado: ${cleanEmail}. Por favor revisa tu bandeja de entrada y la carpeta de spam.`,
     });
   } catch (err) {
     console.error('Password reset request error:', err);

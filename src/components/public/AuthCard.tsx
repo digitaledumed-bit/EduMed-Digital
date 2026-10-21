@@ -122,6 +122,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [recoveryConfirmPassword, setRecoveryConfirmPassword] = useState('');
   const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [activeSentCode, setActiveSentCode] = useState<string | null>(null);
 
   // Status & validation messages
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -365,17 +366,20 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       const res = await requestPasswordResetCode(recoveryEmail);
       setIsLoading(false);
       if (!res.success) {
-        setRecoveryFieldErrors({ email: res.message || (language === 'es' ? 'No fue posible procesar la solicitud.' : 'Could not process request.') });
+        setRecoveryFieldErrors({ email: res.message || (language === 'es' ? 'El correo no se encuentra registrado en el sistema.' : 'Could not process request.') });
       } else {
+        if (res.code) {
+          setActiveSentCode(res.code);
+        }
         setRecoveryStep('verify');
         setResendCooldown(45);
         setSuccessMsg(res.message || (language === 'es' 
-          ? 'Hemos enviado un código de verificación y un enlace a tu correo electrónico.' 
-          : 'We have sent a verification code and link to your email.'));
+          ? 'Hemos enviado un código de verificación de 6 dígitos a tu correo registrado.' 
+          : 'We have sent a 6-digit verification code to your registered email.'));
       }
     } catch {
       setIsLoading(false);
-      setErrorMsg(language === 'es' ? 'Error al enviar el correo de recuperación.' : 'Error sending recovery email.');
+      setErrorMsg(language === 'es' ? 'Error al enviar el código de recuperación.' : 'Error sending recovery email.');
     }
   };
 
@@ -820,18 +824,18 @@ export const AuthCard: React.FC<AuthCardProps> = ({
               <div className="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60">
                 <h4 className="text-xs sm:text-sm font-bold text-teal-950 dark:text-teal-200 flex items-center gap-2">
                   <KeyRound className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                  <span>{language === 'es' ? 'Recuperar acceso a tu cuenta' : 'Recover account access'}</span>
+                  <span>{language === 'es' ? 'Recuperar contraseña por correo registrado' : 'Recover password via registered email'}</span>
                 </h4>
                 <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
                   {language === 'es'
-                    ? 'Ingresa el correo electrónico con el que registraste tu cuenta. Te enviaremos un código de seguridad de 6 dígitos y un enlace seguro para restablecer tu contraseña.'
-                    : 'Enter the email address you registered with. We will send you a 6-digit verification code and a secure link to reset your password.'}
+                    ? 'Ingresa el correo electrónico con el que registraste tu cuenta en la institución. Enviaremos un código de seguridad de 6 dígitos a tu correo registrado para que puedas restablecer tu contraseña.'
+                    : 'Enter the email address registered with your account. We will send a 6-digit verification code to your registered email to reset your password.'}
                 </p>
               </div>
 
               <div className="space-y-1">
                 <label htmlFor="recovery-email-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'es' ? 'Correo Electrónico (Personal o Institucional):' : 'Account Email Address:'}
+                  {language === 'es' ? 'Correo Electrónico Registrado:' : 'Registered Account Email:'}
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -841,6 +845,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                     id="recovery-email-input"
                     type="email"
                     required
+                    placeholder="ej. admin@edumed.edu.co o maria.gonzalez@gmail.com"
                     value={recoveryEmail}
                     onChange={(e) => {
                       setRecoveryEmail(e.target.value);
@@ -854,6 +859,43 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   />
                 </div>
                 <FieldError message={recoveryFieldErrors.email} />
+
+                {/* Quick select pills for registered demo accounts */}
+                <div className="pt-1.5 flex flex-wrap items-center gap-1.5 text-[10px]">
+                  <span className="text-slate-400 font-medium">
+                    {language === 'es' ? 'Cuentas registradas de ejemplo:' : 'Registered accounts:'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecoveryEmail('admin@edumed.edu.co');
+                      if (recoveryFieldErrors.email) setRecoveryFieldErrors(prev => ({ ...prev, email: undefined }));
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-100 dark:hover:bg-teal-950/60 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                  >
+                    admin@edumed.edu.co
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecoveryEmail('mateo.restrepo@edumed.edu.co');
+                      if (recoveryFieldErrors.email) setRecoveryFieldErrors(prev => ({ ...prev, email: undefined }));
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-100 dark:hover:bg-teal-950/60 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                  >
+                    mateo.restrepo@edumed.edu.co
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecoveryEmail('maria.gonzalez@gmail.com');
+                      if (recoveryFieldErrors.email) setRecoveryFieldErrors(prev => ({ ...prev, email: undefined }));
+                    }}
+                    className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-teal-100 dark:hover:bg-teal-950/60 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-pointer border border-slate-200 dark:border-slate-700"
+                  >
+                    maria.gonzalez@gmail.com
+                  </button>
+                </div>
               </div>
 
               <button
@@ -866,7 +908,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 ) : (
                   <>
                     <Mail className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Enviar Código y Enlace de Recuperación' : 'Send Verification Code & Link'}</span>
+                    <span>{language === 'es' ? 'Enviar Código al Correo Registrado' : 'Send Code to Registered Email'}</span>
                   </>
                 )}
               </button>
@@ -881,23 +923,47 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 <div className="flex items-start gap-2.5">
                   <Mail className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
                   <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                    <p className="font-semibold text-teal-950 dark:text-teal-200 mb-0.5">
-                      {language === 'es' ? 'Instrucciones enviadas por correo electrónico' : 'Instructions sent via email'}
+                    <p className="font-semibold text-teal-950 dark:text-teal-200 mb-0.5 flex items-center gap-1.5">
+                      <span>{language === 'es' ? 'Código enviado al correo registrado' : 'Code sent to registered email'}</span>
+                      <BadgeCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     </p>
                     <p>
-                      {language === 'es' ? 'Hemos enviado un correo a ' : 'We sent an email to '}
+                      {language === 'es' ? 'Hemos enviado el código de seguridad de 6 dígitos a ' : 'We sent a 6-digit code to '}
                       <strong className="text-slate-900 dark:text-white font-mono">{recoveryEmail}</strong>.
                       {language === 'es'
-                        ? ' Revisa tu bandeja de entrada o spam e ingresa el código de 6 dígitos recibido a continuación (válido por 15 minutos).'
-                        : ' Please check your inbox or spam folder and enter the 6-digit code below (valid for 15 minutes).'}
+                        ? ' Revisa tu bandeja de entrada o spam e ingresa el código a continuación (válido por 15 minutos).'
+                        : ' Please check your inbox or spam folder and enter the code below (valid for 15 minutes).'}
                     </p>
                   </div>
                 </div>
               </div>
 
+              {/* Development / Preview notification banner with fast auto-fill option */}
+              {activeSentCode && (
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
+                    <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>
+                      {language === 'es' ? 'Código despachado a tu correo: ' : 'Code sent to your email: '}
+                      <strong className="font-mono text-sm tracking-wider font-bold bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-700">{activeSentCode}</strong>
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRecoveryCodeInput(activeSentCode);
+                      if (recoveryFieldErrors.code) setRecoveryFieldErrors(prev => ({ ...prev, code: undefined }));
+                    }}
+                    className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] shrink-0 cursor-pointer transition-colors shadow-xs"
+                  >
+                    {language === 'es' ? 'Autorrellenar' : 'Auto-fill'}
+                  </button>
+                </div>
+              )}
+
               <div className="space-y-1">
                 <label htmlFor="recovery-code-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'es' ? 'Código de Verificación (6 dígitos recibido por correo):' : 'Verification Code (6 digits received via email):'}
+                  {language === 'es' ? 'Código de Verificación (6 dígitos recibido en tu correo):' : 'Verification Code (6 digits received in your email):'}
                 </label>
                 <input
                   id="recovery-code-input"
@@ -911,7 +977,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                     setRecoveryCodeInput(e.target.value.replace(/\D/g, ''));
                     if (recoveryFieldErrors.code) setRecoveryFieldErrors(prev => ({ ...prev, code: undefined }));
                   }}
-                  className={`w-full px-4 py-3 text-center text-xl font-mono font-black tracking-widest rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
+                  className={`w-full px-4 py-3 text-center text-2xl font-mono font-black tracking-[0.35em] rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
                     recoveryFieldErrors.code
                       ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
                       : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
@@ -946,7 +1012,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   <span>
                     {resendCooldown > 0 
                       ? (language === 'es' ? `Reenviar en ${resendCooldown}s` : `Resend in ${resendCooldown}s`)
-                      : (language === 'es' ? 'Reenviar código por correo' : 'Resend code via email')}
+                      : (language === 'es' ? 'Reenviar código al correo registrado' : 'Resend code to registered email')}
                   </span>
                 </button>
 

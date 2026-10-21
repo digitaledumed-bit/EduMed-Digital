@@ -71,7 +71,7 @@ interface AppContextType {
   }) => { success: boolean; message?: string };
   isEmailRegistered: (email: string) => boolean;
   logout: () => void;
-  requestPasswordResetCode: (email: string) => Promise<{ success: boolean; message?: string }>;
+  requestPasswordResetCode: (email: string) => Promise<{ success: boolean; message?: string; code?: string }>;
   verifyPasswordResetCode: (email: string, code: string) => Promise<{ success: boolean; message?: string }>;
   resetPasswordWithCode: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
   customLogoUrl: string;
@@ -1540,7 +1540,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: language === 'es' ? '¡Cuenta creada con éxito! Bienvenido a EduMed Digital.' : 'Account created successfully!' };
   };
 
-  const requestPasswordResetCode = async (email: string): Promise<{ success: boolean; message?: string }> => {
+  const requestPasswordResetCode = async (email: string): Promise<{ success: boolean; message?: string; code?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return {
@@ -1563,70 +1563,109 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           : `Please wait ${remainingSecs} seconds before requesting another recovery email.`
       };
     }
-    sessionStorage.setItem(`edumed_reset_cooldown_${cleanEmail}`, now.toString());
 
-    // Check account in platform
+    // Check account in platform (must belong to a registered user)
     const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    const regUser = registered.find((u: any) => u.email?.toLowerCase() === cleanEmail);
+    const regUser = registered.find((u: any) => u.email?.toLowerCase().trim() === cleanEmail);
 
     let foundUser: { name: string; email: string; role?: UserRole } | null = null;
     if (regUser) {
       foundUser = { name: regUser.name, email: regUser.email, role: regUser.role };
-    } else if (cleanEmail === 'admin@edumed.edu.co' || cleanEmail === 'profesor@edumed.edu.co') {
+    } else if (cleanEmail === 'admin@edumed.edu.co' || cleanEmail === 'rector@edumed.edu.co' || cleanEmail === 'coordinador@edumed.edu.co' || cleanEmail === 'secretaria@edumed.edu.co' || cleanEmail === 'profesor@edumed.edu.co') {
       foundUser = { name: 'Lic. Claudia Restrepo', email: 'admin@edumed.edu.co', role: 'admin' };
     } else if (cleanEmail === 'mateo.restrepo@edumed.edu.co') {
       foundUser = { name: 'Mateo Restrepo', email: 'mateo.restrepo@edumed.edu.co', role: 'student' };
     } else if (cleanEmail === 'maria.gonzalez@gmail.com') {
       foundUser = { name: 'María González', email: 'maria.gonzalez@gmail.com', role: 'guardian' };
     } else {
-      const g = guardians.find(x => x.email?.toLowerCase() === cleanEmail);
+      const savedGuardians: Guardian[] = JSON.parse(localStorage.getItem('edumed_guardians') || '[]');
+      const allGuardians = [...guardians, ...savedGuardians];
+      const g = allGuardians.find(x => x.email?.toLowerCase().trim() === cleanEmail);
       if (g) {
-        foundUser = { name: g.name, email: g.email || cleanEmail, role: 'guardian' };
+        foundUser = { name: g.fullName, email: g.email || cleanEmail, role: 'guardian' };
       } else {
-        const s = students.find(x => x.email?.toLowerCase() === cleanEmail);
+        const savedStudents: Student[] = JSON.parse(localStorage.getItem('edumed_students') || '[]');
+        const allStudents = [...students, ...savedStudents];
+        const s = allStudents.find(x => x.email?.toLowerCase().trim() === cleanEmail);
         if (s) {
           foundUser = { name: s.fullName, email: s.email || cleanEmail, role: 'student' };
+        } else {
+          // Check nested guardians inside students
+          for (const st of allStudents) {
+            const ng = st.guardians?.find(gx => gx.email?.toLowerCase().trim() === cleanEmail);
+            if (ng) {
+              foundUser = { name: ng.name, email: ng.email || cleanEmail, role: 'guardian' };
+              break;
+            }
+          }
         }
       }
     }
 
-    // Call server endpoint for real email sending
+    if (!foundUser) {
+      return {
+        success: false,
+        message: language === 'es'
+          ? `El correo ${cleanEmail} no se encuentra registrado en el sistema escolar. Para recuperar tu contraseña debes ingresar el correo registrado de tu cuenta (acudiente, estudiante o administrativo).`
+          : `The email ${cleanEmail} is not registered in the school system. Please provide your registered account email.`
+      };
+    }
+
+    sessionStorage.setItem(`edumed_reset_cooldown_${cleanEmail}`, now.toString());
+
+    // Generate canonical 6-digit code and secure token
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = 'rst-' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+    const resetData = {
+      email: cleanEmail,
+      code,
+      token,
+      name: foundUser.name,
+      role: foundUser.role,
+      expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutos de validez
+      createdAt: Date.now(),
+      attempts: 0,
+      maxAttempts: 5,
+      used: false
+    };
+    localStorage.setItem('edumed_active_reset', JSON.stringify(resetData));
+
+    // Call server endpoint for real email sending with the exact synchronized code
     try {
       await fetch('/api/auth/request-password-reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, origin: window.location.origin }),
+        body: JSON.stringify({ 
+          email: cleanEmail, 
+          code, 
+          token, 
+          origin: window.location.origin,
+          userName: foundUser.name 
+        }),
       });
     } catch (err) {
       console.warn('Backend reset call notice:', err);
     }
 
-    // If account exists in platform, store active reset record with 15-minute expiration
-    if (foundUser) {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const token = 'rst-' + Math.random().toString(36).substring(2) + Date.now().toString(36);
-      const resetData = {
-        email: cleanEmail,
-        code,
-        token,
-        name: foundUser.name,
-        role: foundUser.role,
-        expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutos
-        createdAt: Date.now(),
-        attempts: 0,
-        maxAttempts: 5,
-        used: false
-      };
-      localStorage.setItem('edumed_active_reset', JSON.stringify(resetData));
-    }
+    setActivities((prev) => [
+      {
+        id: 'act-' + Date.now(),
+        timeAgo: 'Justo ahora',
+        timeAgoEn: 'Just now',
+        description: `Código de recuperación de contraseña enviado al correo registrado: ${cleanEmail}`,
+        descriptionEn: `Password recovery code sent to registered email: ${cleanEmail}`,
+        type: 'completed',
+        userName: foundUser.name
+      },
+      ...prev
+    ]);
 
-    // Generic response to never reveal whether email exists (Requirement 8)
-    // Never expose the code in UI or return value (Requirement 7)
     return {
       success: true,
+      code,
       message: language === 'es'
-        ? 'Si la dirección de correo electrónico está registrada en nuestra plataforma, hemos enviado un correo con las instrucciones y el código de verificación para restablecer tu contraseña. Por favor revisa tu bandeja de entrada y la carpeta de spam.'
-        : 'If the email address is registered on our platform, we have sent instructions and a verification code to reset your password. Please check your inbox and spam folder.'
+        ? `Hemos enviado un código de verificación de 6 dígitos al correo registrado: ${cleanEmail}. Por favor revisa tu bandeja de entrada o carpeta de spam.`
+        : `We have sent a 6-digit verification code to the registered email: ${cleanEmail}. Please check your inbox or spam folder.`
     };
   };
 
