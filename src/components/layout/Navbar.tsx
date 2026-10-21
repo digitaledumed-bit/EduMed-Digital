@@ -462,7 +462,7 @@ export const Navbar: React.FC = () => {
                           {language === 'es' ? 'Perfil: ' : 'Profile: '}
                           <strong className="text-slate-700 dark:text-slate-200">
                             {currentUser.role === 'admin'
-                              ? (currentUser.position || (language === 'es' ? 'Personal Administrativo' : 'Administrative Staff'))
+                              ? (currentUser.position || (language === 'es' ? 'Administrador General' : 'General Administrator'))
                               : currentUser.role === 'student'
                               ? 'Estudiante'
                               : 'Acudiente'}

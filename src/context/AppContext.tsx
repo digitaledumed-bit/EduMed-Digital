@@ -1303,7 +1303,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       avatarUrl: studentAvatar,
       documentNumber: userData.documentNumber?.trim(),
       phone: userData.phone?.trim(),
-      position: userData.position?.trim() || (userData.role === 'admin' ? 'Personal Administrativo' : undefined),
+      position: userData.position?.trim() || (userData.role === 'admin' ? 'Administrador General' : undefined),
       department: userData.department?.trim() || (userData.role === 'admin' ? 'Administración y Secretaría Escolar' : undefined),
       institutionCode: userData.institutionCode?.trim() || (userData.role === 'admin' ? 'DANE 105001002345' : undefined),
       guardianValidationCode: userData.guardianValidationCode?.trim()
@@ -1374,7 +1374,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('dashboard');
 
     const roleName = newUser.role === 'admin' 
-      ? (language === 'es' ? 'Personal Administrativo y Directivo' : 'Administrative / Staff') 
+      ? (newUser.position || (language === 'es' ? 'Administrador General' : 'General Administrator')) 
       : newUser.role === 'student' 
         ? 'Estudiante' 
         : 'Acudiente';

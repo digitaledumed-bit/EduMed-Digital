@@ -100,7 +100,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [regRole, setRegRole] = useState<'guardian' | 'student' | 'admin'>(
     initialRole === 'admin' || initialRole === 'student' ? initialRole : 'guardian'
   );
-  const [regAdminPosition, setRegAdminPosition] = useState('Personal Administrativo');
+  const [regAdminPosition, setRegAdminPosition] = useState('Administrador General');
   const [regGender, setRegGender] = useState<'Masculino' | 'Femenino' | 'LGBTIQ+' | 'Prefiero no decirlo'>('Masculino');
   const [guardianValidationCode, setGuardianValidationCode] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(true);
@@ -1100,7 +1100,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 >
                   <option value="guardian">{language === 'es' ? '👨‍👩‍👦 Acudiente / Padre o Tutor de Familia' : 'Parent / Guardian'}</option>
                   <option value="student">{language === 'es' ? '🎓 Estudiante / Aspirante' : 'Student / Applicant'}</option>
-                  <option value="admin">{language === 'es' ? '💼 Administrativo / Personal Directivo y Secretaría' : 'Administrative / Staff & Management'}</option>
+                  <option value="admin">{language === 'es' ? '💼 Personal Administrativo' : 'Administrative Staff'}</option>
                 </select>
                 <FieldError message={regFieldErrors.role} />
               </div>
@@ -1111,10 +1111,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   <div className="flex items-center justify-between">
                     <label htmlFor="reg-admin-position-select" className="block text-xs font-bold text-teal-900 dark:text-teal-200 flex items-center gap-1.5">
                       <Briefcase className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                      {language === 'es' ? 'Cargo o Función Administrativa:' : 'Administrative Position:'}
+                      {language === 'es' ? 'Personal Administrativo:' : 'Administrative Staff:'}
                     </label>
                     <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-900/60 px-2 py-0.5 rounded-full border border-teal-300 dark:border-teal-700">
-                      {language === 'es' ? 'Gestión Escolar' : 'School Staff'}
+                      {language === 'es' ? 'Administrador General' : 'General Administrator'}
                     </span>
                   </div>
                   <select
@@ -1123,16 +1123,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                     onChange={(e) => setRegAdminPosition(e.target.value)}
                     className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white font-medium bg-white dark:bg-slate-800 border border-teal-300 dark:border-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
                   >
-                    <option value="Personal Administrativo">{language === 'es' ? 'Personal Administrativo General' : 'General Administrative Staff'}</option>
-                    <option value="Secretaría Académica">{language === 'es' ? 'Secretaría Académica y Matrículas' : 'Academic Registrar & Admissions'}</option>
-                    <option value="Coordinación">{language === 'es' ? 'Coordinación Académica y Convivencia' : 'Academic Coordination'}</option>
-                    <option value="Rectoría / Directivo">{language === 'es' ? 'Rectoría / Equipo Directivo' : 'Principal / Leadership Team'}</option>
-                    <option value="Auxiliar Administrativo">{language === 'es' ? 'Auxiliar Administrativo y Archivo' : 'Administrative Assistant'}</option>
+                    <option value="Administrador General">{language === 'es' ? 'Administrador General' : 'General Administrator'}</option>
                   </select>
                   <p className="text-[10px] text-teal-800 dark:text-teal-300 leading-tight">
                     {language === 'es'
-                      ? 'Tu cuenta administrativa tendrá acceso al panel de gestión, auditoría documental, matrículas y reportes SIMAT.'
-                      : 'Your admin account will access enrollment auditing, doc approvals, and institutional reports.'}
+                      ? 'Tu cuenta de Administrador General tendrá acceso completo al panel de gestión institucional, auditoría documental, matrículas y reportes SIMAT.'
+                      : 'Your General Administrator account will have full access to management, document auditing, enrollments, and SIMAT reports.'}
                   </p>
                 </div>
               )}
