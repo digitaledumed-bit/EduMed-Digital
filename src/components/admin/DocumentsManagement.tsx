@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   FolderKanban, 
@@ -17,7 +17,10 @@ import {
   RefreshCw,
   ExternalLink,
   Upload,
-  Plus
+  Plus,
+  UserCheck,
+  ShieldCheck,
+  ArrowRight
 } from 'lucide-react';
 import { StudentDocument } from '../../types';
 import { DocumentPreviewModal } from '../common/DocumentPreviewModal';
@@ -29,14 +32,18 @@ export const DocumentsManagement: React.FC = () => {
     students, 
     documents, 
     updateDocumentStatus,
+    approveAllStudentDocumentsAndEnrollment,
     addStudentDocument,
     currentUser,
     guardians,
     enrollments,
-    setActiveTab
+    setActiveTab,
+    selectedStudentId: appSelectedStudentId,
+    setSelectedStudentId: setAppSelectedStudentId
   } = useApp();
 
   const isGuardian = currentUser?.role === 'guardian';
+  const isAdmin = currentUser?.role === 'admin';
   const isAdminOrStaff = currentUser?.role === 'admin' || currentUser?.role === 'teacher';
 
   // If guardian, find linked students
@@ -82,10 +89,17 @@ export const DocumentsManagement: React.FC = () => {
     : students;
 
   const [selectedStudentId, setSelectedStudentId] = useState<string>(
-    () => availableStudents[0]?.id || ''
+    () => appSelectedStudentId || availableStudents[0]?.id || ''
   );
   const [searchTerm, setSearchTerm] = useState('');
-  
+  const [statusFeedback, setStatusFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (appSelectedStudentId && availableStudents.some((s) => s.id === appSelectedStudentId)) {
+      setSelectedStudentId(appSelectedStudentId);
+    }
+  }, [appSelectedStudentId, availableStudents]);
+
   // Rejection modal state
   const [rejectingDoc, setRejectingDoc] = useState<StudentDocument | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
@@ -93,7 +107,7 @@ export const DocumentsManagement: React.FC = () => {
   // Preview Modal state (for existing documents)
   const [previewDoc, setPreviewDoc] = useState<StudentDocument | null>(null);
 
-  // New Document Upload State with Live Preview
+  // New Document Upload State with Live Preview (Guardians only)
   const [uploadingFile, setUploadingFile] = useState<File | null>(null);
   const [uploadDocName, setUploadDocName] = useState<string>('Documento Adicional');
   const [uploadDocCategory, setUploadDocCategory] = useState<'identity' | 'health' | 'academic' | 'other'>('identity');
@@ -102,7 +116,18 @@ export const DocumentsManagement: React.FC = () => {
   const [isDragging, setIsDragging] = useState<boolean>(false);
 
   const selectedStudent = availableStudents.find((s) => s.id === selectedStudentId) || availableStudents[0] || students[0];
-  const studentDocs = documents.filter((d) => d.studentId === selectedStudent?.id);
+  const studentDocs = documents.filter(
+    (d) =>
+      d.studentId === selectedStudent?.id ||
+      (selectedStudent?.fullName && d.studentName === selectedStudent?.fullName)
+  );
+
+  const studentEnrollment = enrollments.find(
+    (e) =>
+      e.studentId === selectedStudent?.id ||
+      (selectedStudent?.documentNumber && e.studentDoc === selectedStudent?.documentNumber) ||
+      (selectedStudent?.fullName && e.studentName?.toLowerCase().includes(selectedStudent?.fullName?.toLowerCase()))
+  );
 
   const totalDocs = studentDocs.length;
   const approvedDocs = studentDocs.filter((d) => d.status === 'approved').length;
@@ -115,6 +140,33 @@ export const DocumentsManagement: React.FC = () => {
 
   const handleApprove = (docId: string) => {
     updateDocumentStatus(docId, 'approved');
+    const remainingUnapproved = studentDocs.filter(d => d.id !== docId && d.status !== 'approved');
+    if (remainingUnapproved.length === 0) {
+      setStatusFeedback(
+        language === 'es'
+          ? '¡Todos los documentos han sido aprobados! La solicitud de matrícula ahora figura como "Matrícula Aprobada" en el sistema.'
+          : 'All documents approved! The enrollment is now officially marked as "Approved".'
+      );
+    } else {
+      setStatusFeedback(
+        language === 'es'
+          ? `Documento aprobado exitosamente. Restan ${remainingUnapproved.length} documento(s) por auditar para formalizar la matrícula.`
+          : 'Document approved successfully.'
+      );
+    }
+    setTimeout(() => setStatusFeedback(null), 6000);
+  };
+
+  const handleApproveAllAndValidateEnrollment = () => {
+    if (selectedStudent) {
+      approveAllStudentDocumentsAndEnrollment(selectedStudent.id);
+      setStatusFeedback(
+        language === 'es'
+          ? '¡Expediente auditado y validado! Todos los documentos fueron aprobados y la solicitud figura como "Matrícula Aprobada" en Solicitudes de Matrícula.'
+          : 'Digital record validated! All documents approved and enrollment officially marked as Approved.'
+      );
+      setTimeout(() => setStatusFeedback(null), 6000);
+    }
   };
 
   const handleOpenRejectModal = (doc: StudentDocument) => {
@@ -331,7 +383,89 @@ export const DocumentsManagement: React.FC = () => {
                 />
               </div>
             </div>
+
+            {/* Student Enrollment Status Linkage */}
+            {studentEnrollment && (
+              <div className={`mt-4 p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+                studentEnrollment.status === 'approved'
+                  ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-100'
+                  : studentEnrollment.status === 'rejected'
+                  ? 'bg-rose-50/80 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-100'
+                  : 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-100'
+              }`}>
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    {studentEnrollment.status === 'approved' ? (
+                      <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    ) : studentEnrollment.status === 'rejected' ? (
+                      <XCircle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
+                    ) : (
+                      <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-extrabold text-xs sm:text-sm">
+                        {studentEnrollment.status === 'approved' 
+                          ? (language === 'es' ? 'Matrícula Aprobada' : 'Enrollment Approved')
+                          : (language === 'es' ? 'Solicitud de Matrícula en Validación Documental' : 'Enrollment Under Document Review')}
+                      </span>
+                      <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-white/70 dark:bg-slate-900/60 border border-current">
+                        {studentEnrollment.id}
+                      </span>
+                    </div>
+                    <p className="text-[11px] opacity-90 mt-0.5 leading-relaxed">
+                      {studentEnrollment.status === 'approved'
+                        ? (language === 'es' 
+                            ? 'Documentos verificados y validados. La solicitud figura como Matrícula Aprobada oficialmente en el sistema.' 
+                            : 'Documents verified and validated. Enrollment is officially marked Approved.')
+                        : (language === 'es'
+                            ? 'Al auditar y aprobar los documentos del expediente digital, la matrícula se actualizará automáticamente a "Matrícula Aprobada".'
+                            : 'Upon approving digital record documents, enrollment will automatically update to Approved.')}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {studentEnrollment.status !== 'approved' && isAdminOrStaff && (
+                    <button
+                      type="button"
+                      onClick={handleApproveAllAndValidateEnrollment}
+                      className="px-3.5 py-1.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs shadow-xs flex items-center gap-1.5 cursor-pointer transition-all active:scale-98"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>{language === 'es' ? 'Aprobar Todo y Formalizar Matrícula' : 'Approve All & Formalize'}</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('enrollments')}
+                    className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-semibold text-xs hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>{language === 'es' ? 'Ver en Solicitudes de Matrícula' : 'View in Enrollments'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Toast Notification for Approval or Auto-Approval */}
+          {statusFeedback && (
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/80 border-2 border-emerald-400 dark:border-emerald-700 text-emerald-900 dark:text-emerald-100 text-xs sm:text-sm font-bold flex items-center justify-between shadow-md animate-in fade-in">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <span>{statusFeedback}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setStatusFeedback(null)}
+                className="text-emerald-700 dark:text-emerald-300 hover:underline font-bold text-xs ml-3"
+              >
+                ✕
+              </button>
+            </div>
+          )}
 
           {/* Toast Notification for Upload */}
           {uploadSuccessToast && (
@@ -350,60 +484,93 @@ export const DocumentsManagement: React.FC = () => {
             </div>
           )}
 
-          {/* Header of Document list with "Subir Nuevo Documento" button & Drag & Drop */}
-          <div 
-            onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDragging(false);
-              if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                const file = e.dataTransfer.files[0];
-                setUploadingFile(file);
-                const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
-                setUploadDocName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
-                setIsUploadPreviewOpen(true);
-              }
-            }}
-            className={`p-5 rounded-2xl border transition-all ${
-              isDragging 
-                ? 'border-2 border-dashed border-teal-500 bg-teal-50/80 dark:bg-teal-950/60 shadow-lg' 
-                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs'
-            }`}
-          >
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FolderKanban className="w-5 h-5 text-teal-600" />
-                  <span>{language === 'es' ? 'Archivos del Expediente Digital' : 'Digital Record Files'}</span>
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {language === 'es' 
-                    ? 'Arrastra o selecciona archivos PDF o imágenes para ver la vista previa interactiva antes de radicar.' 
-                    : 'Drag or select PDF/image files to view interactive preview before submitting.'}
-                </p>
+          {/* Header of Document list: For Admin -> Audit Mode ONLY (NO UPLOAD). For Guardian -> Upload */}
+          {isAdmin ? (
+            <div className="p-5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200 dark:border-teal-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/60 flex items-center justify-center shrink-0 text-teal-700 dark:text-teal-300">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <FolderKanban className="w-4 h-4 text-teal-600" />
+                      <span>{language === 'es' ? 'Archivos del Expediente Digital' : 'Digital Record Files'}</span>
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-teal-200/80 dark:bg-teal-900/80 text-teal-900 dark:text-teal-200 border border-teal-300 dark:border-teal-700">
+                      {language === 'es' ? 'Auditoría Administrativa General' : 'General Admin Audit'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-teal-800 dark:text-teal-300 mt-1 max-w-2xl leading-relaxed">
+                    {language === 'es' 
+                      ? 'Los documentos son radicados y adjuntados exclusivamente por los acudientes. Como Administrador General tu función oficial es auditar, verificar legibilidad y aprobar o rechazar cada documento para formalizar la matrícula escolar.' 
+                      : 'Documents are uploaded exclusively by guardians. Your role as General Administrator is to audit and approve or reject them to formalize enrollment.'}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                <label className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs sm:text-sm shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]">
-                  <Upload className="w-4 h-4" />
-                  <span>{language === 'es' ? 'Subir Nuevo Documento' : 'Upload New Document'}</span>
-                  <input
-                    type="file"
-                    accept=".pdf,image/png,image/jpeg,image/webp"
-                    className="hidden"
-                    onChange={handleSelectFileToUpload}
-                  />
-                </label>
+              <div className="shrink-0 flex items-center gap-2">
+                <span className="px-3 py-1.5 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-900 dark:text-teal-200 text-xs font-bold border border-teal-300 dark:border-teal-700 flex items-center gap-1.5">
+                  <UserCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                  <span>{language === 'es' ? 'Cargado por Acudientes' : 'Uploaded by Guardians'}</span>
+                </span>
               </div>
             </div>
+          ) : (
+            <div 
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                  const file = e.dataTransfer.files[0];
+                  setUploadingFile(file);
+                  const baseName = file.name.replace(/\.[^/.]+$/, '').replace(/[-_]/g, ' ');
+                  setUploadDocName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
+                  setIsUploadPreviewOpen(true);
+                }
+              }}
+              className={`p-5 rounded-2xl border transition-all ${
+                isDragging 
+                  ? 'border-2 border-dashed border-teal-500 bg-teal-50/80 dark:bg-teal-950/60 shadow-lg' 
+                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-xs'
+              }`}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <FolderKanban className="w-5 h-5 text-teal-600" />
+                    <span>{language === 'es' ? 'Archivos del Expediente Digital' : 'Digital Record Files'}</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    {language === 'es' 
+                      ? 'Arrastra o selecciona archivos PDF o imágenes para ver la vista previa interactiva antes de radicar.' 
+                      : 'Drag or select PDF/image files to view interactive preview before submitting.'}
+                  </p>
+                </div>
 
-            {isDragging && (
-              <div className="mt-3 p-3 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 text-xs font-bold text-center animate-pulse">
-                {language === 'es' ? 'Suelta el archivo aquí para abrir la vista previa instantánea' : 'Drop file here to open instant preview'}
+                <div className="flex items-center gap-2 shrink-0">
+                  <label className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs sm:text-sm shadow-sm cursor-pointer transition-all hover:scale-[1.01] active:scale-[0.99]">
+                    <Upload className="w-4 h-4" />
+                    <span>{language === 'es' ? 'Subir Nuevo Documento' : 'Upload New Document'}</span>
+                    <input
+                      type="file"
+                      accept=".pdf,image/png,image/jpeg,image/webp"
+                      className="hidden"
+                      onChange={handleSelectFileToUpload}
+                    />
+                  </label>
+                </div>
               </div>
-            )}
-          </div>
+
+              {isDragging && (
+                <div className="mt-3 p-3 rounded-xl bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-200 text-xs font-bold text-center animate-pulse">
+                  {language === 'es' ? 'Suelta el archivo aquí para abrir la vista previa instantánea' : 'Drop file here to open instant preview'}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Document Cards List */}
           <div className="space-y-4">
@@ -430,6 +597,18 @@ export const DocumentsManagement: React.FC = () => {
                       <span className="text-xs text-teal-700 dark:text-teal-400 font-medium block mt-0.5">
                         {doc.fileName}
                       </span>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950/70 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-200 text-[11px] font-bold">
+                          <UserCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                          <span>
+                            {language === 'es' ? 'Subido por Acudiente:' : 'Uploaded by Guardian:'}{' '}
+                            <strong className="text-teal-950 dark:text-teal-100">{doc.uploadedBy || 'Acudiente Autorizado'}</strong>
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-slate-400 font-medium">
+                          {language === 'es' ? 'Radicado:' : 'Filed:'} {doc.uploadDate}
+                        </span>
+                      </div>
                     </div>
                   </div>
 

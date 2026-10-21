@@ -85,6 +85,7 @@ interface AppContextType {
 
   updateDocumentStatus: (docId: string, status: DocumentStatus, rejectionReason?: string) => void;
   updateEnrollmentStatus: (enrollmentId: string, status: EnrollmentStatus) => void;
+  approveAllStudentDocumentsAndEnrollment: (studentId: string) => void;
   addStudent: (student: Omit<Student, 'id'>) => string;
   addGuardian: (guardian: Omit<Guardian, 'id'>) => string;
   linkGuardianToStudent: (studentId: string, guardianData: { name: string; relationship: string; phone: string; email: string; isPrimary: boolean; livesWithStudent: boolean }) => void;
@@ -179,12 +180,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>(() => {
     const saved = localStorage.getItem('edumed_enrollments');
-    return saved ? JSON.parse(saved) : initialEnrollments;
+    if (!saved) return initialEnrollments;
+    try {
+      const parsed: EnrollmentRecord[] = JSON.parse(saved);
+      const existingIds = new Set(parsed.map((e) => e.id));
+      const missing = initialEnrollments.filter((e) => !existingIds.has(e.id));
+      return [...parsed, ...missing];
+    } catch {
+      return initialEnrollments;
+    }
   });
 
   const [documents, setDocuments] = useState<StudentDocument[]>(() => {
     const saved = localStorage.getItem('edumed_documents');
-    return saved ? JSON.parse(saved) : initialDocuments;
+    if (!saved) return initialDocuments;
+    try {
+      const parsed: StudentDocument[] = JSON.parse(saved);
+      const existingIds = new Set(parsed.map((d) => d.id));
+      const missing = initialDocuments.filter((d) => !existingIds.has(d.id));
+      return [...parsed, ...missing];
+    } catch {
+      return initialDocuments;
+    }
   });
 
   const [activities, setActivities] = useState<ActivityItem[]>(() => {
@@ -598,44 +615,172 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateDocumentStatus = (docId: string, status: DocumentStatus, rejectionReason?: string) => {
+    let affectedStudentId: string | undefined;
+    let targetDocName: string = '';
+
     setDocuments((prev) =>
-      prev.map((d) =>
-        d.id === docId
-          ? {
-              ...d,
-              status,
-              rejectionReason: status === 'rejected' ? rejectionReason || 'Documento no cumple requisitos.' : undefined
-            }
-          : d
-      )
+      prev.map((d) => {
+        if (d.id === docId) {
+          affectedStudentId = d.studentId;
+          targetDocName = d.name;
+          return {
+            ...d,
+            status,
+            rejectionReason: status === 'rejected' ? rejectionReason || 'Documento no cumple requisitos.' : undefined
+          };
+        }
+        return d;
+      })
     );
 
-    const doc = documents.find(d => d.id === docId);
-    if (doc) {
+    const doc = documents.find((d) => d.id === docId);
+    const studentId = affectedStudentId || doc?.studentId;
+    const docName = targetDocName || doc?.name || 'Documento';
+
+    if (doc || targetDocName) {
       const newActivity: ActivityItem = {
         id: 'act-' + Date.now(),
         timeAgo: 'Justo ahora',
         timeAgoEn: 'Just now',
-        description: `Documento "${doc.name}" ${status === 'approved' ? 'aprobado' : status === 'rejected' ? 'rechazado' : 'actualizado'} por Administración`,
-        descriptionEn: `Document "${doc.name}" ${status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'updated'} by Administration`,
+        description: `Documento "${docName}" ${status === 'approved' ? 'aprobado' : status === 'rejected' ? 'rechazado' : 'actualizado'} por Administración General`,
+        descriptionEn: `Document "${docName}" ${status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'updated'} by General Administration`,
         type: status === 'approved' ? 'completed' : status === 'rejected' ? 'warning' : 'review'
       };
       setActivities((prev) => [newActivity, ...prev]);
     }
+
+    // Al momento de aprobar documentos, verificar si la matrícula del estudiante debe quedar Aprobada
+    if (status === 'approved' && studentId) {
+      const studentOtherDocs = documents.filter((d) => d.studentId === studentId && d.id !== docId);
+      const allDocsApproved = studentOtherDocs.every((d) => d.status === 'approved');
+
+      if (allDocsApproved) {
+        setEnrollments((prev) =>
+          prev.map((e) => {
+            if (e.studentId === studentId && e.status !== 'approved') {
+              return {
+                ...e,
+                status: 'approved',
+                step: 6,
+                lastUpdated: new Date().toLocaleDateString('es-CO', {
+                  day: '2-digit',
+                  month: 'short',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                }),
+                notes: 'Matrícula Aprobada: Expediente digital validado y documentos aprobados oficialmente por Administración General.'
+              };
+            }
+            return e;
+          })
+        );
+
+        const std = students.find((s) => s.id === studentId);
+        setActivities((prev) => [
+          {
+            id: 'act-mat-' + Date.now(),
+            timeAgo: 'Justo ahora',
+            timeAgoEn: 'Just now',
+            description: `Solicitud de matrícula para ${std?.fullName || 'el estudiante'} formalmente Aprobada tras la verificación y aprobación de todos los documentos del expediente digital.`,
+            descriptionEn: `Enrollment application for ${std?.fullName || 'student'} officially Approved after full verification and approval of digital record documents.`,
+            type: 'completed',
+            studentName: std?.fullName
+          },
+          ...prev
+        ]);
+      }
+    }
   };
 
-  const updateEnrollmentStatus = (enrollmentId: string, status: EnrollmentStatus) => {
+  const approveAllStudentDocumentsAndEnrollment = (studentId: string) => {
+    // 1. Aprobar todos los documentos del estudiante
+    setDocuments((prev) =>
+      prev.map((d) =>
+        d.studentId === studentId ? { ...d, status: 'approved' as DocumentStatus, rejectionReason: undefined } : d
+      )
+    );
+
+    // 2. Aprobar matrícula del estudiante
     setEnrollments((prev) =>
       prev.map((e) =>
-        e.id === enrollmentId
+        e.studentId === studentId
           ? {
               ...e,
-              status,
-              lastUpdated: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+              status: 'approved' as EnrollmentStatus,
+              step: 6,
+              lastUpdated: new Date().toLocaleDateString('es-CO', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              }),
+              notes: 'Matrícula Aprobada: Expediente digital completo validado y aprobado en bloque por Administración General.'
             }
           : e
       )
     );
+
+    // 3. Activar estudiante si estaba in_process
+    setStudents((prev) =>
+      prev.map((s) => (s.id === studentId && s.status !== 'active' ? { ...s, status: 'active' } : s))
+    );
+
+    // 4. Registro de actividad institucional
+    const std = students.find((s) => s.id === studentId);
+    setActivities((prev) => [
+      {
+        id: 'act-all-' + Date.now(),
+        timeAgo: 'Justo ahora',
+        timeAgoEn: 'Just now',
+        description: `Expediente digital auditado: Todos los documentos aprobados y Matrícula Aprobada formalmente para ${std?.fullName || 'el estudiante'} por Administración General.`,
+        descriptionEn: `Digital record audited: All documents approved and Enrollment officially Approved for ${std?.fullName || 'the student'} by General Administration.`,
+        type: 'completed',
+        studentName: std?.fullName
+      },
+      ...prev
+    ]);
+  };
+
+  const updateEnrollmentStatus = (enrollmentId: string, status: EnrollmentStatus) => {
+    let affectedStudentId: string | undefined;
+
+    setEnrollments((prev) =>
+      prev.map((e) => {
+        if (e.id === enrollmentId) {
+          affectedStudentId = e.studentId;
+          return {
+            ...e,
+            status,
+            lastUpdated: new Date().toLocaleDateString('es-CO', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }),
+            notes:
+              status === 'approved'
+                ? 'Matrícula Aprobada oficialmente por Administración General.'
+                : status === 'rejected'
+                ? 'Matrícula rechazada por requisitos documentales o cupo no disponible.'
+                : e.notes
+          };
+        }
+        return e;
+      })
+    );
+
+    // Si se aprueba la matrícula, sincronizar documentos a aprobados y estudiante activo
+    if (status === 'approved' && affectedStudentId) {
+      setStudents((prev) =>
+        prev.map((s) => (s.id === affectedStudentId ? { ...s, status: 'active' } : s))
+      );
+      setDocuments((prev) =>
+        prev.map((d) => (d.studentId === affectedStudentId ? { ...d, status: 'approved', rejectionReason: undefined } : d))
+      );
+    }
   };
 
   const addStudent = (studentData: Omit<Student, 'id'>): string => {
@@ -1977,6 +2122,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activities,
         updateDocumentStatus,
         updateEnrollmentStatus,
+        approveAllStudentDocumentsAndEnrollment,
         addStudent,
         addGuardian,
         linkGuardianToStudent,
