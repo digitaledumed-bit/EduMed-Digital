@@ -102,6 +102,17 @@ interface AppContextType {
   notifications: AppNotification[];
   markNotificationsAsRead: () => void;
   unreadCount: number;
+  notifyStudentAssignment: (data: {
+    studentId: string;
+    studentName: string;
+    studentEmail?: string;
+    studentDoc?: string;
+    grade: string;
+    shift: string;
+    classroom?: string;
+    homeroomTeacher?: string;
+    customNote?: string;
+  }) => boolean;
 
   portalConfigs: Record<'admin' | 'guardian' | 'student', RolePortalConfig>;
   updateRolePortalConfig: (role: 'admin' | 'guardian' | 'student', updatedConfig: RolePortalConfig) => Promise<{ success: boolean; message?: string }>;
@@ -2118,6 +2129,69 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const notifyStudentAssignment = (data: {
+    studentId: string;
+    studentName: string;
+    studentEmail?: string;
+    studentDoc?: string;
+    grade: string;
+    shift: string;
+    classroom?: string;
+    homeroomTeacher?: string;
+    customNote?: string;
+  }): boolean => {
+    const shiftHours = data.shift === 'Tarde' ? '12:30 PM - 6:30 PM' : data.shift === 'Única' ? '7:00 AM - 3:00 PM' : '6:30 AM - 12:30 PM';
+    const classroomText = data.classroom || 'Salón 204';
+    const teacherText = data.homeroomTeacher || 'Lic. Claudia Restrepo';
+
+    const newNotif: AppNotification = {
+      id: 'notif-assign-' + Date.now(),
+      title: `Asignación Oficial: Grado ${data.grade} - Jornada ${data.shift}`,
+      titleEn: `Official Placement: Grade ${data.grade} - ${data.shift} Shift`,
+      message: `Hola ${data.studentName}, la Secretaría Académica te informa que tu cupo ha sido asignado al grado ${data.grade} en la jornada ${data.shift} (${shiftHours}) en el ${classroomText}. Docente titular: ${teacherText}.${data.customNote ? ` Nota: ${data.customNote}` : ''}`,
+      messageEn: `Dear ${data.studentName}, you have been assigned to grade ${data.grade} in the ${data.shift} shift (${shiftHours}) in ${classroomText}. Homeroom teacher: ${teacherText}.${data.customNote ? ` Note: ${data.customNote}` : ''}`,
+      date: 'Justo ahora',
+      dateEn: 'Just now',
+      read: false,
+      targetRoles: ['student', 'guardian'],
+      targetEmail: data.studentEmail,
+      targetDocNumber: data.studentDoc,
+      category: 'academic'
+    };
+
+    setNotifications((prev) => [newNotif, ...prev]);
+
+    setActivities((prev) => [
+      {
+        id: 'act-notif-' + Date.now(),
+        timeAgo: 'Justo ahora',
+        timeAgoEn: 'Just now',
+        description: `Aviso oficial de asignación (Grado ${data.grade}, Jornada ${data.shift}) enviado a ${data.studentName}.`,
+        descriptionEn: `Official placement notice (Grade ${data.grade}, ${data.shift} Shift) sent to ${data.studentName}.`,
+        type: 'admin',
+        userName: currentUser?.name || 'Administración',
+        studentName: data.studentName
+      },
+      ...prev
+    ]);
+
+    // Synchronize student grade and shift in students state
+    setStudents((prev) =>
+      prev.map((s) => {
+        if (s.id === data.studentId || (data.studentDoc && s.documentNumber === data.studentDoc)) {
+          return {
+            ...s,
+            grade: data.grade,
+            shift: data.shift
+          };
+        }
+        return s;
+      })
+    );
+
+    return true;
+  };
+
   const t = translations[language];
 
   return (
@@ -2172,6 +2246,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notifications: userNotifications,
         markNotificationsAsRead,
         unreadCount,
+        notifyStudentAssignment,
         portalConfigs,
         updateRolePortalConfig,
         resetRolePortalConfig,

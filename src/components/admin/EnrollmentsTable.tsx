@@ -3,24 +3,26 @@ import { useApp } from '../../context/AppContext';
 import { 
   Search, 
   Download, 
-  Plus, 
   Eye, 
   CheckCircle, 
-  CheckCircle2,
+  CheckCircle2, 
   XCircle, 
   Clock, 
-  FileText,
-  FolderKanban,
-  UserCheck
+  FileText, 
+  FolderKanban, 
+  UserCheck,
+  BellRing
 } from 'lucide-react';
-import { EnrollmentStatus } from '../../types';
+import { NotifyAssignmentModal, StudentAssignmentTarget } from './NotifyAssignmentModal';
 
 export const EnrollmentsTable: React.FC = () => {
-  const { t, language, enrollments, documents, updateEnrollmentStatus, setActiveTab, setSelectedStudentId } = useApp();
+  const { t, language, enrollments, documents, setActiveTab, setSelectedStudentId } = useApp();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [yearFilter, setYearFilter] = useState<string>('2026');
+  const [notifyStudent, setNotifyStudent] = useState<StudentAssignmentTarget | null>(null);
+  const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
 
   const totalCount = enrollments.length;
   const approvedCount = enrollments.filter(e => e.status === 'approved' || e.status === 'completed').length;
@@ -38,10 +40,6 @@ export const EnrollmentsTable: React.FC = () => {
 
     return matchesSearch && matchesStatus && matchesYear;
   });
-
-  const handleStatusChange = (id: string, newStatus: EnrollmentStatus) => {
-    updateEnrollmentStatus(id, newStatus);
-  };
 
   const exportData = () => {
     const csvContent = "data:text/csv;charset=utf-8," 
@@ -63,14 +61,9 @@ export const EnrollmentsTable: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-              {t.admin.enrollments.title}
-            </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-100 dark:bg-teal-900/60 text-teal-800 dark:text-teal-300 border border-teal-300 dark:border-teal-700">
-              SIMAT 2026
-            </span>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
+            {t.admin.enrollments.title}
+          </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             {t.admin.enrollments.subtitle}
           </p>
@@ -78,19 +71,23 @@ export const EnrollmentsTable: React.FC = () => {
 
         <div className="flex items-center gap-3">
           <button
+            onClick={() => {
+              setNotifyStudent(null);
+              setIsNotifyModalOpen(true);
+            }}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer"
+            title={language === 'es' ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
+          >
+            <BellRing className="w-4 h-4" />
+            <span>{language === 'es' ? 'Avisar Grado y Jornada' : 'Notify Shift & Grade'}</span>
+          </button>
+
+          <button
             onClick={exportData}
             className="px-4 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-semibold rounded-xl transition-colors flex items-center gap-2 cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span>{t.admin.enrollments.exportBtn}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('wizard')}
-            className="px-4 py-2 bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t.admin.enrollments.newEnrollmentBtn}</span>
           </button>
         </div>
       </div>
@@ -364,25 +361,25 @@ export const EnrollmentsTable: React.FC = () => {
                         <span>{language === 'es' ? 'Ver Perfil' : 'Profile'}</span>
                       </button>
 
-                      {rec.status !== 'approved' && (
-                        <button
-                          onClick={() => handleStatusChange(rec.id, 'approved')}
-                          className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1 cursor-pointer shadow-xs"
-                        >
-                          <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>{language === 'es' ? 'Aprobar Matrícula' : 'Approve'}</span>
-                        </button>
-                      )}
-
-                      {rec.status !== 'rejected' && (
-                        <button
-                          onClick={() => handleStatusChange(rec.id, 'rejected')}
-                          className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-bold flex items-center justify-center gap-1 cursor-pointer"
-                        >
-                          <XCircle className="w-3.5 h-3.5 shrink-0" />
-                          <span>{language === 'es' ? 'Rechazar' : 'Reject'}</span>
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          setNotifyStudent({
+                            id: rec.studentId,
+                            studentName: rec.studentName,
+                            studentDoc: rec.studentDoc,
+                            grade: rec.grade,
+                            shift: 'Mañana',
+                            guardianName: rec.guardianName,
+                            guardianRelationship: rec.guardianRelationship
+                          });
+                          setIsNotifyModalOpen(true);
+                        }}
+                        className="flex-1 min-h-[40px] px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold hover:bg-amber-100 dark:hover:bg-amber-900/60 flex items-center justify-center gap-1.5 cursor-pointer"
+                        title={language === 'es' ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
+                      >
+                        <BellRing className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                        <span>{language === 'es' ? 'Avisar Asignación' : 'Notify'}</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -475,7 +472,26 @@ export const EnrollmentsTable: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex items-center justify-end gap-1.5">
+                          <div className="flex items-center justify-end gap-1">
+                            <button
+                              onClick={() => {
+                                setNotifyStudent({
+                                  id: rec.studentId,
+                                  studentName: rec.studentName,
+                                  studentDoc: rec.studentDoc,
+                                  grade: rec.grade,
+                                  shift: 'Mañana',
+                                  guardianName: rec.guardianName,
+                                  guardianRelationship: rec.guardianRelationship
+                                });
+                                setIsNotifyModalOpen(true);
+                              }}
+                              className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-amber-600 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-xl transition-colors cursor-pointer"
+                              title={language === 'es' ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
+                              aria-label={language === 'es' ? 'Avisar Grado y Jornada' : 'Notify Shift and Grade'}
+                            >
+                              <BellRing className="w-4 h-4" />
+                            </button>
                             <button
                               onClick={() => {
                                 setSelectedStudentId(rec.studentId);
@@ -487,26 +503,6 @@ export const EnrollmentsTable: React.FC = () => {
                             >
                               <Eye className="w-4 h-4" />
                             </button>
-                            {rec.status !== 'approved' && (
-                              <button
-                                onClick={() => handleStatusChange(rec.id, 'approved')}
-                                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/60 rounded-xl transition-colors cursor-pointer"
-                                title={language === 'es' ? 'Aprobar Matrícula' : 'Approve Enrollment'}
-                                aria-label={language === 'es' ? 'Aprobar Matrícula' : 'Approve Enrollment'}
-                              >
-                                <CheckCircle className="w-4 h-4" />
-                              </button>
-                            )}
-                            {rec.status !== 'rejected' && (
-                              <button
-                                onClick={() => handleStatusChange(rec.id, 'rejected')}
-                                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/60 rounded-xl transition-colors cursor-pointer"
-                                title={language === 'es' ? 'Rechazar' : 'Reject'}
-                                aria-label={language === 'es' ? 'Rechazar' : 'Reject'}
-                              >
-                                <XCircle className="w-4 h-4" />
-                              </button>
-                            )}
                           </div>
                         </td>
                       </tr>
@@ -518,6 +514,16 @@ export const EnrollmentsTable: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Modal de Aviso de Grado y Jornada */}
+      <NotifyAssignmentModal 
+        isOpen={isNotifyModalOpen} 
+        onClose={() => {
+          setIsNotifyModalOpen(false);
+          setNotifyStudent(null);
+        }} 
+        initialStudent={notifyStudent || undefined} 
+      />
 
     </div>
   );

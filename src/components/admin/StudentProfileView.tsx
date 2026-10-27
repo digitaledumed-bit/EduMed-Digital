@@ -22,10 +22,12 @@ import {
   Eye,
   Clock,
   XCircle,
-  FileCheck
+  FileCheck,
+  BellRing
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { DocumentViewerModal } from '../common/DocumentViewerModal';
+import { NotifyAssignmentModal } from './NotifyAssignmentModal';
 import { StudentDocument } from '../../types';
 import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
 
@@ -45,6 +47,7 @@ export const StudentProfileView: React.FC = () => {
 
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
   const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
+  const [showNotifyModal, setShowNotifyModal] = useState<boolean>(false);
   const [viewingDoc, setViewingDoc] = useState<StudentDocument | null>(null);
 
   // Role-based student resolution to ensure strict data isolation
@@ -133,13 +136,24 @@ export const StudentProfileView: React.FC = () => {
           </button>
 
           {currentUser?.role === 'admin' ? (
-            <button
-              onClick={() => setFeedbackToast(language === 'es' ? 'Ficha académica en modo de edición directiva.' : 'Academic file in editing mode.')}
-              className="min-h-[40px] px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>{t.admin.studentProfile.editProfile}</span>
-            </button>
+            <>
+              <button
+                onClick={() => setShowNotifyModal(true)}
+                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+                title={language === 'es' ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
+              >
+                <BellRing className="w-3.5 h-3.5" />
+                <span>{language === 'es' ? 'Avisar Grado y Jornada' : 'Notify Shift & Grade'}</span>
+              </button>
+
+              <button
+                onClick={() => setFeedbackToast(language === 'es' ? 'Ficha académica en modo de edición directiva.' : 'Academic file in editing mode.')}
+                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>{t.admin.studentProfile.editProfile}</span>
+              </button>
+            </>
           ) : (
             <button
               onClick={() => setFeedbackToast(language === 'es' ? 'Para actualizar datos personales o de contacto, por favor radique la solicitud ante la secretaría de la I.E. Félix Henao Botero.' : 'To update personal info, please request at school secretary office.')}
@@ -512,6 +526,22 @@ export const StudentProfileView: React.FC = () => {
         studentName={student.fullName}
         studentGender={student.gender || currentUser?.gender}
         currentAvatarUrl={currentUser?.avatarUrl || student.avatarUrl}
+      />
+
+      {/* Modal de Aviso de Asignación de Grado y Jornada */}
+      <NotifyAssignmentModal
+        isOpen={showNotifyModal}
+        onClose={() => setShowNotifyModal(false)}
+        initialStudent={{
+          id: student.id,
+          studentName: student.fullName,
+          studentDoc: student.documentNumber,
+          studentEmail: student.email,
+          grade: student.grade,
+          shift: student.shift,
+          guardianName: student.guardians?.[0]?.name,
+          guardianPhone: student.guardians?.[0]?.phone
+        }}
       />
     </div>
   );

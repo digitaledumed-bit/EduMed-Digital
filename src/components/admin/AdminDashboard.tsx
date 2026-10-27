@@ -16,8 +16,10 @@ import {
   GraduationCap,
   Inbox,
   ShieldCheck,
-  BookOpen
+  BookOpen,
+  BellRing
 } from 'lucide-react';
+import { NotifyAssignmentModal } from './NotifyAssignmentModal';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -45,6 +47,7 @@ export const AdminDashboard: React.FC = () => {
   } = useApp();
   
   const [timeframe, setTimeframe] = useState<'monthly' | 'weekly'>('monthly');
+  const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
 
   // Registered users in persistent storage
   const registeredUsers: any[] = JSON.parse(
@@ -142,7 +145,16 @@ export const AdminDashboard: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setIsNotifyModalOpen(true)}
+            className="min-h-[44px] px-4 py-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-colors shadow-xs flex items-center gap-2 cursor-pointer"
+            title={isEs ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
+          >
+            <BellRing className="w-4 h-4" />
+            <span>{isEs ? 'Avisar Grado y Jornada' : 'Notify Shift & Grade'}</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('enrollments')}
             className="min-h-[44px] px-4 py-2.5 bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-xs flex items-center gap-2 cursor-pointer"
@@ -549,6 +561,12 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Modal de Asignación de Grado y Jornada */}
+      <NotifyAssignmentModal
+        isOpen={isNotifyModalOpen}
+        onClose={() => setIsNotifyModalOpen(false)}
+      />
 
     </div>
   );
