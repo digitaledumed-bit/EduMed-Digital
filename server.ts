@@ -483,8 +483,8 @@ const initialServerPortalConfigs: Record<string, any> = {
     ],
     permissions: {
       canDownloadCertificates: true,
-      canEditProfile: true,
-      canUploadAvatar: true,
+      canEditProfile: false,
+      canUploadAvatar: false,
       canEnrollStudents: false,
       canAuditDocuments: false,
       canManageUsers: false,

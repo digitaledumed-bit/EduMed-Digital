@@ -18,12 +18,11 @@ import { ParentsList } from './components/admin/ParentsList';
 import { DocumentsManagement } from './components/admin/DocumentsManagement';
 import { InstitutionalSettings } from './components/admin/InstitutionalSettings';
 import { PortalConfigView } from './components/admin/PortalConfigView';
-import { MandatoryEnrollmentGate } from './components/student/MandatoryEnrollmentGate';
 import { StudentMainDashboard } from './components/student/StudentMainDashboard';
 import { GuardianMainDashboard } from './components/guardian/GuardianMainDashboard';
 import { TeacherMainDashboard } from './components/teacher/TeacherMainDashboard';
 import { StudentEditProfileModal } from './components/student/StudentEditProfileModal';
-import { ShieldAlert, ArrowLeft } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
   const { 

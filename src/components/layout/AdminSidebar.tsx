@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   LayoutDashboard, 
@@ -18,10 +18,8 @@ import {
   LifeBuoy,
   Globe,
   FilePlus,
-  Camera,
   Sliders
 } from 'lucide-react';
-import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { getDefaultAvatarByGender, isMaleGender } from '../../utils/avatarUtils';
 
 export const AdminSidebar: React.FC = () => {
@@ -36,8 +34,6 @@ export const AdminSidebar: React.FC = () => {
     logout,
     portalConfigs
   } = useApp();
-
-  const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
 
   const pendingDocsCount = documents.filter(d => d.status === 'in_review' || d.status === 'pending').length;
 
@@ -282,14 +278,7 @@ export const AdminSidebar: React.FC = () => {
             className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
           >
             {currentUser?.role === 'student' ? (
-              <div 
-                className="relative group cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowAvatarModal(true);
-                }}
-                title={language === 'es' ? 'Cambiar foto de avatar' : 'Change avatar photo'}
-              >
+              <div className="relative shrink-0">
                 <img
                   src={currentUser.avatarUrl || getDefaultAvatarByGender(currentUser.gender)}
                   alt={currentUser.name}
@@ -298,9 +287,6 @@ export const AdminSidebar: React.FC = () => {
                     (e.currentTarget as HTMLImageElement).src = getDefaultAvatarByGender(currentUser.gender);
                   }}
                 />
-                <div className="absolute inset-0 rounded-full bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                  <Camera className="w-3 h-3" />
-                </div>
               </div>
             ) : (
               <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold border border-teal-500/60">
@@ -323,17 +309,6 @@ export const AdminSidebar: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1">
-            {currentUser?.role === 'student' && (
-              <button
-                type="button"
-                onClick={() => setShowAvatarModal(true)}
-                className="p-1.5 text-teal-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
-                title={language === 'es' ? 'Cambiar foto' : 'Change photo'}
-              >
-                <Camera className="w-3.5 h-3.5" />
-              </button>
-            )}
-
             <button
               id="sidebar-logout-btn"
               onClick={logout}
@@ -345,17 +320,6 @@ export const AdminSidebar: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Avatar Change Modal for Student */}
-      {currentUser && currentUser.role === 'student' && (
-        <AvatarChangeModal
-          isOpen={showAvatarModal}
-          onClose={() => setShowAvatarModal(false)}
-          studentName={currentUser.name}
-          studentGender={currentUser.gender}
-          currentAvatarUrl={currentUser.avatarUrl}
-        />
-      )}
     </aside>
     </>
   );

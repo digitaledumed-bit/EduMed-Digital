@@ -463,8 +463,8 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
     ],
     permissions: {
       canDownloadCertificates: true,
-      canEditProfile: true,
-      canUploadAvatar: true,
+      canEditProfile: false,
+      canUploadAvatar: false,
       canEnrollStudents: false,
       canAuditDocuments: false,
       canManageUsers: false,

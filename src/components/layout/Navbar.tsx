@@ -17,7 +17,6 @@ import {
   Sparkles,
   LogOut,
   LogIn,
-  Camera,
   Menu,
   LayoutDashboard,
   FolderKanban,
@@ -26,7 +25,6 @@ import {
   UserCheck,
   FilePlus
 } from 'lucide-react';
-import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
 
 export const Navbar: React.FC = () => {
@@ -52,7 +50,6 @@ export const Navbar: React.FC = () => {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
 
   const handleRoleChange = (role: 'public' | 'admin' | 'guardian' | 'student') => {
@@ -483,14 +480,10 @@ export const Navbar: React.FC = () => {
             {currentUser ? (
               <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2 shrink-0">
                 {currentUser.role === 'student' ? (
-                  /* Student Profile Badge with Gender-Based Avatar & Photo Customizer */
+                  /* Student Profile Badge with Gender-Based Avatar (Read-Only) */
                   <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-2xl bg-teal-50 dark:bg-slate-800 border border-teal-300 dark:border-slate-700 shadow-xs">
-                    {/* Interactive Avatar with Gender and Photo-Changer */}
-                    <div 
-                      onClick={() => setShowAvatarModal(true)}
-                      className="relative group cursor-pointer shrink-0"
-                      title={language === 'es' ? 'Cambiar tu foto de avatar' : 'Change avatar photo'}
-                    >
+                    {/* Non-editable Avatar */}
+                    <div className="relative shrink-0">
                       <img
                         src={currentUser.avatarUrl || getDefaultAvatarByGender(currentUser.gender)}
                         alt={currentUser.name}
@@ -499,16 +492,13 @@ export const Navbar: React.FC = () => {
                           (e.currentTarget as HTMLImageElement).src = getDefaultAvatarByGender(currentUser.gender);
                         }}
                       />
-                      <div className="absolute inset-0 rounded-full bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
-                        <Camera className="w-3.5 h-3.5" />
-                      </div>
                     </div>
 
                     {/* Student Name & Clean Label */}
                     <div 
-                      onClick={() => { setActiveRole('student'); setActiveTab('student-profile'); }}
+                      onClick={() => { setActiveRole('student'); setActiveTab('dashboard'); }}
                       className="text-left cursor-pointer hidden min-[400px]:block"
-                      title={language === 'es' ? 'Ver expediente del estudiante' : 'View student record'}
+                      title={language === 'es' ? 'Mi Grado y Jornada' : 'My Grade & Shift'}
                     >
                       <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight truncate max-w-[90px] sm:max-w-[130px] md:max-w-[150px]">
                         {currentUser.name}
@@ -517,17 +507,6 @@ export const Navbar: React.FC = () => {
                         {language === 'es' ? 'Estudiante' : 'Student'}
                       </span>
                     </div>
-
-                    {/* Quick Button to Change Avatar Photo (Desktop & Tablet) */}
-                    <button
-                      type="button"
-                      onClick={() => setShowAvatarModal(true)}
-                      className="hidden md:inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-teal-100 dark:hover:bg-slate-600 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-slate-600 transition-colors cursor-pointer shadow-2xs"
-                      title={language === 'es' ? 'Cambiar foto de avatar' : 'Change avatar photo'}
-                    >
-                      <Camera className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
-                      <span>{language === 'es' ? 'Cambiar foto' : 'Change'}</span>
-                    </button>
                   </div>
                 ) : (
                   /* Admin / Guardian Chip */
@@ -657,21 +636,6 @@ export const Navbar: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
-                {currentUser.role === 'student' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowAvatarModal(true);
-                      setShowMobileNav(false);
-                    }}
-                    className="p-2 rounded-xl bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-xs font-bold flex items-center gap-1 cursor-pointer"
-                    title={language === 'es' ? 'Cambiar foto avatar' : 'Change avatar'}
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                    <span className="text-[10px]">{language === 'es' ? 'Foto' : 'Photo'}</span>
-                  </button>
-                )}
               </div>
 
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 pb-1">
@@ -1042,17 +1006,6 @@ export const Navbar: React.FC = () => {
             </>
           )}
         </div>
-      )}
-
-      {/* Avatar Customization Modal for Student */}
-      {currentUser && currentUser.role === 'student' && (
-        <AvatarChangeModal
-          isOpen={showAvatarModal}
-          onClose={() => setShowAvatarModal(false)}
-          studentName={currentUser.name}
-          studentGender={currentUser.gender}
-          currentAvatarUrl={currentUser.avatarUrl}
-        />
       )}
     </header>
   );

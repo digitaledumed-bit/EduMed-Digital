@@ -1,28 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   GraduationCap, 
   Sun, 
   Clock, 
-  Calendar, 
-  MapPin, 
-  User, 
-  CheckCircle2, 
-  Printer, 
-  Camera, 
-  RotateCcw, 
   Building2, 
   ShieldCheck, 
-  Sparkles,
-  Info
+  Info,
+  Printer,
+  User,
+  CheckCircle2,
+  Lock
 } from 'lucide-react';
-import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { 
   getDefaultAvatarByGender, 
   isMaleGender, 
-  isFemaleGender, 
-  isDefaultIllustratedAvatar, 
-  getSavedCustomPhoto 
+  isFemaleGender 
 } from '../../utils/avatarUtils';
 
 interface StudentMainDashboardProps {
@@ -33,12 +26,8 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = () => {
   const { 
     currentUser, 
     language, 
-    students, 
-    restoreDefaultAvatar 
+    students
   } = useApp();
-
-  const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
-  const [feedback, setFeedback] = useState<string | null>(null);
 
   const isEs = language === 'es';
 
@@ -122,38 +111,11 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = () => {
   const defaultIllustratedAvatar = getDefaultAvatarByGender(studentGender);
   const currentAvatar = currentUser?.avatarUrl || defaultIllustratedAvatar;
 
-  const isMale = isMaleGender(studentGender);
-  const isFemale = isFemaleGender(studentGender);
-  const hasCustomPhoto = Boolean(
-    currentUser?.id && getSavedCustomPhoto(currentUser.id, currentUser.email)
-  ) || (!isDefaultIllustratedAvatar(currentAvatar));
-
-  const handleRestoreDefault = () => {
-    restoreDefaultAvatar();
-    const genderLabel = isMale ? 'Masculino' : isFemale ? 'Femenino' : 'Neutro';
-    setFeedback(
-      isEs
-        ? `✓ Se ha restaurado el avatar ilustrado oficial (${genderLabel}).`
-        : `✓ Default illustrated avatar restored (${genderLabel}).`
-    );
-    setTimeout(() => setFeedback(null), 4000);
-  };
-
   return (
     <div className="space-y-6 max-w-5xl mx-auto animate-in fade-in duration-300">
       
-      {/* Feedback Toast */}
-      {feedback && (
-        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/70 border border-emerald-300 dark:border-emerald-800 text-emerald-900 dark:text-emerald-200 text-xs sm:text-sm font-bold flex items-center justify-between shadow-xs">
-          <div className="flex items-center gap-2.5">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <span>{feedback}</span>
-          </div>
-        </div>
-      )}
-
       {/* ========================================================================= */}
-      {/* 1. TARJETA DE IDENTIFICACIÓN INSTITUCIONAL DEL ESTUDIANTE                 */}
+      {/* 1. TARJETA DE IDENTIFICACIÓN INSTITUCIONAL DEL ESTUDIANTE (SOLO LECTURA)  */}
       {/* ========================================================================= */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-8 shadow-xs relative overflow-hidden">
         {/* Subtle decorative gradient */}
@@ -161,28 +123,19 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = () => {
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           
-          {/* Avatar + Nombre + Documento */}
+          {/* Avatar Institucional + Nombre + Documento */}
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
             
-            {/* Interactive Avatar */}
-            <div className="relative group shrink-0">
+            {/* Non-editable Avatar */}
+            <div className="relative shrink-0">
               <img
                 src={currentAvatar}
                 alt={studentName}
-                onClick={() => setShowAvatarModal(true)}
-                className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-teal-500/90 shadow-xl bg-slate-100 dark:bg-slate-800 transition-transform group-hover:scale-105 cursor-pointer"
+                className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl object-cover ring-4 ring-teal-500/90 shadow-xl bg-slate-100 dark:bg-slate-800"
                 onError={(e) => {
                   (e.currentTarget as HTMLImageElement).src = defaultIllustratedAvatar;
                 }}
               />
-              <button
-                type="button"
-                onClick={() => setShowAvatarModal(true)}
-                className="absolute -bottom-2 -right-2 p-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white shadow-md transition-all hover:scale-110 cursor-pointer"
-                title={isEs ? 'Cambiar foto de perfil' : 'Change profile photo'}
-              >
-                <Camera className="w-4 h-4" />
-              </button>
             </div>
 
             {/* Info textual del estudiante */}
@@ -196,6 +149,11 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = () => {
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold border border-emerald-200 dark:border-emerald-800 flex items-center gap-1">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                   {isEs ? 'Matrícula Oficial Activa' : 'Active Enrollment'}
+                </span>
+
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 text-xs font-bold border border-amber-200 dark:border-amber-800 flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-amber-600" />
+                  {isEs ? 'Solo Lectura (Datos de Acudiente)' : 'Read-Only (Guardian Data)'}
                 </span>
 
                 <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold">
@@ -217,34 +175,14 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = () => {
             </div>
           </div>
 
-          {/* Botones de avatar y constancia */}
-          <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0 self-center md:self-auto w-full sm:w-auto">
-            <button
-              type="button"
-              onClick={() => setShowAvatarModal(true)}
-              className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <Camera className="w-4 h-4 shrink-0" />
-              <span>{isEs ? 'Cambiar foto' : 'Change photo'}</span>
-            </button>
-
-            {hasCustomPhoto && (
-              <button
-                type="button"
-                onClick={handleRestoreDefault}
-                className="min-h-[44px] px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 hover:border-teal-500 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <RotateCcw className="w-4 h-4 text-teal-600 shrink-0" />
-                <span>{isEs ? 'Restaurar avatar' : 'Restore avatar'}</span>
-              </button>
-            )}
-
+          {/* Botón único permitido: Imprimir Constancia de asignación */}
+          <div className="flex flex-col gap-2.5 shrink-0 self-center md:self-auto w-full sm:w-auto">
             <button
               type="button"
               onClick={() => window.print()}
-              className="min-h-[44px] px-4 py-2.5 rounded-2xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-all flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+              className="min-h-[44px] px-5 py-2.5 rounded-2xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <Printer className="w-4 h-4 text-slate-600 dark:text-slate-400 shrink-0" />
+              <Printer className="w-4 h-4 shrink-0" />
               <span>{isEs ? 'Imprimir constancia' : 'Print certificate'}</span>
             </button>
           </div>
@@ -491,27 +429,16 @@ export const StudentMainDashboard: React.FC<StudentMainDashboardProps> = () => {
           </div>
         </div>
 
-        {/* Nota informativa para el estudiante */}
-        <div className="mt-4 flex items-start gap-2.5 p-3.5 rounded-2xl bg-teal-50/60 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-800/40 text-xs text-slate-600 dark:text-slate-300">
-          <Info className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
-          <p className="leading-relaxed">
+        {/* Nota informativa de restricción y solo lectura */}
+        <div className="mt-4 flex items-start gap-2.5 p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200">
+          <ShieldCheck className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+          <p className="leading-relaxed font-medium">
             {isEs 
-              ? 'Tu portal de estudiante está habilitado exclusivamente para consultar tu grado y tu jornada escolar asignada. Si necesitas realizar trámites administrativos, solicitud de certificados o actualización de datos, estos deben ser gestionados por tu acudiente registrado ante la secretaría de la institución.'
-              : 'Your student portal is configured exclusively to check your assigned grade and shift. Any administrative requests must be submitted through your registered guardian.'}
+              ? 'Modalidad Solo Lectura Institucional: Tu portal de estudiante está habilitado exclusivamente para consultar el grado y la jornada escolar que te correspondió. Toda tu información y documentación fue formalizada por tu acudiente y no puede ser modificada desde esta cuenta, ni se permite subir documentos adicionales. Si requieres alguna corrección o trámite, debe ser gestionado directamente por tu acudiente legal.'
+              : 'Institutional Read-Only Mode: Your student portal is configured exclusively to check your assigned grade and school shift. All personal information and documents were submitted by your guardian and cannot be edited from this account. Any administrative update must be handled directly by your legal guardian.'}
           </p>
         </div>
       </div>
-
-      {/* Modal para cambiar foto de avatar si lo desea */}
-      {currentUser && (
-        <AvatarChangeModal
-          isOpen={showAvatarModal}
-          onClose={() => setShowAvatarModal(false)}
-          studentName={currentUser.name}
-          studentGender={currentUser.gender}
-          currentAvatarUrl={currentUser.avatarUrl}
-        />
-      )}
 
     </div>
   );
