@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   Search, 
-  Filter, 
   Download, 
   Plus, 
   Eye, 
@@ -10,12 +9,9 @@ import {
   CheckCircle2,
   XCircle, 
   Clock, 
-  MoreVertical, 
-  Calendar,
   FileText,
   FolderKanban,
-  UserCheck,
-  Check
+  UserCheck
 } from 'lucide-react';
 import { EnrollmentStatus } from '../../types';
 
@@ -30,7 +26,6 @@ export const EnrollmentsTable: React.FC = () => {
   const approvedCount = enrollments.filter(e => e.status === 'approved' || e.status === 'completed').length;
   const inReviewCount = enrollments.filter(e => e.status === 'in_review').length;
   const pendingCount = enrollments.filter(e => e.status === 'pending').length;
-  const rejectedCount = enrollments.filter(e => e.status === 'rejected').length;
 
   const filteredEnrollments = enrollments.filter((item) => {
     const matchesSearch = 
@@ -223,77 +218,10 @@ export const EnrollmentsTable: React.FC = () => {
         </div>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-        
-        {/* Quick Filter Pill Buttons */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-          <button
-            type="button"
-            onClick={() => setStatusFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all cursor-pointer ${
-              statusFilter === 'all'
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            {language === 'es' ? 'Todas' : 'All'} ({totalCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStatusFilter('approved')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-              statusFilter === 'approved'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 hover:bg-emerald-100'
-            }`}
-          >
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>{language === 'es' ? 'Matrículas Aprobadas' : 'Approved Enrollments'}</span> ({approvedCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStatusFilter('in_review')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-              statusFilter === 'in_review'
-                ? 'bg-amber-600 text-white shadow-xs'
-                : 'bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100'
-            }`}
-          >
-            <Clock className="w-3.5 h-3.5" />
-            <span>{language === 'es' ? 'En Revisión Documental' : 'In Review'}</span> ({inReviewCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStatusFilter('pending')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-              statusFilter === 'pending'
-                ? 'bg-slate-700 text-white shadow-xs'
-                : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            <span>{language === 'es' ? 'Pendientes' : 'Pending'}</span> ({pendingCount})
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setStatusFilter('rejected')}
-            className={`px-3.5 py-1.5 rounded-xl font-bold whitespace-nowrap transition-all flex items-center gap-1.5 cursor-pointer ${
-              statusFilter === 'rejected'
-                ? 'bg-rose-600 text-white shadow-xs'
-                : 'bg-rose-50 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 border border-rose-200 dark:border-rose-800 hover:bg-rose-100'
-            }`}
-          >
-            <span>{language === 'es' ? 'Rechazadas' : 'Rejected'}</span> ({rejectedCount})
-          </button>
-        </div>
-
-        {/* Search & Dropdown Filters */}
-        <div className="flex flex-col md:flex-row items-center gap-4 pt-1 border-t border-slate-100 dark:border-slate-800">
-          {/* Search */}
+      {/* Search and Filters Bar */}
+      <div className="bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
+        <div className="flex flex-col md:flex-row items-center gap-3 sm:gap-4">
+          {/* Search by ID, Name or Document */}
           <div className="relative flex-1 w-full">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
@@ -301,7 +229,7 @@ export const EnrollmentsTable: React.FC = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={t.admin.enrollments.searchPlaceholder}
-              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-teal-500 focus:outline-none transition-shadow"
             />
           </div>
 
@@ -310,7 +238,8 @@ export const EnrollmentsTable: React.FC = () => {
             <select
               value={yearFilter}
               onChange={(e) => setYearFilter(e.target.value)}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              aria-label={language === 'es' ? 'Filtrar por año lectivo' : 'Filter by academic year'}
+              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none transition-shadow cursor-pointer"
             >
               <option value="2026">{language === 'es' ? 'Año Lectivo 2026' : 'School Year 2026'}</option>
               <option value="2025">{language === 'es' ? 'Año Lectivo 2025' : 'School Year 2025'}</option>
@@ -319,21 +248,21 @@ export const EnrollmentsTable: React.FC = () => {
           </div>
 
           {/* Status filter dropdown */}
-          <div className="w-full md:w-52">
+          <div className="w-full md:w-56">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none"
+              aria-label={language === 'es' ? 'Filtrar por estado' : 'Filter by status'}
+              className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500 focus:outline-none transition-shadow cursor-pointer font-medium"
             >
               <option value="all">{language === 'es' ? 'Todos los Estados' : 'All Statuses'}</option>
               <option value="approved">{language === 'es' ? 'Matrículas Aprobadas' : 'Approved'}</option>
               <option value="in_review">{language === 'es' ? 'En Revisión Documental' : 'In Review'}</option>
-              <option value="pending">{language === 'es' ? 'Pendientes' : 'Pending'}</option>
+              <option value="pending">{language === 'es' ? 'Pendientes de Validación' : 'Pending'}</option>
               <option value="rejected">{language === 'es' ? 'Rechazadas' : 'Rejected'}</option>
             </select>
           </div>
         </div>
-
       </div>
 
       {/* Enrollments Table & Mobile Cards */}
