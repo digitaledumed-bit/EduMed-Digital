@@ -562,6 +562,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isModuleEnabled = (role: UserRole, moduleId: string): boolean => {
     if (role === 'public') return true;
+    if (role === 'student') return moduleId === 'dashboard';
     const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
     if (!config || !config.modules) return true;
     const mod = config.modules.find(m => m.id === moduleId);

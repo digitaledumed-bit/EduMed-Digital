@@ -341,18 +341,18 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
     role: 'student',
     name: 'Estudiante',
     nameEn: 'Student',
-    description: 'Portal académico con calificaciones, horario de clases y carnet estudiantil.',
-    descriptionEn: 'Academic portal with grades, class schedule, and student ID.',
+    description: 'Consulta oficial del grado y la jornada escolar asignada.',
+    descriptionEn: 'Official view of assigned grade and school shift.',
     badgeLabel: 'Portal Estudiante',
     badgeLabelEn: 'Student Portal',
     defaultTab: 'dashboard',
     modules: [
       {
         id: 'dashboard',
-        label: 'Mi Portal y Notas',
-        labelEn: 'My Portal & Grades',
-        description: 'Calificaciones del periodo, horario semanal y avatar.',
-        descriptionEn: 'Term grades, weekly schedule, and profile avatar.',
+        label: 'Mi Grado y Jornada',
+        labelEn: 'My Grade & Shift',
+        description: 'Información oficial del grado y la jornada escolar asignada.',
+        descriptionEn: 'Official information of assigned grade and school shift.',
         enabled: true,
         order: 1,
         iconName: 'GraduationCap',
@@ -364,7 +364,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         labelEn: 'My Enrollment Status',
         description: 'Verificación del código de radicado oficial.',
         descriptionEn: 'Verification of official docket code.',
-        enabled: true,
+        enabled: false,
         order: 2,
         iconName: 'Search'
       },
@@ -374,7 +374,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         labelEn: 'My Student Benefits',
         description: 'Acceso a programas PAE y eventos del colegio.',
         descriptionEn: 'Access to PAE programs and school events.',
-        enabled: true,
+        enabled: false,
         order: 3,
         iconName: 'Award'
       },
@@ -384,7 +384,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         labelEn: 'My School',
         description: 'Himno, valores, misión y proyectos estudiantiles.',
         descriptionEn: 'Anthem, values, mission, and student projects.',
-        enabled: true,
+        enabled: false,
         order: 4,
         iconName: 'Globe'
       },
@@ -394,7 +394,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         labelEn: 'Counseling & Support',
         description: 'Contacto con psicoorientación y bienestar escolar.',
         descriptionEn: 'School counseling and wellness contact.',
-        enabled: true,
+        enabled: false,
         order: 5,
         iconName: 'LifeBuoy'
       }

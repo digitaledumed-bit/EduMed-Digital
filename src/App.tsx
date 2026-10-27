@@ -52,6 +52,13 @@ const MainAppContent: React.FC = () => {
   const isAdmin = currentUser.role === 'admin';
   const isEnrollmentDone = isStudent ? isStudentEnrollmentCompleted(currentUser.id) : true;
 
+  // Student role restriction: strictly only allowed to view assigned grade and shift on dashboard
+  React.useEffect(() => {
+    if (isStudent && activeTab !== 'dashboard') {
+      setActiveTab('dashboard');
+    }
+  }, [isStudent, activeTab, setActiveTab]);
+
   // Configuration screens (portal-config, settings) must remain strictly hidden from navigation
   React.useEffect(() => {
     if (activeTab === 'portal-config' || activeTab === 'settings') {
@@ -66,8 +73,9 @@ const MainAppContent: React.FC = () => {
     (!isTeacher && activeTab === 'students') ||
     (!isTeacher && !isGuardian && activeTab === 'documents')
   );
+  const isUnauthorizedStudentTab = isStudent && activeTab !== 'dashboard';
   const isModuleAllowed = activeTab === 'dashboard' || isAdmin || isTeacher || isModuleEnabled(currentUser.role, activeTab);
-  const isUnauthorized = isUnauthorizedAdminTab || !isModuleAllowed;
+  const isUnauthorized = isUnauthorizedAdminTab || isUnauthorizedStudentTab || !isModuleAllowed;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
@@ -125,16 +133,11 @@ const MainAppContent: React.FC = () => {
                     </button>
                   </div>
                 </div>
-              ) : isStudent && !isEnrollmentDone ? (
-                /* MANDATORY ENROLLMENT PROCESS GATE FOR STUDENTS */
-                <MandatoryEnrollmentGate 
-                  onEnrollmentCompleted={() => setActiveTab('dashboard')} 
-                />
               ) : (
                 <>
                   {activeTab === 'dashboard' && (
                     isStudent ? (
-                      <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} />
+                      <StudentMainDashboard />
                     ) : isGuardian ? (
                       <GuardianMainDashboard />
                     ) : isTeacher ? (

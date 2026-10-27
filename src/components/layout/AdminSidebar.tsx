@@ -61,6 +61,18 @@ export const AdminSidebar: React.FC = () => {
 
   // Build role-specific menu items dynamically respecting the administrator's configuration and order
   const getMenuItems = () => {
+    // Dedicated Student Navigation: strictly limited to viewing assigned grade and shift
+    if (role === 'student') {
+      return [
+        {
+          id: 'dashboard',
+          label: language === 'es' ? 'Mi Grado y Jornada' : 'My Grade & Shift',
+          icon: GraduationCap,
+          badge: null
+        }
+      ];
+    }
+
     // Dedicated Teacher Navigation: strictly limited to authorized scope
     if (role === 'teacher') {
       return [
@@ -266,7 +278,7 @@ export const AdminSidebar: React.FC = () => {
       <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
         <div className="flex items-center justify-between">
           <div 
-            onClick={() => setActiveTab(currentUser?.role === 'student' ? 'student-profile' : 'dashboard')}
+            onClick={() => setActiveTab('dashboard')}
             className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
           >
             {currentUser?.role === 'student' ? (

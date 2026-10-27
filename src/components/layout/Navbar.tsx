@@ -290,56 +290,18 @@ export const Navbar: React.FC = () => {
               </>
             )}
 
-            {/* Student Portal Quick Links (respects administrator's portal configuration) */}
+            {/* Student Portal Quick Links: strictly only assigned grade and shift */}
             {currentUser && currentUser.role === 'student' && (
-              <>
-                <button
-                  onClick={() => setActiveTab('dashboard')}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === 'dashboard' || activeTab === 'student-profile'
-                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  {language === 'es' ? 'Mi Portal y Notas' : 'My Grades'}
-                </button>
-                {isModuleEnabled('student', 'status') && (
-                  <button
-                    onClick={() => setActiveTab('status')}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === 'status'
-                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {language === 'es' ? 'Estado Matrícula' : 'Enrollment Status'}
-                  </button>
-                )}
-                {isModuleEnabled('student', 'beneficios') && (
-                  <button
-                    onClick={() => setActiveTab('beneficios')}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === 'beneficios'
-                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {language === 'es' ? 'Mis Beneficios' : 'My Benefits'}
-                  </button>
-                )}
-                {isModuleEnabled('student', 'institucion') && (
-                  <button
-                    onClick={() => setActiveTab('institucion')}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      activeTab === 'institucion'
-                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
-                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    {language === 'es' ? 'Mi Colegio' : 'My School'}
-                  </button>
-                )}
-              </>
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`px-3.5 py-2 rounded-xl text-sm font-bold transition-colors ${
+                  activeTab === 'dashboard'
+                    ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-black'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                }`}
+              >
+                {language === 'es' ? 'Mi Grado y Jornada' : 'My Grade & Shift'}
+              </button>
             )}
           </nav>
 
@@ -716,92 +678,23 @@ export const Navbar: React.FC = () => {
                 {language === 'es' ? 'Módulos Disponibles' : 'Available Modules'}
               </div>
 
-              {/* Student Mobile Links */}
+              {/* Student Mobile Links: strictly only assigned grade and shift */}
               {currentUser.role === 'student' && (
-                <>
-                  <button
-                    onClick={() => {
-                      setActiveRole('student');
-                      setActiveTab('dashboard');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'dashboard'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <GraduationCap className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Mi Portal y Notas Periódicas' : 'My Grades & Portal'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveRole('student');
-                      setActiveTab('student-profile');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'student-profile'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Shield className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Carnet Escolar y Expediente' : 'School ID & Records'}</span>
-                  </button>
-
-                  {isModuleEnabled('student', 'status') && (
-                    <button
-                      onClick={() => {
-                        setActiveTab('status');
-                        setShowMobileNav(false);
-                      }}
-                      className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                        activeTab === 'status'
-                          ? 'bg-teal-700 text-white font-bold shadow-xs'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <Search className="w-4 h-4 shrink-0" />
-                      <span>{language === 'es' ? 'Estado Matrícula SIMAT' : 'SIMAT Status'}</span>
-                    </button>
-                  )}
-
-                  {isModuleEnabled('student', 'beneficios') && (
-                    <button
-                      onClick={() => {
-                        setActiveTab('beneficios');
-                        setShowMobileNav(false);
-                      }}
-                      className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                        activeTab === 'beneficios'
-                          ? 'bg-teal-700 text-white font-bold shadow-xs'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <Award className="w-4 h-4 shrink-0" />
-                      <span>{language === 'es' ? 'Mis Beneficios Escolares' : 'My School Benefits'}</span>
-                    </button>
-                  )}
-
-                  {isModuleEnabled('student', 'institucion') && (
-                    <button
-                      onClick={() => {
-                        setActiveTab('institucion');
-                        setShowMobileNav(false);
-                      }}
-                      className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                        activeTab === 'institucion'
-                          ? 'bg-teal-700 text-white font-bold shadow-xs'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <Globe className="w-4 h-4 shrink-0" />
-                      <span>{language === 'es' ? 'Información Institucional' : 'School Info'}</span>
-                    </button>
-                  )}
-                </>
+                <button
+                  onClick={() => {
+                    setActiveRole('student');
+                    setActiveTab('dashboard');
+                    setShowMobileNav(false);
+                  }}
+                  className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-colors text-left cursor-pointer ${
+                    activeTab === 'dashboard'
+                      ? 'bg-teal-700 text-white font-bold shadow-xs'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  <GraduationCap className="w-4 h-4 shrink-0 text-teal-400" />
+                  <span>{language === 'es' ? 'Mi Grado y Jornada' : 'My Grade & Shift'}</span>
+                </button>
               )}
 
               {/* Guardian Mobile Links */}
