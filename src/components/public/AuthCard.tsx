@@ -114,15 +114,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
   }, [regRole, regDocType]);
 
-  // Recovery form state
-  const [recoveryStep, setRecoveryStep] = useState<'request' | 'verify' | 'new-password'>('request');
+  // Recovery form state (Real Firebase sendPasswordResetEmail)
+  const [recoveryStep, setRecoveryStep] = useState<'request' | 'sent'>('request');
   const [recoveryEmail, setRecoveryEmail] = useState('');
-  const [recoveryCodeInput, setRecoveryCodeInput] = useState('');
-  const [recoveryNewPassword, setRecoveryNewPassword] = useState('');
-  const [recoveryConfirmPassword, setRecoveryConfirmPassword] = useState('');
-  const [showRecoveryPassword, setShowRecoveryPassword] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
-  const [activeSentCode, setActiveSentCode] = useState<string | null>(null);
 
   // Status & validation messages
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -149,9 +144,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
   const [recoveryFieldErrors, setRecoveryFieldErrors] = useState<{
     email?: string;
-    code?: string;
-    newPassword?: string;
-    confirmPassword?: string;
   }>({});
 
   // Countdown timer for resend email
@@ -163,36 +155,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
-  // Direct reset link via URL query parameters
-  React.useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tokenParam = params.get('reset_token');
-    const emailParam = params.get('email');
-
-    if (tokenParam && emailParam) {
-      setMode('forgot-password');
-      setRecoveryEmail(emailParam);
-      setRecoveryCodeInput(tokenParam);
-      setIsLoading(true);
-
-      verifyPasswordResetCode(emailParam, tokenParam).then((res) => {
-        setIsLoading(false);
-        if (res.success) {
-          setRecoveryStep('new-password');
-          setSuccessMsg(language === 'es' 
-            ? 'Enlace de verificación validado con éxito. Ingresa tu nueva contraseña.' 
-            : 'Verification link validated successfully. Enter your new password.');
-        } else {
-          setRecoveryStep('request');
-          setErrorMsg(res.message || (language === 'es' 
-            ? 'El enlace de recuperación es inválido o ha expirado. Por favor solicita uno nuevo.' 
-            : 'The recovery link is invalid or expired. Please request a new one.'));
-        }
-      });
-
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-  }, []);
 
   const clearAllErrors = () => {
     setErrorMsg(null);
@@ -205,7 +167,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   // Check in real-time if the email being registered already exists in the platform
   const isRegEmailTaken = regEmail.trim().length > 3 && regEmail.includes('@') && isEmailRegistered(regEmail.trim().toLowerCase());
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     clearAllErrors();
     const newErrors: { identifier?: string; password?: string; role?: string } = {};
@@ -223,28 +185,30 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     setIsLoading(true);
-
-    setTimeout(() => {
-      const res = login(loginIdentifier, loginPassword);
+    try {
+      const res = await login(loginIdentifier, loginPassword, initialRole);
       setIsLoading(false);
       if (!res.success) {
         if (res.notFound) {
           setLoginFieldErrors({
-            identifier: language === 'es' ? 'La cuenta no está registrada con este correo o documento.' : 'The account is not registered'
+            identifier: res.message || (language === 'es' ? 'La cuenta no está registrada con este correo o documento.' : 'The account is not registered')
           });
         } else {
           setLoginFieldErrors({
-            password: language === 'es' ? 'Contraseña incorrecta. Verifique sus datos o recupere su clave.' : 'Incorrect password. Check your credentials or reset your password.'
+            password: res.message || (language === 'es' ? 'Contraseña incorrecta. Verifique sus datos o recupere su clave.' : 'Incorrect password.')
           });
         }
       } else {
         setSuccessMsg(res.message || (language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome back!'));
         if (onSuccess) onSuccess();
       }
-    }, 450);
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMsg(err?.message || (language === 'es' ? 'Error al iniciar sesión con Firebase.' : 'Login error.'));
+    }
   };
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     clearAllErrors();
     const newErrors: {
@@ -305,8 +269,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       }
     }
 
-    if (!regPassword || regPassword.length < 5) {
-      newErrors.password = language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.';
+    if (!regPassword || regPassword.length < 6) {
+      newErrors.password = language === 'es' ? 'La contraseña debe tener al menos 6 caracteres (requisito de Firebase).' : 'Password must have at least 6 characters.';
     }
 
     if (regPassword !== regConfirmPassword) {
@@ -323,8 +287,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const res = register({
+    try {
+      const res = await register({
         name: regName,
         email: cleanRegEmail,
         password: regPassword,
@@ -346,10 +310,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({
           setErrorMsg(res.message || (language === 'es' ? 'Error al registrar usuario.' : 'Registration failed.'));
         }
       } else {
-        setSuccessMsg(language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!');
+        setSuccessMsg(res.message || (language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!'));
         if (onSuccess) onSuccess();
       }
-    }, 450);
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMsg(err?.message || (language === 'es' ? 'Error al registrarse con Firebase.' : 'Registration error.'));
+    }
   };
 
   const handleRequestRecoveryCode = async (e?: React.FormEvent) => {
@@ -366,90 +333,20 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       const res = await requestPasswordResetCode(recoveryEmail);
       setIsLoading(false);
       if (!res.success) {
-        setRecoveryFieldErrors({ email: res.message || (language === 'es' ? 'El correo no se encuentra registrado en el sistema.' : 'Could not process request.') });
+        setRecoveryFieldErrors({ email: res.message || (language === 'es' ? 'No se pudo enviar el correo de recuperación.' : 'Could not process request.') });
       } else {
-        if (res.code) {
-          setActiveSentCode(res.code);
-        }
-        setRecoveryStep('verify');
+        setRecoveryStep('sent');
         setResendCooldown(45);
         setSuccessMsg(res.message || (language === 'es' 
-          ? 'Hemos enviado un código de verificación de 6 dígitos a tu correo registrado.' 
-          : 'We have sent a 6-digit verification code to your registered email.'));
+          ? 'Hemos enviado un correo real de restablecimiento de contraseña a través de Firebase Authentication.' 
+          : 'We have sent a password reset email via Firebase Authentication.'));
       }
-    } catch {
+    } catch (err: any) {
       setIsLoading(false);
-      setErrorMsg(language === 'es' ? 'Error al enviar el código de recuperación.' : 'Error sending recovery email.');
+      setErrorMsg(err?.message || (language === 'es' ? 'Error al enviar el correo de recuperación con Firebase.' : 'Error sending recovery email.'));
     }
   };
 
-  const handleVerifyRecoveryCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearAllErrors();
-
-    if (!recoveryCodeInput.trim()) {
-      setRecoveryFieldErrors({ code: language === 'es' ? 'Por favor ingrese el código recibido en su correo electrónico.' : 'Please enter the code received in your email.' });
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const res = await verifyPasswordResetCode(recoveryEmail, recoveryCodeInput);
-      setIsLoading(false);
-      if (!res.success) {
-        setRecoveryFieldErrors({ code: res.message || (language === 'es' ? 'Código de verificación incorrecto.' : 'Invalid code.') });
-      } else {
-        setRecoveryStep('new-password');
-        setSuccessMsg(language === 'es' 
-          ? 'Código verificado con éxito. Ingresa tu nueva contraseña.' 
-          : 'Code verified successfully. Enter your new password.');
-      }
-    } catch {
-      setIsLoading(false);
-      setErrorMsg(language === 'es' ? 'Error al verificar el código.' : 'Error verifying code.');
-    }
-  };
-
-  const handleSetNewPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearAllErrors();
-
-    const newErrors: { newPassword?: string; confirmPassword?: string } = {};
-    if (recoveryNewPassword.length < 5) {
-      newErrors.newPassword = language === 'es' ? 'La nueva contraseña debe tener mínimo 5 caracteres.' : 'Password must be at least 5 characters.';
-    }
-    if (recoveryNewPassword !== recoveryConfirmPassword) {
-      newErrors.confirmPassword = language === 'es' ? 'Las contraseñas no coinciden.' : 'Passwords do not match.';
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setRecoveryFieldErrors(newErrors);
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const res = await resetPasswordWithCode(recoveryEmail, recoveryCodeInput, recoveryNewPassword);
-      setIsLoading(false);
-      if (!res.success) {
-        setErrorMsg(res.message || (language === 'es' ? 'Error al actualizar contraseña.' : 'Error resetting password.'));
-      } else {
-        setSuccessMsg(res.message || (language === 'es' 
-          ? '¡Tu contraseña ha sido restablecida exitosamente! Ya puedes iniciar sesión con tu nueva contraseña.' 
-          : 'Password reset successfully! You can now log in with your new password.'));
-        setMode('login');
-        setLoginIdentifier(recoveryEmail);
-        setLoginPassword(recoveryNewPassword);
-        setRecoveryStep('request');
-        setRecoveryCodeInput('');
-        setRecoveryNewPassword('');
-        setRecoveryConfirmPassword('');
-      }
-    } catch {
-      setIsLoading(false);
-      setErrorMsg(language === 'es' ? 'Error al actualizar contraseña.' : 'Error resetting password.');
-    }
-  };
 
   // If user is currently logged in, show active session banner with logout option
   if (currentUser) {
@@ -908,217 +805,91 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 ) : (
                   <>
                     <Mail className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Enviar Código al Correo Registrado' : 'Send Code to Registered Email'}</span>
+                    <span>{language === 'es' ? 'Enviar Enlace de Recuperación (Firebase)' : 'Send Reset Link (Firebase)'}</span>
                   </>
                 )}
               </button>
             </form>
           )}
 
-          {/* STEP 2: VERIFICAR CÓDIGO RECIBIDO POR CORREO */}
-          {recoveryStep === 'verify' && (
-            <form onSubmit={handleVerifyRecoveryCode} className="space-y-4">
-              
-              <div className="p-3.5 rounded-2xl bg-teal-50/80 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/80 shadow-xs">
-                <div className="flex items-start gap-2.5">
-                  <Mail className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
-                  <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                    <p className="font-semibold text-teal-950 dark:text-teal-200 mb-0.5 flex items-center gap-1.5">
-                      <span>{language === 'es' ? 'Código enviado al correo registrado' : 'Code sent to registered email'}</span>
-                      <BadgeCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                    </p>
-                    <p>
-                      {language === 'es' ? 'Hemos enviado el código de seguridad de 6 dígitos a ' : 'We sent a 6-digit code to '}
-                      <strong className="text-slate-900 dark:text-white font-mono">{recoveryEmail}</strong>.
+          {/* STEP 2: CONFIRMACIÓN REAL DE ENVÍO POR FIREBASE AUTHENTICATION */}
+          {recoveryStep === 'sent' && (
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 shadow-xs text-left">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-emerald-950 dark:text-emerald-200 flex items-center gap-1.5">
+                      <span>{language === 'es' ? '¡Correo de restablecimiento enviado!' : 'Reset Email Sent!'}</span>
+                      <BadgeCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    </h4>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                       {language === 'es'
-                        ? ' Revisa tu bandeja de entrada o spam e ingresa el código a continuación (válido por 15 minutos).'
-                        : ' Please check your inbox or spam folder and enter the code below (valid for 15 minutes).'}
+                        ? 'Hemos solicitado a Firebase Authentication el envío de un correo real con el enlace seguro de restablecimiento a: '
+                        : 'We requested Firebase Authentication to send a secure password reset link to: '}
+                      <strong className="font-mono text-slate-900 dark:text-white bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">{recoveryEmail}</strong>
                     </p>
                   </div>
                 </div>
               </div>
 
-              {/* Development / Preview notification banner with fast auto-fill option */}
-              {activeSentCode && (
-                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 flex items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2 text-amber-900 dark:text-amber-200">
-                    <Sparkles className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>
-                      {language === 'es' ? 'Código despachado a tu correo: ' : 'Code sent to your email: '}
-                      <strong className="font-mono text-sm tracking-wider font-bold bg-white dark:bg-slate-900 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-700">{activeSentCode}</strong>
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRecoveryCodeInput(activeSentCode);
-                      if (recoveryFieldErrors.code) setRecoveryFieldErrors(prev => ({ ...prev, code: undefined }));
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold text-[11px] shrink-0 cursor-pointer transition-colors shadow-xs"
-                  >
-                    {language === 'es' ? 'Autorrellenar' : 'Auto-fill'}
-                  </button>
-                </div>
-              )}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-xs text-slate-600 dark:text-slate-300 space-y-2 text-left leading-relaxed">
+                <p className="font-semibold text-slate-800 dark:text-slate-200">
+                  {language === 'es' ? 'Pasos para restablecer tu contraseña:' : 'Steps to reset your password:'}
+                </p>
+                <ol className="list-decimal list-inside space-y-1 text-[11px] sm:text-xs">
+                  <li>{language === 'es' ? 'Abre la bandeja de entrada de tu correo (y revisa la carpeta de spam).' : 'Open your email inbox (check spam or junk folder if needed).'}</li>
+                  <li>{language === 'es' ? 'Haz clic en el enlace seguro provisto por Firebase para escribir tu nueva clave.' : 'Click the secure link provided by Firebase to write your new password.'}</li>
+                  <li>{language === 'es' ? 'Vuelve a EduMed Digital e inicia sesión con tu nueva contraseña.' : 'Return to EduMed Digital and sign in with your new password.'}</li>
+                </ol>
+              </div>
 
-              <div className="space-y-1">
-                <label htmlFor="recovery-code-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'es' ? 'Código de Verificación (6 dígitos recibido en tu correo):' : 'Verification Code (6 digits received in your email):'}
-                </label>
-                <input
-                  id="recovery-code-input"
-                  type="text"
-                  maxLength={6}
-                  required
-                  autoFocus
-                  placeholder="------"
-                  value={recoveryCodeInput}
-                  onChange={(e) => {
-                    setRecoveryCodeInput(e.target.value.replace(/\D/g, ''));
-                    if (recoveryFieldErrors.code) setRecoveryFieldErrors(prev => ({ ...prev, code: undefined }));
+              <div className="space-y-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setRecoveryStep('request');
+                    setLoginIdentifier(recoveryEmail);
+                    clearAllErrors();
                   }}
-                  className={`w-full px-4 py-3 text-center text-2xl font-mono font-black tracking-[0.35em] rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                    recoveryFieldErrors.code
-                      ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                      : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
-                  }`}
-                />
-                <FieldError message={recoveryFieldErrors.code} />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading || recoveryCodeInput.length < 6}
-                className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-              >
-                {isLoading ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Validar Código y Continuar' : 'Verify Code and Continue'}</span>
-                  </>
-                )}
-              </button>
-
-              <div className="flex items-center justify-between text-xs pt-1">
-                <button
-                  type="button"
-                  disabled={resendCooldown > 0 || isLoading}
-                  onClick={() => handleRequestRecoveryCode()}
-                  className="text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 font-medium cursor-pointer disabled:opacity-50 disabled:no-underline"
+                  className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
-                  <RotateCcw className={`w-3.5 h-3.5 ${resendCooldown > 0 ? 'animate-spin' : ''}`} />
-                  <span>
-                    {resendCooldown > 0 
-                      ? (language === 'es' ? `Reenviar en ${resendCooldown}s` : `Resend in ${resendCooldown}s`)
-                      : (language === 'es' ? 'Reenviar código al correo registrado' : 'Resend code to registered email')}
-                  </span>
+                  <LogIn className="w-4 h-4" />
+                  <span>{language === 'es' ? 'Ir a Iniciar Sesión' : 'Go to Log In'}</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => { setRecoveryStep('request'); setErrorMsg(null); }}
-                  className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-                >
-                  {language === 'es' ? 'Cambiar correo' : 'Change email'}
-                </button>
-              </div>
-            </form>
-          )}
-
-          {/* STEP 3: CREAR NUEVA CONTRASEÑA */}
-          {recoveryStep === 'new-password' && (
-            <form onSubmit={handleSetNewPassword} className="space-y-4">
-              <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/70 text-xs flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>
-                  {language === 'es' 
-                    ? `Código validado para ${recoveryEmail}. Escribe tu nueva contraseña.` 
-                    : `Code validated for ${recoveryEmail}. Enter your new password.`}
-                </span>
-              </div>
-
-              <div className="space-y-1">
-                <label htmlFor="new-password-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'es' ? 'Nueva Contraseña (mínimo 5 caracteres):' : 'New Password (min 5 characters):'}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <input
-                    id="new-password-input"
-                    type={showRecoveryPassword ? 'text' : 'password'}
-                    required
-                    value={recoveryNewPassword}
-                    onChange={(e) => {
-                      setRecoveryNewPassword(e.target.value);
-                      if (recoveryFieldErrors.newPassword) setRecoveryFieldErrors(prev => ({ ...prev, newPassword: undefined }));
-                    }}
-                    className={`w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      recoveryFieldErrors.newPassword
-                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
-                    }`}
-                  />
+                <div className="flex items-center justify-between text-xs pt-1">
                   <button
                     type="button"
-                    onClick={() => setShowRecoveryPassword(!showRecoveryPassword)}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                    tabIndex={-1}
+                    disabled={resendCooldown > 0 || isLoading}
+                    onClick={() => handleRequestRecoveryCode()}
+                    className="text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1 font-medium cursor-pointer disabled:opacity-50 disabled:no-underline"
                   >
-                    {showRecoveryPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    <RotateCcw className={`w-3.5 h-3.5 ${resendCooldown > 0 ? 'animate-spin' : ''}`} />
+                    <span>
+                      {resendCooldown > 0 
+                        ? (language === 'es' ? `Reenviar en ${resendCooldown}s` : `Resend in ${resendCooldown}s`)
+                        : (language === 'es' ? 'Reenviar correo vía Firebase' : 'Resend email via Firebase')}
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => { setRecoveryStep('request'); clearAllErrors(); }}
+                    className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                  >
+                    {language === 'es' ? 'Cambiar correo' : 'Change email'}
                   </button>
                 </div>
-                <FieldError message={recoveryFieldErrors.newPassword} />
               </div>
-
-              <div className="space-y-1">
-                <label htmlFor="confirm-new-password-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'es' ? 'Confirmar Nueva Contraseña:' : 'Confirm New Password:'}
-                </label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                    <Lock className="w-4 h-4" />
-                  </div>
-                  <input
-                    id="confirm-new-password-input"
-                    type={showRecoveryPassword ? 'text' : 'password'}
-                    required
-                    value={recoveryConfirmPassword}
-                    onChange={(e) => {
-                      setRecoveryConfirmPassword(e.target.value);
-                      if (recoveryFieldErrors.confirmPassword) setRecoveryFieldErrors(prev => ({ ...prev, confirmPassword: undefined }));
-                    }}
-                    className={`w-full pl-9 pr-10 py-2.5 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                      recoveryFieldErrors.confirmPassword
-                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                        : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
-                    }`}
-                  />
-                </div>
-                <FieldError message={recoveryFieldErrors.confirmPassword} />
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-              >
-                {isLoading ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Guardar Nueva Contraseña e Iniciar Sesión' : 'Save New Password & Log In'}</span>
-                  </>
-                )}
-              </button>
-            </form>
+            </div>
           )}
 
         </div>
+
       ) : (
         /* TAB 2: CREAR UNA CUENTA */
         <div className="mt-5 space-y-4">
