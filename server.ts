@@ -1,6 +1,7 @@
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import nodemailer, { type Transporter } from 'nodemailer';
 import dotenv from 'dotenv';
@@ -15,6 +16,43 @@ const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
+
+// Public Firebase config extraction for runtime delivery
+function getFirebasePublicConfig() {
+  const apiKey = (process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || '').trim();
+  const authDomain = (process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN || '').trim();
+  const projectId = (process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || '').trim();
+  const storageBucket = (process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || '').trim();
+  const messagingSenderId = (process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || '').trim();
+  const appId = (process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || '').trim();
+  const measurementId = (process.env.VITE_FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID || '').trim();
+
+  const isConfigured = Boolean(
+    apiKey &&
+    projectId &&
+    !apiKey.startsWith('your-') &&
+    !projectId.startsWith('your-') &&
+    !apiKey.includes('placeholder')
+  );
+
+  return {
+    configured: isConfigured,
+    config: isConfigured ? {
+      apiKey,
+      authDomain: authDomain || (projectId ? `${projectId}.firebaseapp.com` : undefined),
+      projectId,
+      storageBucket: storageBucket || (projectId ? `${projectId}.appspot.com` : undefined),
+      messagingSenderId: messagingSenderId || undefined,
+      appId: appId || undefined,
+      measurementId: measurementId || undefined,
+    } : null
+  };
+}
+
+// GET /api/config/firebase - Returns runtime Firebase client config safely
+app.get('/api/config/firebase', (_req, res) => {
+  return res.json(getFirebasePublicConfig());
+});
 
 interface ResetRecord {
   code: string;
@@ -646,9 +684,20 @@ app.get('/api/portal-config/roles/meta', (req, res) => {
 // Dev / Prod Vite mounting
 async function startServer() {
   if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.resolve(__dirname, 'dist')));
+    app.use(express.static(path.resolve(__dirname, 'dist'), { index: false }));
     app.get('*', (_req, res) => {
-      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+      const indexPath = path.resolve(__dirname, 'dist', 'index.html');
+      if (!fs.existsSync(indexPath)) {
+        return res.status(404).send('Build not found. Please run npm run build.');
+      }
+      let html = fs.readFileSync(indexPath, 'utf-8');
+      const fb = getFirebasePublicConfig();
+      if (fb.configured && fb.config) {
+        const injection = `<script>window.__FIREBASE_CONFIG__ = ${JSON.stringify(fb.config)};</script>`;
+        html = html.replace('</head>', `${injection}\n</head>`);
+      }
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      return res.send(html);
     });
   } else {
     const vite = await createViteServer({

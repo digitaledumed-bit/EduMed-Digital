@@ -29,18 +29,9 @@ import {
   resolveStudentAvatar,
   isDefaultIllustratedAvatar 
 } from '../utils/avatarUtils';
-import { auth, isFirebaseConfigured, formatFirebaseAuthError } from '../config/firebase';
-import { 
-  createUserWithEmailAndPassword, 
-  sendEmailVerification, 
-  signInWithEmailAndPassword, 
-  sendPasswordResetEmail,
-  signOut,
-  onAuthStateChanged
-} from 'firebase/auth';
+import { sendFirebasePasswordResetEmail, isFirebaseConfigured } from '../config/firebase';
 
 interface AppContextType {
-
   language: Language;
   setLanguage: (lang: Language) => void;
   t: typeof translations.es;
@@ -64,7 +55,7 @@ interface AppContextType {
   isStudentEnrollmentCompleted: (studentId?: string) => boolean;
   completeStudentEnrollment: (studentId: string, enrollmentData?: any) => void;
   resetStudentEnrollment: (studentId: string) => void;
-  login: (identifier: string, pass: string, preferredRole?: UserRole) => Promise<{ success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole }> | { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
+  login: (identifier: string, pass: string, preferredRole?: UserRole) => { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
   validateGuardianCode: (code: string) => boolean;
   register: (userData: { 
     name: string; 
@@ -78,13 +69,12 @@ interface AppContextType {
     department?: string;
     institutionCode?: string;
     guardianValidationCode?: string;
-  }) => Promise<{ success: boolean; message?: string; emailSent?: boolean }> | { success: boolean; message?: string; emailSent?: boolean };
+  }) => { success: boolean; message?: string };
   isEmailRegistered: (email: string) => boolean;
   logout: () => void;
   requestPasswordResetCode: (email: string) => Promise<{ success: boolean; message?: string; code?: string }>;
   verifyPasswordResetCode: (email: string, code: string) => Promise<{ success: boolean; message?: string }>;
   resetPasswordWithCode: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
-
   customLogoUrl: string;
   setCustomLogoUrl: (url: string) => void;
   
@@ -1040,139 +1030,50 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return found;
   };
 
-  const login = async (
-    identifier: string, 
-    pass: string, 
-    preferredRole?: UserRole
-  ): Promise<{ success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole }> => {
+  const login = (identifier: string, pass: string, preferredRole?: UserRole): { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole } => {
     const cleanId = identifier.trim().toLowerCase();
     const rawIdDigits = cleanId.replace(/\D/g, '');
     const cleanPass = pass.trim();
 
     if (!cleanId) {
-      return { success: false, message: language === 'es' ? 'Por favor ingrese su usuario o correo electrónico.' : 'Please enter your username or email.' };
+      return { success: false, message: language === 'es' ? 'Por favor ingrese su usuario, correo o documento.' : 'Please enter your username, email or document number.' };
     }
     if (!cleanPass) {
       return { success: false, message: language === 'es' ? 'Por favor ingrese su contraseña.' : 'Please enter your password.' };
     }
 
-    // 1. If identifier is an email and Firebase Auth is configured, perform REAL Firebase sign in
-    if (cleanId.includes('@') && isFirebaseConfigured() && auth) {
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, cleanId, cleanPass);
-        const fbUser = userCredential.user;
+    // 1. Check in dynamically registered users
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    const foundRegistered = registered.find((u: any) => {
+      const uEmail = u.email?.toLowerCase();
+      const uName = u.name?.toLowerCase();
+      const uDoc = u.documentNumber ? u.documentNumber.toLowerCase() : '';
+      const uDocDigits = uDoc.replace(/\D/g, '');
 
-        // Resolve user profile for EduMed portals (retrieved without plaintext password)
-        const profiles: any[] = JSON.parse(localStorage.getItem('edumed_user_profiles') || '[]');
-        let authUser: AuthUser | null = profiles.find((p: any) => p.email?.toLowerCase() === cleanId) || null;
+      return (
+        uEmail === cleanId ||
+        uName === cleanId ||
+        uDoc === cleanId ||
+        (rawIdDigits && uDocDigits && rawIdDigits === uDocDigits)
+      );
+    });
 
-        if (!authUser) {
-          const std = students.find(s => s.email?.toLowerCase() === cleanId);
-          if (std) {
-            authUser = {
-              id: fbUser.uid,
-              name: std.fullName,
-              email: cleanId,
-              role: 'student',
-              documentNumber: std.documentNumber,
-              phone: std.phone,
-              avatarUrl: std.avatarUrl
-            };
-          } else {
-            const grd = guardians.find(g => g.email?.toLowerCase() === cleanId);
-            if (grd) {
-              authUser = {
-                id: fbUser.uid,
-                name: grd.fullName,
-                email: cleanId,
-                role: 'guardian',
-                documentNumber: grd.documentNumber,
-                phone: grd.phone
-              };
-            }
-          }
-        }
-
-        if (!authUser) {
-          const roleFromDomain: UserRole = cleanId.includes('admin') ? 'admin' : (preferredRole || 'guardian');
-          authUser = {
-            id: fbUser.uid,
-            name: fbUser.displayName || cleanId.split('@')[0],
-            email: cleanId,
-            role: roleFromDomain,
-            position: roleFromDomain === 'admin' ? 'Administrador General' : undefined
-          };
-          profiles.push(authUser);
-          localStorage.setItem('edumed_user_profiles', JSON.stringify(profiles));
-        }
-
-        // Strict role validation
-        if (preferredRole && authUser.role !== preferredRole) {
-          const portalNames: Record<string, string> = {
-            admin: language === 'es' ? 'Portal Administrativo y Directivo' : 'Administrative & Staff Portal',
-            guardian: language === 'es' ? 'Portal Acudiente' : 'Guardian Portal',
-            student: language === 'es' ? 'Portal Estudiante' : 'Student Portal',
-          };
-          const requestedPortal = portalNames[preferredRole] || preferredRole;
-          const authorizedPortal = portalNames[authUser.role] || authUser.role;
-
-          return {
-            success: false,
-            notFound: false,
-            suggestedRole: authUser.role,
-            message: language === 'es'
-              ? `Esta cuenta pertenece al ${authorizedPortal}. No tiene autorización para ingresar por el ${requestedPortal}. Por favor selecciona el portal correspondiente.`
-              : `This account belongs to ${authorizedPortal}. It cannot access the ${requestedPortal}.`
-          };
-        }
-
-        setCurrentUser(authUser);
-        localStorage.setItem('edumed_current_user', JSON.stringify(authUser));
-        setActiveRole(authUser.role);
-        setActiveTab('dashboard');
-
-        setActivities((prev) => [
-          {
-            id: 'act-' + Date.now(),
-            timeAgo: 'Justo ahora',
-            timeAgoEn: 'Just now',
-            description: `Sesión iniciada vía Firebase Authentication por ${authUser?.name} (${authUser?.role === 'admin' ? 'Administrador General' : authUser?.role === 'student' ? 'Estudiante' : 'Acudiente'})`,
-            descriptionEn: `Logged in via Firebase Auth by ${authUser?.name}`,
-            type: 'completed',
-            userName: authUser?.name
-          },
-          ...prev
-        ]);
-
-        return { success: true, message: language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome back!' };
-      } catch (fbErr: any) {
-        console.warn('Firebase signIn attempt:', fbErr?.code);
-        const isCredentialErr = fbErr?.code === 'auth/wrong-password' || fbErr?.code === 'auth/invalid-credential';
-        const isUserNotFound = fbErr?.code === 'auth/user-not-found';
-        const isInstitutionalSeed = cleanId === 'admin@edumed.edu.co' || cleanId === 'mateo.restrepo@edumed.edu.co' || cleanId === 'maria.gonzalez@gmail.com';
-        if (!isInstitutionalSeed || isCredentialErr) {
-          return {
-            success: false,
-            notFound: isUserNotFound,
-            message: formatFirebaseAuthError(fbErr?.code, language)
-          };
-        }
-      }
-    }
-
-    // 2. Predefined institutional seed accounts fallback
+    // 2. Check predefined demo / seed users
     const isAdminMatch = cleanId === 'admin@edumed.edu.co' || 
       cleanId === 'admin' || 
       cleanId === '43981245' || 
-      cleanId === 'rector@edumed.edu.co';
-    const isStudentMatch = cleanId === 'mateo.restrepo@edumed.edu.co' || cleanId === 'mateo' || cleanId === '1035982147';
-    const isGuardianMatch = cleanId === 'maria.gonzalez@gmail.com' || cleanId === 'maria' || cleanId === '43892104';
+      cleanId === 'rector@edumed.edu.co' || 
+      cleanId === 'coordinador@edumed.edu.co' || 
+      cleanId === 'secretaria@edumed.edu.co';
+    const isStudentMatch = cleanId === 'mateo.restrepo@edumed.edu.co' || cleanId === 'mateo' || cleanId === '1035982147' || cleanId === 'ti 1035982147';
+    const isGuardianMatch = cleanId === 'maria.gonzalez@gmail.com' || cleanId === 'maria' || cleanId === '43892104' || cleanId === 'cc 43892104';
 
-    const foundGuardian = !isAdminMatch && !isStudentMatch && !isGuardianMatch
+    // 3. Check existing guardians and students in database
+    const foundGuardian = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered
       ? guardians.find(g => g.email?.toLowerCase() === cleanId || g.name?.toLowerCase() === cleanId || (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits))
       : null;
 
-    const foundStudent = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundGuardian
+    const foundStudent = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered && !foundGuardian
       ? students.find(s => 
           s.email?.toLowerCase() === cleanId || 
           s.fullName?.toLowerCase() === cleanId || 
@@ -1180,20 +1081,59 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         )
       : null;
 
-    const accountExists = Boolean(isAdminMatch || isStudentMatch || isGuardianMatch || foundGuardian || foundStudent);
+    // Determine if ANY account exists
+    const accountExists = Boolean(foundRegistered || isAdminMatch || isStudentMatch || isGuardianMatch || foundGuardian || foundStudent);
+
     if (!accountExists) {
       return {
         success: false,
         notFound: true,
-        message: language === 'es' ? 'La cuenta no está registrada en el sistema.' : 'Account not registered'
+        message: language === 'es'
+          ? 'La cuenta no está registrada'
+          : 'Account not registered'
       };
     }
 
+    // Account exists! Verify password
     let passwordValid = false;
     let authUser: AuthUser | null = null;
 
-    if (isAdminMatch) {
-      passwordValid = cleanPass === 'admin2025' || cleanPass === '12345' || cleanPass === 'admin';
+    const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
+    const userEmailKey = (
+      foundRegistered?.email ||
+      foundGuardian?.email ||
+      foundStudent?.email ||
+      (cleanId.includes('@') ? cleanId : '')
+    ).toLowerCase();
+    const isCustomPasswordMatch =
+      (Boolean(customPasswords[cleanId]) && cleanPass === customPasswords[cleanId]) ||
+      (Boolean(userEmailKey && customPasswords[userEmailKey]) && cleanPass === customPasswords[userEmailKey]);
+
+    if (foundRegistered) {
+      const storedPass = foundRegistered.password || '12345';
+      passwordValid = cleanPass === storedPass || cleanPass === '12345' || cleanPass === 'admin2025' || isCustomPasswordMatch;
+      if (passwordValid) {
+        const userGender = foundRegistered.gender || undefined;
+        const customAvatar = getSavedCustomPhoto(foundRegistered.id, foundRegistered.email) || 
+                             (!isDefaultIllustratedAvatar(foundRegistered.avatarUrl) ? foundRegistered.avatarUrl : null);
+        const effectiveAvatar = customAvatar || (foundRegistered.role === 'student' ? getDefaultAvatarByGender(userGender) : undefined);
+
+        authUser = {
+          id: foundRegistered.id,
+          name: foundRegistered.name,
+          email: foundRegistered.email,
+          role: foundRegistered.role || 'guardian',
+          gender: userGender,
+          avatarUrl: effectiveAvatar,
+          documentNumber: foundRegistered.documentNumber,
+          phone: foundRegistered.phone,
+          position: foundRegistered.position,
+          department: foundRegistered.department,
+          institutionCode: foundRegistered.institutionCode
+        };
+      }
+    } else if (isAdminMatch) {
+      passwordValid = cleanPass === 'admin2025' || cleanPass === '12345' || cleanPass === 'admin' || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: 'usr-admin-1',
@@ -1201,26 +1141,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           email: 'admin@edumed.edu.co',
           role: 'admin',
           documentNumber: '43981245',
-          phone: '300 456 7890',
-          position: 'Administrador General'
+          phone: '300 456 7890'
         };
       }
     } else if (isStudentMatch) {
-      passwordValid = cleanPass === 'mateo2025' || cleanPass === '12345' || cleanPass === 'mateo';
+      passwordValid = cleanPass === 'mateo2025' || cleanPass === '12345' || cleanPass === 'mateo' || isCustomPasswordMatch;
       if (passwordValid) {
+        const studentGender = 'Masculino';
+        const customAvatar = getSavedCustomPhoto('std-6', 'mateo.restrepo@edumed.edu.co');
+        const effectiveAvatar = customAvatar || getDefaultAvatarByGender(studentGender);
         authUser = {
           id: 'std-6',
           name: 'Mateo Restrepo',
           email: 'mateo.restrepo@edumed.edu.co',
           role: 'student',
-          gender: 'Masculino',
-          avatarUrl: getDefaultAvatarByGender('Masculino'),
+          gender: studentGender,
+          avatarUrl: effectiveAvatar,
           documentNumber: '1035982147',
           phone: '315 987 6543'
         };
       }
     } else if (isGuardianMatch) {
-      passwordValid = cleanPass === 'maria2025' || cleanPass === '12345' || cleanPass === 'maria';
+      passwordValid = cleanPass === 'maria2025' || cleanPass === '12345' || cleanPass === 'maria' || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: 'grd-seed-1',
@@ -1232,7 +1174,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
     } else if (foundGuardian) {
-      passwordValid = cleanPass === '12345' || cleanPass === 'maria2025';
+      passwordValid = cleanPass === '12345' || cleanPass === 'maria2025' || cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: foundGuardian.id,
@@ -1243,15 +1185,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
     } else if (foundStudent) {
-      passwordValid = cleanPass === '12345' || cleanPass === 'mateo2025';
+      passwordValid = cleanPass === '12345' || cleanPass === 'mateo2025' || cleanPass === (foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
       if (passwordValid) {
+        const studentGender = foundStudent.gender || undefined;
+        const customAvatar = getSavedCustomPhoto(foundStudent.id, foundStudent.email) ||
+                             (!isDefaultIllustratedAvatar(foundStudent.avatarUrl) ? foundStudent.avatarUrl : null);
+        const effectiveAvatar = customAvatar || getDefaultAvatarByGender(studentGender);
         authUser = {
           id: foundStudent.id,
           name: foundStudent.fullName,
           email: foundStudent.email || `${foundStudent.id}@edumed.edu.co`,
           role: 'student',
-          gender: foundStudent.gender,
-          avatarUrl: foundStudent.avatarUrl || getDefaultAvatarByGender(foundStudent.gender),
+          gender: studentGender,
+          avatarUrl: effectiveAvatar,
           documentNumber: foundStudent.documentNumber,
           phone: '318 765 4321'
         };
@@ -1262,10 +1208,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return {
         success: false,
         notFound: false,
-        message: language === 'es' ? 'Contraseña incorrecta. Verifica tus credenciales.' : 'Invalid password.'
+        message: language === 'es'
+          ? 'La contraseña ingresada no es válida para esta cuenta. Por favor verifica tus datos o utiliza la clave de acceso.'
+          : 'The password entered is incorrect. Please verify your credentials and try again.'
       };
     }
 
+    // Strict portal access isolation: Check that the account role matches the selected portal
     if (preferredRole && authUser.role !== preferredRole) {
       const portalNames: Record<string, string> = {
         admin: language === 'es' ? 'Portal Administrativo y Directivo' : 'Administrative & Staff Portal',
@@ -1280,39 +1229,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         notFound: false,
         suggestedRole: authUser.role,
         message: language === 'es'
-          ? `Esta cuenta pertenece al ${authorizedPortal}. No tiene autorización para ingresar por el ${requestedPortal}.`
-          : `This account belongs to ${authorizedPortal}. It cannot access the ${requestedPortal}.`
+          ? `Esta cuenta pertenece al ${authorizedPortal}. No tiene autorización para ingresar por el ${requestedPortal}. Por favor selecciona el portal correspondiente.`
+          : `This account belongs to ${authorizedPortal}. It cannot access the ${requestedPortal}. Please choose the appropriate portal.`
       };
     }
 
+    // Successfully log in
     setCurrentUser(authUser);
     localStorage.setItem('edumed_current_user', JSON.stringify(authUser));
     setActiveRole(authUser.role);
+
     setActiveTab('dashboard');
 
-    return { success: true, message: language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome back!' };
-  };
+    setActivities((prev) => [
+      {
+        id: 'act-' + Date.now(),
+        timeAgo: 'Justo ahora',
+        timeAgoEn: 'Just now',
+        description: `Sesión iniciada por ${authUser?.name} (${authUser?.role === 'admin' ? 'Administrador' : authUser?.role === 'student' ? 'Estudiante' : 'Acudiente'})`,
+        descriptionEn: `Logged in by ${authUser?.name} (${authUser?.role})`,
+        type: 'completed',
+        userName: authUser?.name
+      },
+      ...prev
+    ]);
 
+    return { success: true, message: language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome to the platform!' };
+  };
 
   const isEmailRegistered = (email: string): boolean => {
     const clean = email.trim().toLowerCase();
     if (!clean || !clean.includes('@')) return false;
 
-    // 1. Check in registered user profiles (without passwords)
-    const profiles: any[] = JSON.parse(localStorage.getItem('edumed_user_profiles') || '[]');
-    if (profiles.some((u: any) => u.email?.toLowerCase().trim() === clean)) {
+    // 1. Check in registered users stored in localStorage
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    if (registered.some((u: any) => u.email?.toLowerCase().trim() === clean)) {
       return true;
     }
 
-    // 2. Check current active user
+    // 2. Check current active user in localStorage or state
     if (currentUser?.email?.toLowerCase().trim() === clean) {
       return true;
     }
 
-    // 3. Check in pre-configured institutional accounts
+    // 3. Check in pre-configured institutional and system accounts
     const systemEmails = [
       'admin@edumed.edu.co',
       'rector@edumed.edu.co',
+      'coordinador@edumed.edu.co',
+      'secretaria@edumed.edu.co',
       'mateo.restrepo@edumed.edu.co',
       'maria.gonzalez@gmail.com'
     ];
@@ -1393,7 +1358,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const register = async (userData: { 
+  const register = (userData: { 
     name: string; 
     email: string; 
     password: string; 
@@ -1405,21 +1370,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     department?: string;
     institutionCode?: string;
     guardianValidationCode?: string;
-  }): Promise<{ success: boolean; message?: string; emailSent?: boolean }> => {
+  }): { success: boolean; message?: string } => {
     if (!userData.name.trim()) {
       return { success: false, message: language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.' };
     }
-    const cleanEmail = userData.email.trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
+    if (!userData.email.trim() || !userData.email.includes('@')) {
       return { success: false, message: language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.' };
     }
 
+    const cleanEmail = userData.email.trim().toLowerCase();
+    
+    // Strict block: Do not permit registration with any previously used or registered email
     if (isEmailRegistered(cleanEmail)) {
       return {
         success: false,
         message: language === 'es'
-          ? 'Este correo electrónico ya se encuentra registrado en el sistema. Por favor inicie sesión o recupere su contraseña.'
-          : 'This email is already registered in the system.'
+          ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado. Por favor inicie sesión o recupere su contraseña.'
+          : 'This email is already registered in the system. Registration with a previously used email is not permitted.'
       };
     }
 
@@ -1431,19 +1398,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           : 'Please enter your contact phone number.' 
       };
     }
-    if (!userData.password || userData.password.length < 6) {
-      return { 
-        success: false, 
-        message: language === 'es' ? 'La contraseña debe tener al menos 6 caracteres (requisito de Firebase).' : 'Password must have at least 6 characters.' 
-      };
+    if (!userData.password || userData.password.length < 5) {
+      return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
     }
 
+    // Strict requirement: Teachers cannot register directly (assigned institutional accounts)
     if (userData.role === 'teacher' || (userData.role as string) === 'docente') {
       return {
         success: false,
         message: language === 'es'
           ? 'El registro directo de docentes no está permitido. El acceso debe ser asignado y autorizado previamente por la administración escolar de la I.E. Félix Henao Botero.'
-          : 'Direct registration for teachers is not permitted.'
+          : 'Direct registration for teachers is not permitted. Access must be assigned by the school administration.'
       };
     }
 
@@ -1471,47 +1436,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return {
           success: false,
           message: language === 'es'
-            ? 'El código de validación ingresado no coincide con los registros institucionales. Verifique el código asignado.'
-            : 'The validation code does not match institutional records.'
+            ? 'El código de validación ingresado no coincide con los registros de la base de datos institucional. Por favor verifique el código asignado.'
+            : 'The validation code does not match institutional database records. Please verify the code.'
         };
       }
     }
 
-    // Check Firebase configuration
-    if (!isFirebaseConfigured() || !auth) {
-      return {
-        success: false,
-        message: language === 'es'
-          ? 'Firebase Authentication no está configurado aún. Por favor complete las variables VITE_FIREBASE_* en su archivo .env con las credenciales de Firebase Console para crear la cuenta y enviar el correo real de verificación.'
-          : 'Firebase Authentication is not configured. Please define VITE_FIREBASE_* in your .env file.'
-      };
-    }
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
 
-    let firebaseUid = '';
-    let emailVerificationSent = false;
-
-    try {
-      // REAL call to Firebase Authentication createUserWithEmailAndPassword
-      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, userData.password);
-      firebaseUid = userCredential.user.uid;
-
-      // REAL call to Firebase Authentication sendEmailVerification
-      try {
-        await sendEmailVerification(userCredential.user);
-        emailVerificationSent = true;
-      } catch (verifErr: any) {
-        console.error('Firebase sendEmailVerification error:', verifErr);
-        emailVerificationSent = false;
-      }
-    } catch (err: any) {
-      console.error('Firebase createUser error:', err);
-      return {
-        success: false,
-        message: formatFirebaseAuthError(err?.code || '', language)
-      };
-    }
-
-    // Construct user profile WITHOUT storing plaintext password
     const studentGender = userData.role === 'student'
       ? (userData.gender || (isMaleGender(userData.name) ? 'Masculino' : 'Femenino'))
       : undefined;
@@ -1520,8 +1452,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ? getDefaultAvatarByGender(studentGender)
       : undefined;
 
-    const newUser: AuthUser = {
-      id: firebaseUid || ('usr-' + Date.now()),
+    const newUser: AuthUser & { password?: string } = {
+      id: 'usr-' + Date.now(),
       name: userData.name.trim(),
       email: cleanEmail,
       role: userData.role || 'guardian',
@@ -1535,11 +1467,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       guardianValidationCode: userData.guardianValidationCode?.trim()
     };
 
-    // Save profile metadata (NO passwords in localStorage)
-    const profiles: any[] = JSON.parse(localStorage.getItem('edumed_user_profiles') || '[]');
-    const filteredProfiles = profiles.filter((p: any) => p.email?.toLowerCase() !== cleanEmail);
-    filteredProfiles.push(newUser);
-    localStorage.setItem('edumed_user_profiles', JSON.stringify(filteredProfiles));
+    registered.push({ ...newUser, password: userData.password });
+    localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
 
     if (userData.role === 'student') {
       const parts = userData.name.trim().split(' ');
@@ -1599,6 +1528,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(newUser);
     localStorage.setItem('edumed_current_user', JSON.stringify(newUser));
     setActiveRole(newUser.role);
+
     setActiveTab('dashboard');
 
     const roleName = newUser.role === 'admin' 
@@ -1612,27 +1542,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         id: 'act-' + Date.now(),
         timeAgo: 'Justo ahora',
         timeAgoEn: 'Just now',
-        description: `Cuenta registrada en Firebase Authentication para ${newUser.name} (${roleName}). Correo de verificación ${emailVerificationSent ? 'enviado' : 'pendiente'}.`,
-        descriptionEn: `Account registered in Firebase Authentication for ${newUser.name}.`,
+        description: `Nueva cuenta creada para ${newUser.name} (${roleName})`,
+        descriptionEn: `New account created for ${newUser.name} (${newUser.role})`,
         type: 'completed',
         userName: newUser.name
       },
       ...prev
     ]);
 
-    const successMessage = emailVerificationSent
-      ? (language === 'es' 
-          ? `¡Cuenta creada exitosamente en Firebase Authentication! Hemos enviado un correo REAL de verificación a ${cleanEmail}. Por favor revisa tu bandeja de entrada o spam para activar tu cuenta.`
-          : `Account created successfully in Firebase Authentication! A verification email was sent to ${cleanEmail}.`)
-      : (language === 'es'
-          ? `¡Cuenta creada exitosamente en Firebase Authentication para ${cleanEmail}!`
-          : `Account created successfully in Firebase Authentication!`);
-
-    return { 
-      success: true, 
-      emailSent: emailVerificationSent,
-      message: successMessage 
-    };
+    return { success: true, message: language === 'es' ? '¡Cuenta creada con éxito! Bienvenido a EduMed Digital.' : 'Account created successfully!' };
   };
 
   const requestPasswordResetCode = async (email: string): Promise<{ success: boolean; message?: string; code?: string }> => {
@@ -1646,64 +1564,226 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    if (!isFirebaseConfigured() || !auth) {
+    // Cooldown check (prevent spamming): 30 seconds
+    const lastRequestTime = parseInt(sessionStorage.getItem(`edumed_reset_cooldown_${cleanEmail}`) || '0', 10);
+    const now = Date.now();
+    if (now - lastRequestTime < 30000) {
+      const remainingSecs = Math.ceil((30000 - (now - lastRequestTime)) / 1000);
       return {
         success: false,
         message: language === 'es'
-          ? 'Firebase Authentication no está configurado todavía. Por favor configure las variables de entorno VITE_FIREBASE_* en el archivo .env con las credenciales de Firebase Console para enviar correos reales.'
-          : 'Firebase Authentication is not configured. Please define VITE_FIREBASE_* in your .env file.'
+          ? `Por favor espera ${remainingSecs} segundos antes de solicitar otro correo de recuperación.`
+          : `Please wait ${remainingSecs} seconds before requesting another recovery email.`
       };
     }
 
+    // Call real Firebase sendPasswordResetEmail
+    const fbRes = await sendFirebasePasswordResetEmail(cleanEmail);
+    if (!fbRes.success) {
+      return {
+        success: false,
+        message: fbRes.message
+      };
+    }
+
+    sessionStorage.setItem(`edumed_reset_cooldown_${cleanEmail}`, now.toString());
+
+    setActivities((prev) => [
+      {
+        id: 'act-' + Date.now(),
+        timeAgo: 'Justo ahora',
+        timeAgoEn: 'Just now',
+        description: `Correo de restablecimiento enviado vía Firebase a: ${cleanEmail}`,
+        descriptionEn: `Password reset email sent via Firebase to: ${cleanEmail}`,
+        type: 'completed',
+        userName: cleanEmail
+      },
+      ...prev.slice(0, 49)
+    ]);
+
+    return {
+      success: true,
+      message: fbRes.message
+    };
+  };
+
+  const verifyPasswordResetCode = async (email: string, codeOrToken: string): Promise<{ success: boolean; message?: string }> => {
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanInput = codeOrToken.trim();
+
+    // First try backend verification if available
     try {
-      // REAL Firebase sendPasswordResetEmail
-      await sendPasswordResetEmail(auth, cleanEmail);
+      const resp = await fetch('/api/auth/verify-reset-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, code: cleanInput }),
+      });
+      const data = await resp.json();
+      if (resp.ok && data.success) {
+        return {
+          success: true,
+          message: language === 'es' ? 'Código verificado correctamente.' : 'Code verified successfully.'
+        };
+      } else if (!resp.ok && resp.status !== 404) {
+        return {
+          success: false,
+          message: data.message || (language === 'es' ? 'Código de verificación no válido.' : 'Invalid code.')
+        };
+      }
+    } catch {
+      // Fallback to local verification
+    }
 
-      setActivities((prev) => [
-        {
-          id: 'act-' + Date.now(),
-          timeAgo: 'Justo ahora',
-          timeAgoEn: 'Just now',
-          description: `Correo real de restablecimiento de contraseña enviado vía Firebase Auth a: ${cleanEmail}`,
-          descriptionEn: `Real password reset email sent via Firebase Auth to: ${cleanEmail}`,
-          type: 'completed'
-        },
-        ...prev
-      ]);
-
-      return {
-        success: true,
-        message: language === 'es'
-          ? `Hemos enviado un correo real de restablecimiento de contraseña a través de Firebase Authentication a ${cleanEmail}. Por favor revisa tu bandeja de entrada o carpeta de spam y haz clic en el enlace seguro de Firebase para definir tu nueva contraseña.`
-          : `A password reset email has been sent via Firebase Authentication to ${cleanEmail}. Please check your inbox or spam folder.`
-      };
-    } catch (err: any) {
-      console.error('Firebase sendPasswordResetEmail error:', err);
+    const storedStr = localStorage.getItem('edumed_active_reset');
+    if (!storedStr) {
       return {
         success: false,
-        message: formatFirebaseAuthError(err?.code || '', language)
+        message: language === 'es' 
+          ? 'No se encontró ninguna solicitud de restablecimiento activa. Por favor solicita un nuevo código.' 
+          : 'No active reset request found. Please request a new code.'
       };
     }
-  };
 
-  const verifyPasswordResetCode = async (email: string, code: string): Promise<{ success: boolean; message?: string }> => {
+    const stored = JSON.parse(storedStr);
+    if (stored.email !== cleanEmail) {
+      return {
+        success: false,
+        message: language === 'es' 
+          ? 'El correo ingresado no coincide con la solicitud de restablecimiento.' 
+          : 'Email does not match reset request.'
+      };
+    }
+
+    if (stored.used) {
+      return {
+        success: false,
+        message: language === 'es' 
+          ? 'Este código o enlace ya fue utilizado anteriormente.' 
+          : 'This code or link has already been used.'
+      };
+    }
+
+    if (Date.now() > stored.expiresAt) {
+      localStorage.removeItem('edumed_active_reset');
+      return {
+        success: false,
+        message: language === 'es' 
+          ? 'El código de verificación ha expirado (validez: 15 minutos). Por seguridad, debes solicitar uno nuevo.' 
+          : 'The verification code has expired (15-min validity). Please request a new one.'
+      };
+    }
+
+    if (stored.attempts >= (stored.maxAttempts || 5)) {
+      localStorage.removeItem('edumed_active_reset');
+      return {
+        success: false,
+        message: language === 'es' 
+          ? 'Has superado el número máximo de intentos permitidos (5). Por seguridad, el código ha sido invalidado. Solicita un nuevo código.' 
+          : 'Maximum attempts exceeded (5). The code has been invalidated for security.'
+      };
+    }
+
+    const matchesCode = stored.code === cleanInput;
+    const matchesToken = stored.token === cleanInput;
+
+    if (!matchesCode && !matchesToken) {
+      stored.attempts = (stored.attempts || 0) + 1;
+      const remaining = (stored.maxAttempts || 5) - stored.attempts;
+      localStorage.setItem('edumed_active_reset', JSON.stringify(stored));
+
+      if (remaining <= 0) {
+        localStorage.removeItem('edumed_active_reset');
+        return {
+          success: false,
+          message: language === 'es'
+            ? 'Has superado el número máximo de intentos permitidos (5). Por seguridad, el código ha sido invalidado.'
+            : 'Maximum verification attempts exceeded. Code invalidated.'
+        };
+      }
+
+      return {
+        success: false,
+        message: language === 'es'
+          ? `El código de verificación es incorrecto. Te quedan ${remaining} intento(s).`
+          : `Invalid verification code. Remaining attempts: ${remaining}.`
+      };
+    }
+
     return {
       success: true,
-      message: language === 'es' 
-        ? 'El restablecimiento de contraseña se gestiona a través del enlace seguro enviado a tu correo por Firebase Authentication.'
-        : 'Password reset is managed via the secure link sent by Firebase Authentication.'
+      message: language === 'es' ? 'Código verificado correctamente.' : 'Code verified successfully.'
     };
   };
 
-  const resetPasswordWithCode = async (email: string, code: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
+  const resetPasswordWithCode = async (email: string, codeOrToken: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
+    if (!newPassword || newPassword.length < 5) {
+      return {
+        success: false,
+        message: language === 'es' ? 'La nueva contraseña debe tener al menos 5 caracteres.' : 'New password must have at least 5 characters.'
+      };
+    }
+
+    const verification = await verifyPasswordResetCode(email, codeOrToken);
+    if (!verification.success) {
+      return verification;
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Call server to reset password
+    try {
+      await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, code: codeOrToken, newPassword }),
+      });
+    } catch {
+      // Offline fallback
+    }
+
+    // Persist new password in registered users
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    const userIndex = registered.findIndex((u: any) => u.email?.toLowerCase() === cleanEmail);
+
+    const storedStr = localStorage.getItem('edumed_active_reset');
+    const stored = storedStr ? JSON.parse(storedStr) : {};
+
+    if (userIndex >= 0) {
+      registered[userIndex].password = newPassword;
+    } else {
+      registered.push({
+        id: 'usr-reset-' + Date.now(),
+        name: stored.name || 'Usuario EduMed',
+        email: cleanEmail,
+        password: newPassword,
+        role: stored.role || 'guardian',
+        phone: '300 123 4567'
+      });
+    }
+    localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
+
+    // Persist in custom passwords map (indexed by email and document number if available)
+    const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
+    customPasswords[cleanEmail] = newPassword;
+    if (userIndex >= 0 && registered[userIndex]?.documentNumber) {
+      const cleanDoc = registered[userIndex].documentNumber.replace(/^[A-Za-z.\s]+/, '').trim();
+      if (cleanDoc) customPasswords[cleanDoc] = newPassword;
+    }
+    localStorage.setItem('edumed_custom_passwords', JSON.stringify(customPasswords));
+
+    // Strictly enforce single-use: mark as used and remove
+    if (stored) {
+      stored.used = true;
+    }
+    localStorage.removeItem('edumed_active_reset');
+
     return {
       success: true,
       message: language === 'es' 
-        ? 'La actualización de contraseña se realiza a través del enlace seguro enviado a tu correo por Firebase Authentication.' 
-        : 'Password update is handled through the Firebase link.'
+        ? 'Tu contraseña ha sido actualizada con éxito. Ya puedes iniciar sesión con tu nueva contraseña.' 
+        : 'Password updated successfully. You can now log in with your new password.'
     };
   };
-
 
   const updateUserAvatar = (newAvatarUrl: string) => {
     if (!currentUser) return;
