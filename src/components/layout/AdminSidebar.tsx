@@ -19,7 +19,8 @@ import {
   Globe,
   FilePlus,
   Camera,
-  Sliders
+  Sliders,
+  Database
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { getDefaultAvatarByGender, isMaleGender } from '../../utils/avatarUtils';
@@ -54,6 +55,7 @@ export const AdminSidebar: React.FC = () => {
     'student-profile': GraduationCap,
     status: Search,
     wizard: FilePlus,
+    database: Database,
     beneficios: Award,
     institucion: Globe,
     soporte: LifeBuoy
@@ -87,7 +89,7 @@ export const AdminSidebar: React.FC = () => {
 
     const roleConfig = portalConfigs[role as 'admin' | 'guardian' | 'student' | 'directivo'];
     if (roleConfig && roleConfig.modules) {
-      return roleConfig.modules
+      const items = roleConfig.modules
         .filter(m => m.enabled && m.id !== 'portal-config' && m.id !== 'settings')
         .map(m => {
           let badge: string | null = null;
@@ -101,6 +103,17 @@ export const AdminSidebar: React.FC = () => {
             badge
           };
         });
+
+      if ((role === 'admin' || role === 'directivo') && !items.some(i => i.id === 'database')) {
+        items.push({
+          id: 'database',
+          label: language === 'es' ? 'Bases de Datos' : 'Database Tables',
+          icon: Database,
+          badge: null
+        });
+      }
+
+      return items;
     }
 
     // Safe fallback if not yet loaded

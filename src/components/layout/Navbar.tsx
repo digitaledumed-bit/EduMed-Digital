@@ -154,8 +154,8 @@ export const Navbar: React.FC = () => {
               </>
             )}
 
-            {/* Admin Portal Quick Links */}
-            {currentUser && currentUser.role === 'admin' && (
+            {/* Admin & Directivo Portal Quick Links */}
+            {currentUser && (currentUser.role === 'admin' || currentUser.role === 'directivo') && (
               <>
                 <button
                   id="nav-link-dashboard"
@@ -203,6 +203,19 @@ export const Navbar: React.FC = () => {
                   }`}
                 >
                   {t.nav.parents}
+                </button>
+
+                <button
+                  id="nav-link-database"
+                  onClick={() => setActiveTab('database')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'database'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                  title={language === 'es' ? 'Bases de Datos Oficiales y Códigos' : 'Official Databases & Codes'}
+                >
+                  {language === 'es' ? 'Bases de Datos' : 'Databases'}
                 </button>
 
                 <button

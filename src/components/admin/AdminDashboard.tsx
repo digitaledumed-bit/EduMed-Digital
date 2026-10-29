@@ -16,7 +16,8 @@ import {
   GraduationCap,
   Inbox,
   ShieldCheck,
-  BookOpen
+  BookOpen,
+  Database
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -154,6 +155,14 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => setActiveTab('database')}
+            className="min-h-[44px] px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-xs flex items-center gap-2 cursor-pointer border border-slate-200 dark:border-slate-700"
+          >
+            <Database className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+            <span>{isEs ? 'Bases de Datos' : 'Databases'}</span>
+          </button>
+
           <button
             onClick={() => setActiveTab('enrollments')}
             className="min-h-[44px] px-4 py-2.5 bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-xs flex items-center gap-2 cursor-pointer"

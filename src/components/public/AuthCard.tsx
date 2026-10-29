@@ -296,9 +296,15 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     const cleanRegEmail = regEmail.trim().toLowerCase();
+    const cleanGCode = guardianValidationCode.trim();
+    const isPredefinedOfficialWithCode = 
+      (cleanRegEmail === 'nicole.roa7729@gmail.com' && (cleanGCode === '101' || cleanGCode === 'ACUD-2026')) ||
+      (cleanRegEmail === 'luztoscano051@gmail.com' && (cleanGCode === '102' || cleanGCode === 'ACUD-2026')) ||
+      (cleanGCode === '101' || cleanGCode === '102');
+
     if (!cleanRegEmail || !cleanRegEmail.includes('@')) {
       newErrors.email = language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.';
-    } else if (isEmailRegistered(cleanRegEmail)) {
+    } else if (isEmailRegistered(cleanRegEmail) && !isPredefinedOfficialWithCode) {
       newErrors.email = language === 'es' 
         ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado.' 
         : 'This email is already registered in the system. Registration with a previously used email is not permitted.';
@@ -811,29 +817,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             </label>
           </div>
 
-          {/* Quick Admin Helper for Institutional Login */}
-          <div className="p-3 rounded-2xl bg-teal-50/80 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60 text-left flex items-center justify-between gap-2.5">
-            <div className="min-w-0">
-              <span className="text-[11px] font-bold text-teal-900 dark:text-teal-200 uppercase tracking-wide block">
-                {language === 'es' ? 'Acceso Directivo / Administrativo' : 'Administrative / Leadership Access'}
-              </span>
-              <span className="text-xs text-slate-600 dark:text-slate-400 font-mono block truncate">
-                admin@edumed.edu.co • Clave: admin2025
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setLoginIdentifier('admin@edumed.edu.co');
-                setLoginPassword('admin2025');
-                clearAllErrors();
-              }}
-              className="px-2.5 py-1.5 rounded-lg bg-teal-700 hover:bg-teal-800 text-white font-bold text-xs shrink-0 cursor-pointer shadow-xs transition-colors"
-            >
-              {language === 'es' ? 'Autocompletar' : 'Autofill'}
-            </button>
-          </div>
-
           {/* Submit Button */}
           <button
             id="btn-submit-login"
@@ -1083,104 +1066,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 <span>{language === 'es' ? 'Regresar a la pantalla principal de inicio de sesión' : 'Back to main login screen'}</span>
               </button>
             </div>
-
-            {/* Cuentas institucionales autorizadas para verificación rápida */}
-            <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                  {language === 'es' ? 'Cuentas institucionales autorizadas:' : 'Authorized test accounts:'}
-                </span>
-                <span className="text-[10px] text-teal-600 dark:text-teal-400 font-semibold">
-                  {language === 'es' ? 'Clic para autocompletar' : 'Click to autofill'}
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAdminUserType('Administrativo');
-                    setAdminIdentifier('alexandermiranda270608@gmail.com');
-                    setAdminPassword('12');
-                    setErrorMsg(null);
-                  }}
-                  className="p-2.5 rounded-xl bg-slate-50 hover:bg-teal-50 dark:bg-slate-800 dark:hover:bg-teal-950/40 border border-slate-200 dark:border-slate-700 text-left transition-all cursor-pointer group"
-                >
-                  <div className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase">
-                    Administrativo • Alexander Miranda
-                  </div>
-                  <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    alexandermiranda270608@gmail.com
-                  </div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                    Cód. Verificación / Clave: <strong className="font-mono text-teal-700 dark:text-teal-300">12</strong>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAdminUserType('Directivo');
-                    setAdminIdentifier('digitaledumed@gmail.com');
-                    setAdminPassword('13');
-                    setErrorMsg(null);
-                  }}
-                  className="p-2.5 rounded-xl bg-slate-50 hover:bg-amber-50 dark:bg-slate-800 dark:hover:bg-amber-950/40 border border-slate-200 dark:border-slate-700 text-left transition-all cursor-pointer group"
-                >
-                  <div className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase">
-                    Directivo • Juan Jose Torres
-                  </div>
-                  <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    digitaledumed@gmail.com
-                  </div>
-                  <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                    Cód. Verificación / Clave: <strong className="font-mono text-amber-700 dark:text-amber-300">13</strong>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAdminUserType('Administrativo');
-                    setAdminIdentifier('admin@edumed.edu.co');
-                    setAdminPassword('admin2025');
-                    setErrorMsg(null);
-                  }}
-                  className="p-2 rounded-xl bg-slate-50/70 hover:bg-teal-50 dark:bg-slate-800/70 dark:hover:bg-teal-950/40 border border-slate-200 dark:border-slate-700 text-left transition-all cursor-pointer group"
-                >
-                  <div className="text-[10px] font-bold text-teal-700 dark:text-teal-400 uppercase">
-                    Secretaría General
-                  </div>
-                  <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    admin@edumed.edu.co
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    Clave: admin2025
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAdminUserType('Directivo');
-                    setAdminIdentifier('rectoria@edumed.edu.co');
-                    setAdminPassword('rector2026');
-                    setErrorMsg(null);
-                  }}
-                  className="p-2 rounded-xl bg-slate-50/70 hover:bg-amber-50 dark:bg-slate-800/70 dark:hover:bg-amber-950/40 border border-slate-200 dark:border-slate-700 text-left transition-all cursor-pointer group"
-                >
-                  <div className="text-[10px] font-bold text-amber-700 dark:text-amber-400 uppercase">
-                    Rectoría Demo
-                  </div>
-                  <div className="text-[11px] font-semibold text-slate-800 dark:text-slate-200 truncate">
-                    rectoria@edumed.edu.co
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    Clave: rector2026
-                  </div>
-                </button>
-              </div>
-            </div>
-
           </form>
 
         </div>

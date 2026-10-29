@@ -214,3 +214,18 @@ export interface RolePortalConfig {
   lastUpdated?: string;
 }
 
+export interface StaffUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'directivo';
+  documentType: string;
+  documentNumber: string;
+  phone: string;
+  position: string;
+  department: string;
+  verificationCode: string;
+  password?: string;
+  fileNumber?: number;
+}
+

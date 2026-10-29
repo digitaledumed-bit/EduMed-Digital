@@ -1,4 +1,4 @@
-import { Student, Guardian, EnrollmentRecord, StudentDocument, ActivityItem } from '../types';
+import { Student, Guardian, EnrollmentRecord, StudentDocument, ActivityItem, StaffUser } from '../types';
 import { getDefaultAvatarByGender } from '../utils/avatarUtils';
 
 export const initialStudents: Student[] = [
@@ -672,20 +672,6 @@ export const gradeDistributionData = [
   { grade: '11°', count: 130 },
 ];
 
-export interface StaffUser {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'directivo';
-  documentType: string;
-  documentNumber: string;
-  phone: string;
-  position: string;
-  department: string;
-  verificationCode: string;
-  password?: string;
-}
-
 export const initialStaffUsers: StaffUser[] = [
   {
     id: 'usr-staff-alexander',
@@ -712,6 +698,32 @@ export const initialStaffUsers: StaffUser[] = [
     department: 'Rectoría y Dirección Institucional',
     verificationCode: '13',
     password: '13'
+  },
+  {
+    id: 'usr-admin-1',
+    name: 'Lic. Claudia Restrepo',
+    email: 'admin@edumed.edu.co',
+    role: 'admin',
+    documentType: 'C.C',
+    documentNumber: '43981245',
+    phone: '+57 300 456 7890',
+    position: 'Secretario — Gestión documental',
+    department: 'Secretaría Académica General',
+    verificationCode: '14',
+    password: 'admin'
+  },
+  {
+    id: 'usr-rector-1',
+    name: 'Mag. Carlos Alberto Henao',
+    email: 'rectoria@edumed.edu.co',
+    role: 'directivo',
+    documentType: 'C.C',
+    documentNumber: '71654321',
+    phone: '+57 310 892 4567',
+    position: 'Rector — Dirección institucional',
+    department: 'Rectoría y Consejo Directivo',
+    verificationCode: '15',
+    password: 'rector'
   }
 ];
 

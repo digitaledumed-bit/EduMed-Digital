@@ -14,7 +14,8 @@ import {
   AuthUser, 
   AppNotification,
   RolePortalConfig,
-  RolePermissions
+  RolePermissions,
+  StaffUser
 } from '../types';
 import { defaultPortalConfigs } from '../data/defaultPortalConfigs';
 import { translations } from '../i18n/translations';
@@ -86,6 +87,7 @@ interface AppContextType {
   
   students: Student[];
   guardians: Guardian[];
+  staffUsers: StaffUser[];
   enrollments: EnrollmentRecord[];
   documents: StudentDocument[];
   activities: ActivityItem[];
@@ -176,13 +178,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const parsed: Student[] = JSON.parse(saved);
         const existingIds = new Set(parsed.map(s => s.id));
+        const updated = parsed.map(item => {
+          const init = initialStudents.find(i => i.id === item.id);
+          return init ? { ...init, ...item, fileNumber: init.fileNumber ?? item.fileNumber } : item;
+        });
         const missing = initialStudents.filter(s => !existingIds.has(s.id));
-        if (missing.length > 0) {
-          const merged = [...parsed, ...missing];
-          localStorage.setItem('edumed_students', JSON.stringify(merged));
-          return merged;
-        }
-        return parsed;
+        const merged = [...updated, ...missing];
+        localStorage.setItem('edumed_students', JSON.stringify(merged));
+        return merged;
       } catch (e) {
         return initialStudents;
       }
@@ -196,18 +199,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const parsed: Guardian[] = JSON.parse(saved);
         const existingIds = new Set(parsed.map(g => g.id));
+        const updated = parsed.map(item => {
+          const init = initialGuardians.find(i => i.id === item.id);
+          return init ? { 
+            ...init, 
+            ...item, 
+            verificationCode: init.verificationCode || item.verificationCode,
+            fileNumber: init.fileNumber ?? item.fileNumber 
+          } : item;
+        });
         const missing = initialGuardians.filter(g => !existingIds.has(g.id));
-        if (missing.length > 0) {
-          const merged = [...parsed, ...missing];
-          localStorage.setItem('edumed_guardians', JSON.stringify(merged));
-          return merged;
-        }
-        return parsed;
+        const merged = [...updated, ...missing];
+        localStorage.setItem('edumed_guardians', JSON.stringify(merged));
+        return merged;
       } catch (e) {
         return initialGuardians;
       }
     }
     return initialGuardians;
+  });
+
+  const [staffUsers, setStaffUsers] = useState<StaffUser[]>(() => {
+    const saved = localStorage.getItem('edumed_staff_users');
+    if (saved) {
+      try {
+        const parsed: StaffUser[] = JSON.parse(saved);
+        const existingIds = new Set(parsed.map(s => s.id));
+        const updated = parsed.map(item => {
+          const init = initialStaffUsers.find(i => i.id === item.id);
+          return init ? { ...init, ...item } : item;
+        });
+        const missing = initialStaffUsers.filter(s => !existingIds.has(s.id));
+        const merged = [...updated, ...missing];
+        localStorage.setItem('edumed_staff_users', JSON.stringify(merged));
+        return merged;
+      } catch (e) {
+        return initialStaffUsers;
+      }
+    }
+    return initialStaffUsers;
   });
 
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>(() => {
@@ -240,7 +270,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : initialActivities;
   });
 
-  // Seed institutional staff users (Alexander Miranda and Juan Jose Torres)
+  // Seed institutional staff users and custom passwords
   React.useEffect(() => {
     try {
       const savedUsers: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
@@ -248,6 +278,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const toAdd = initialStaffUsers.filter(s => !userEmails.has(s.email.toLowerCase().trim()));
       if (toAdd.length > 0) {
         localStorage.setItem('edumed_registered_users', JSON.stringify([...savedUsers, ...toAdd]));
+      }
+
+      // Ensure verification code passwords are seeded in custom passwords
+      const customPasswords = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
+      let updatedPasswords = false;
+      initialStaffUsers.forEach(s => {
+        if (!customPasswords[s.email.toLowerCase()]) {
+          customPasswords[s.email.toLowerCase()] = s.verificationCode;
+          updatedPasswords = true;
+        }
+        if (!customPasswords[s.verificationCode]) {
+          customPasswords[s.verificationCode] = s.verificationCode;
+          updatedPasswords = true;
+        }
+      });
+      initialGuardians.forEach(g => {
+        if (g.verificationCode) {
+          if (g.email && !customPasswords[g.email.toLowerCase()]) {
+            customPasswords[g.email.toLowerCase()] = g.verificationCode;
+            updatedPasswords = true;
+          }
+          if (!customPasswords[g.verificationCode]) {
+            customPasswords[g.verificationCode] = g.verificationCode;
+            updatedPasswords = true;
+          }
+        }
+      });
+      initialStudents.forEach(s => {
+        const gCode = s.guardians[0]?.verificationCode;
+        if (gCode) {
+          if (s.email && !customPasswords[s.email.toLowerCase()]) {
+            customPasswords[s.email.toLowerCase()] = gCode;
+            updatedPasswords = true;
+          }
+        }
+      });
+      if (updatedPasswords) {
+        localStorage.setItem('edumed_custom_passwords', JSON.stringify(customPasswords));
       }
     } catch (e) {
       console.error('Failed to seed staff users:', e);
@@ -869,10 +937,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         e.id.toLowerCase() === `#${cleanQuery}` ||
         e.id.toLowerCase().replace(/^#/, '') === strippedCode ||
         e.studentDoc.toLowerCase() === cleanQuery ||
-        e.studentDoc.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '') ||
+        (cleanQuery.replace(/\D/g, '') && e.studentDoc.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '')) ||
         e.studentName.toLowerCase().includes(cleanQuery) ||
-        (e.guardianDoc && e.guardianDoc.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '')) ||
-        (e.guardianName && e.guardianName.toLowerCase().includes(cleanQuery))
+        (cleanQuery.replace(/\D/g, '') && e.guardianDoc && e.guardianDoc.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '')) ||
+        (e.guardianName && e.guardianName.toLowerCase().includes(cleanQuery)) ||
+        (cleanQuery === '101' && (e.id.includes('0101') || e.studentDoc.includes('1038809029') || (e.guardianDoc && e.guardianDoc.includes('1017287888')))) ||
+        (cleanQuery === '102' && (e.id.includes('0102') || e.studentDoc.includes('1025662108') || (e.guardianDoc && e.guardianDoc.includes('1064191482'))))
     );
 
     if (!found) return null;
@@ -933,6 +1003,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cleanId === 'digitaledumed@gmail.com' ||
       cleanId === '1013346890' ||
       cleanId === 'digitaledumed' ||
+      cleanId === '13' ||
       cleanId === '71654321';
 
     const isAdminMatch = cleanId === 'admin@edumed.edu.co' || 
@@ -944,20 +1015,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cleanId === 'alexandermiranda270608@gmail.com' ||
       cleanId === '1033184935' ||
       cleanId === 'alexandermiranda' ||
+      cleanId === '12' ||
       cleanId === '32456781';
     const isStudentMatch = cleanId === 'mateo.restrepo@edumed.edu.co' || cleanId === 'mateo' || cleanId === '1035982147' || cleanId === 'ti 1035982147';
     const isGuardianMatch = cleanId === 'maria.gonzalez@gmail.com' || cleanId === 'maria' || cleanId === '43892104' || cleanId === 'cc 43892104';
 
-    // 3. Check existing guardians and students in database
+    // 3. Check existing guardians and students in database (supports verification codes 101, 102)
     const foundGuardian = !isDirectivoMatch && !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered
-      ? guardians.find(g => g.email?.toLowerCase() === cleanId || g.fullName?.toLowerCase() === cleanId || (g.documentNumber && g.documentNumber.replace(/\D/g, '') === rawIdDigits) || (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits))
+      ? (preferredRole === 'student' && (cleanId === '101' || cleanId === '102')
+          ? null
+          : guardians.find(g => 
+              g.email?.toLowerCase() === cleanId || 
+              g.fullName?.toLowerCase() === cleanId || 
+              (g.documentNumber && g.documentNumber.replace(/\D/g, '') === rawIdDigits) || 
+              (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits) ||
+              (g.verificationCode && g.verificationCode.toLowerCase() === cleanId)
+            )
+        )
       : null;
 
     const foundStudent = !isDirectivoMatch && !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered && !foundGuardian
       ? students.find(s => 
           s.email?.toLowerCase() === cleanId || 
           s.fullName?.toLowerCase() === cleanId || 
-          (rawIdDigits && s.documentNumber && s.documentNumber.replace(/\D/g, '') === rawIdDigits)
+          (rawIdDigits && s.documentNumber && s.documentNumber.replace(/\D/g, '') === rawIdDigits) ||
+          (cleanId === '101' && s.id === 'std-8') ||
+          (cleanId === '102' && s.id === 'std-9') ||
+          (s.guardians?.some(g => g.verificationCode && g.verificationCode.toLowerCase() === cleanId))
         )
       : null;
 
@@ -1013,7 +1097,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
     } else if (isDirectivoMatch) {
-      const isJuanJose = cleanId.includes('digitaledumed') || cleanId === '1013346890';
+      const isJuanJose = cleanId.includes('digitaledumed') || cleanId === '1013346890' || cleanId === '13';
       passwordValid = cleanPass === '13' || cleanPass === 'rector2026' || cleanPass === 'directivo2026' || cleanPass === '12345' || cleanPass === 'admin2025' || isCustomPasswordMatch;
       if (passwordValid) {
         if (isJuanJose) {
@@ -1043,7 +1127,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
       }
     } else if (isAdminMatch) {
-      const isAlexander = cleanId.includes('alexandermiranda') || cleanId === '1033184935';
+      const isAlexander = cleanId.includes('alexandermiranda') || cleanId === '1033184935' || cleanId === '12';
       passwordValid = cleanPass === '12' || cleanPass === 'admin2025' || cleanPass === 'secretaria2026' || cleanPass === '12345' || cleanPass === 'admin' || isCustomPasswordMatch;
       if (passwordValid) {
         if (isAlexander) {
@@ -1122,9 +1206,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } else if (foundStudent) {
       const sDocDigits = foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '';
+      const gVerificationCode = foundStudent.guardians?.[0]?.verificationCode || '';
       passwordValid = cleanPass === '12345' || 
                       cleanPass === 'mateo2025' || 
                       (Boolean(sDocDigits) && cleanPass === sDocDigits) || 
+                      (Boolean(gVerificationCode) && cleanPass === gVerificationCode) ||
+                      (foundStudent.id === 'std-8' && cleanPass === '101') ||
+                      (foundStudent.id === 'std-9' && cleanPass === '102') ||
                       isCustomPasswordMatch;
       if (passwordValid) {
         const studentGender = foundStudent.gender || undefined;
@@ -1224,6 +1312,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cleanId === 'digitaledumed@gmail.com' ||
       cleanId === '1013346890' ||
       cleanId === 'digitaledumed' ||
+      cleanId === '13' ||
       cleanId === '71654321';
 
     // 2. Cuentas institucionales autorizadas como Administrativo:
@@ -1235,6 +1324,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       cleanId === 'alexandermiranda270608@gmail.com' ||
       cleanId === '1033184935' ||
       cleanId === 'alexandermiranda' ||
+      cleanId === '12' ||
       cleanId === 'admin' ||
       cleanId === '43981245' ||
       cleanId === '32456781';
@@ -1294,9 +1384,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     if (isDirectivoPredefined) {
       accountAuthorizedType = 'Directivo';
-      const isJuanJose = cleanId.includes('digitaledumed') || cleanId === '1013346890';
+      const isJuanJose = cleanId.includes('digitaledumed') || cleanId === '1013346890' || cleanId === '13';
       passwordValid =
-        (isJuanJose && cleanPass === '13') ||
+        (isJuanJose && (cleanPass === '13' || cleanPass === '12345')) ||
         cleanPass === 'rector2026' ||
         cleanPass === 'directivo2026' ||
         cleanPass === '12345' ||
@@ -1334,9 +1424,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     } else if (isAdministrativoPredefined) {
       accountAuthorizedType = 'Administrativo';
-      const isAlexander = cleanId.includes('alexandermiranda') || cleanId === '1033184935';
+      const isAlexander = cleanId.includes('alexandermiranda') || cleanId === '1033184935' || cleanId === '12';
       passwordValid =
-        (isAlexander && cleanPass === '12') ||
+        (isAlexander && (cleanPass === '12' || cleanPass === '12345')) ||
         cleanPass === 'admin2025' ||
         cleanPass === 'secretaria2026' ||
         cleanPass === '12345' ||
@@ -2340,6 +2430,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCustomLogoUrl,
         students,
         guardians,
+        staffUsers,
         enrollments,
         documents,
         activities,

@@ -18,6 +18,7 @@ import { ParentsList } from './components/admin/ParentsList';
 import { DocumentsManagement } from './components/admin/DocumentsManagement';
 import { InstitutionalSettings } from './components/admin/InstitutionalSettings';
 import { PortalConfigView } from './components/admin/PortalConfigView';
+import { DatabaseTablesView } from './components/admin/DatabaseTablesView';
 import { MandatoryEnrollmentGate } from './components/student/MandatoryEnrollmentGate';
 import { StudentMainDashboard } from './components/student/StudentMainDashboard';
 import { GuardianMainDashboard } from './components/guardian/GuardianMainDashboard';
@@ -172,6 +173,9 @@ const MainAppContent: React.FC = () => {
                   )}
                   {activeTab === 'link-guardian' && isAdmin && <LinkGuardianView />}
                   {activeTab === 'parents' && isStaff && <ParentsList />}
+                  {(activeTab === 'database' || activeTab === 'databases') && isStaff && <DatabaseTablesView />}
+                  {activeTab === 'portal-config' && isAdmin && <PortalConfigView />}
+                  {activeTab === 'settings' && isStaff && <InstitutionalSettings />}
                   
                   {/* Direct views accessible to authorized users */}
                   {(activeTab === 'wizard') && <EnrollmentWizard />}
