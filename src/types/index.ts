@@ -54,6 +54,8 @@ export interface Student {
   admissionDate: string;
   previousSchool?: string;
   medicalNotes?: string;
+  fichaNumber?: string;
+  numeroFicha?: number;
   guardians: GuardianRef[];
   fileNumber?: number;
 }
@@ -88,6 +90,25 @@ export interface Guardian {
     name: string;
     grade: string;
   }[];
+  fichaNumber?: string;
+  numeroFicha?: number;
+  verificationCode?: string;
+  codigoVerificacion?: string;
+}
+
+export interface AdminRecord {
+  id: string;
+  nombre: string;
+  fullName: string;
+  tipoDocumento: string;
+  documentType: string;
+  numeroDocumento: string;
+  documentNumber: string;
+  correo: string;
+  email: string;
+  codigoVerificacion: string;
+  verificationCode: string;
+  role: 'admin';
 }
 
 export interface EnrollmentRecord {
@@ -146,6 +167,9 @@ export interface AuthUser {
   department?: string;
   institutionCode?: string;
   guardianValidationCode?: string;
+  adminValidationCode?: string;
+  verificationCode?: string;
+  fichaNumber?: string;
 }
 
 export interface AppNotification {

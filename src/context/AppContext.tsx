@@ -14,19 +14,11 @@ import {
   AuthUser, 
   AppNotification,
   RolePortalConfig,
-  RolePermissions,
-  StaffUser
+  RolePermissions
 } from '../types';
 import { defaultPortalConfigs } from '../data/defaultPortalConfigs';
 import { translations } from '../i18n/translations';
-import { 
-  initialStudents, 
-  initialGuardians, 
-  initialEnrollments, 
-  initialDocuments, 
-  initialActivities,
-  initialStaffUsers 
-} from '../data/mockData';
+import { initialStudents, initialGuardians, initialAdmins, initialEnrollments, initialDocuments, initialActivities } from '../data/mockData';
 import { 
   getDefaultAvatarByGender, 
   isMaleGender, 
@@ -37,6 +29,18 @@ import {
   resolveStudentAvatar,
   isDefaultIllustratedAvatar 
 } from '../utils/avatarUtils';
+import {
+  sendFirebasePasswordReset,
+  verifyFirebaseOobCode,
+  confirmFirebaseNewPassword,
+  registerUserInFirebaseAuth,
+  syncInstitutionalTablesToFirestore,
+  fetchInstitutionalTablesFromFirestore,
+  saveRegisteredUserToFirestore,
+  INSTITUTIONAL_ACUDIENTES,
+  INSTITUTIONAL_ADMINISTRATIVOS,
+  INSTITUTIONAL_ESTUDIANTES
+} from '../config/firebase';
 
 interface AppContextType {
   language: Language;
@@ -63,7 +67,8 @@ interface AppContextType {
   completeStudentEnrollment: (studentId: string, enrollmentData?: any) => void;
   resetStudentEnrollment: (studentId: string) => void;
   login: (identifier: string, pass: string, preferredRole?: UserRole) => { success: boolean; message?: string; notFound?: boolean; suggestedRole?: UserRole };
-  validateGuardianCode: (code: string) => boolean;
+  validateGuardianCode: (code: string, email?: string, docNumber?: string) => boolean;
+  validateAdminCode: (code: string, email?: string, docNumber?: string) => boolean;
   register: (userData: { 
     name: string; 
     email: string; 
@@ -76,6 +81,7 @@ interface AppContextType {
     department?: string;
     institutionCode?: string;
     guardianValidationCode?: string;
+    adminValidationCode?: string;
   }) => { success: boolean; message?: string };
   isEmailRegistered: (email: string) => boolean;
   logout: () => void;
@@ -87,7 +93,6 @@ interface AppContextType {
   
   students: Student[];
   guardians: Guardian[];
-  staffUsers: StaffUser[];
   enrollments: EnrollmentRecord[];
   documents: StudentDocument[];
   activities: ActivityItem[];
@@ -98,21 +103,25 @@ interface AppContextType {
   addGuardian: (guardian: Omit<Guardian, 'id'>) => string;
   linkGuardianToStudent: (studentId: string, guardianData: { name: string; relationship: string; phone: string; email: string; isPrimary: boolean; livesWithStudent: boolean }) => void;
   submitNewEnrollment: (data: { student: Partial<Student>; guardian: Partial<Guardian>; documents: { name: string; file: File | null }[] }) => string;
+  addStudentDocument: (docData: {
+    studentId: string;
+    name: string;
+    category?: 'identity' | 'health' | 'academic' | 'other';
+    fileName: string;
+    fileSize: string;
+    fileUrl?: string;
+    file?: File | null;
+  }) => string;
   notifications: AppNotification[];
   markNotificationsAsRead: () => void;
   unreadCount: number;
 
-  portalConfigs: Record<'admin' | 'guardian' | 'student' | 'directivo', RolePortalConfig>;
-  updateRolePortalConfig: (role: 'admin' | 'guardian' | 'student' | 'directivo', updatedConfig: RolePortalConfig) => Promise<{ success: boolean; message?: string }>;
-  resetRolePortalConfig: (role?: 'admin' | 'guardian' | 'student' | 'directivo') => Promise<{ success: boolean; message?: string }>;
+  portalConfigs: Record<'admin' | 'guardian' | 'student', RolePortalConfig>;
+  updateRolePortalConfig: (role: 'admin' | 'guardian' | 'student', updatedConfig: RolePortalConfig) => Promise<{ success: boolean; message?: string }>;
+  resetRolePortalConfig: (role?: 'admin' | 'guardian' | 'student') => Promise<{ success: boolean; message?: string }>;
   isModuleEnabled: (role: UserRole, moduleId: string) => boolean;
   isWidgetEnabled: (role: UserRole, widgetId: string) => boolean;
   hasPermission: (role: UserRole, permissionKey: keyof RolePermissions) => boolean;
-  loginAdminDirectivo: (
-    identifier: string,
-    pass: string,
-    userType: 'Administrativo' | 'Directivo'
-  ) => { success: boolean; message?: string; notFound?: boolean; unauthorizedRole?: boolean };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -174,90 +183,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [students, setStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem('edumed_students');
-    if (saved) {
-      try {
-        const parsed: Student[] = JSON.parse(saved);
-        const existingIds = new Set(parsed.map(s => s.id));
-        const updated = parsed.map(item => {
-          const init = initialStudents.find(i => i.id === item.id);
-          return init ? { ...init, ...item, fileNumber: init.fileNumber ?? item.fileNumber } : item;
-        });
-        const missing = initialStudents.filter(s => !existingIds.has(s.id));
-        const merged = [...updated, ...missing];
-        localStorage.setItem('edumed_students', JSON.stringify(merged));
-        return merged;
-      } catch (e) {
-        return initialStudents;
-      }
+    if (!saved) return initialStudents;
+    try {
+      const parsed: Student[] = JSON.parse(saved);
+      const existingDocs = new Set(parsed.map(s => s.documentNumber?.replace(/\D/g, '')));
+      const missing = initialStudents.filter(s => !existingDocs.has(s.documentNumber?.replace(/\D/g, '')));
+      return [...missing, ...parsed];
+    } catch {
+      return initialStudents;
     }
-    return initialStudents;
   });
 
   const [guardians, setGuardians] = useState<Guardian[]>(() => {
     const saved = localStorage.getItem('edumed_guardians');
-    if (saved) {
-      try {
-        const parsed: Guardian[] = JSON.parse(saved);
-        const existingIds = new Set(parsed.map(g => g.id));
-        const updated = parsed.map(item => {
-          const init = initialGuardians.find(i => i.id === item.id);
-          return init ? { 
-            ...init, 
-            ...item, 
-            verificationCode: init.verificationCode || item.verificationCode,
-            fileNumber: init.fileNumber ?? item.fileNumber 
-          } : item;
-        });
-        const missing = initialGuardians.filter(g => !existingIds.has(g.id));
-        const merged = [...updated, ...missing];
-        localStorage.setItem('edumed_guardians', JSON.stringify(merged));
-        return merged;
-      } catch (e) {
-        return initialGuardians;
-      }
+    if (!saved) return initialGuardians;
+    try {
+      const parsed: Guardian[] = JSON.parse(saved);
+      const existingDocs = new Set(parsed.map(g => g.documentNumber?.replace(/\D/g, '')));
+      const missing = initialGuardians.filter(g => !existingDocs.has(g.documentNumber?.replace(/\D/g, '')));
+      return [...missing, ...parsed];
+    } catch {
+      return initialGuardians;
     }
-    return initialGuardians;
   });
 
-  const [staffUsers, setStaffUsers] = useState<StaffUser[]>(() => {
-    const saved = localStorage.getItem('edumed_staff_users');
-    if (saved) {
-      try {
-        const parsed: StaffUser[] = JSON.parse(saved);
-        const existingIds = new Set(parsed.map(s => s.id));
-        const updated = parsed.map(item => {
-          const init = initialStaffUsers.find(i => i.id === item.id);
-          return init ? { ...init, ...item } : item;
-        });
-        const missing = initialStaffUsers.filter(s => !existingIds.has(s.id));
-        const merged = [...updated, ...missing];
-        localStorage.setItem('edumed_staff_users', JSON.stringify(merged));
-        return merged;
-      } catch (e) {
-        return initialStaffUsers;
-      }
-    }
-    return initialStaffUsers;
-  });
+  useEffect(() => {
+    void syncInstitutionalTablesToFirestore();
+    void fetchInstitutionalTablesFromFirestore();
+  }, []);
 
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>(() => {
     const saved = localStorage.getItem('edumed_enrollments');
-    if (saved) {
-      try {
-        const parsed: EnrollmentRecord[] = JSON.parse(saved);
-        const existingIds = new Set(parsed.map(e => e.id));
-        const missing = initialEnrollments.filter(e => !existingIds.has(e.id));
-        if (missing.length > 0) {
-          const merged = [...parsed, ...missing];
-          localStorage.setItem('edumed_enrollments', JSON.stringify(merged));
-          return merged;
-        }
-        return parsed;
-      } catch (e) {
-        return initialEnrollments;
-      }
-    }
-    return initialEnrollments;
+    return saved ? JSON.parse(saved) : initialEnrollments;
   });
 
   const [documents, setDocuments] = useState<StudentDocument[]>(() => {
@@ -269,58 +226,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('edumed_activities');
     return saved ? JSON.parse(saved) : initialActivities;
   });
-
-  // Seed institutional staff users and custom passwords
-  React.useEffect(() => {
-    try {
-      const savedUsers: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-      const userEmails = new Set(savedUsers.map((u: any) => (u.email || '').toLowerCase().trim()));
-      const toAdd = initialStaffUsers.filter(s => !userEmails.has(s.email.toLowerCase().trim()));
-      if (toAdd.length > 0) {
-        localStorage.setItem('edumed_registered_users', JSON.stringify([...savedUsers, ...toAdd]));
-      }
-
-      // Ensure verification code passwords are seeded in custom passwords
-      const customPasswords = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
-      let updatedPasswords = false;
-      initialStaffUsers.forEach(s => {
-        if (!customPasswords[s.email.toLowerCase()]) {
-          customPasswords[s.email.toLowerCase()] = s.verificationCode;
-          updatedPasswords = true;
-        }
-        if (!customPasswords[s.verificationCode]) {
-          customPasswords[s.verificationCode] = s.verificationCode;
-          updatedPasswords = true;
-        }
-      });
-      initialGuardians.forEach(g => {
-        if (g.verificationCode) {
-          if (g.email && !customPasswords[g.email.toLowerCase()]) {
-            customPasswords[g.email.toLowerCase()] = g.verificationCode;
-            updatedPasswords = true;
-          }
-          if (!customPasswords[g.verificationCode]) {
-            customPasswords[g.verificationCode] = g.verificationCode;
-            updatedPasswords = true;
-          }
-        }
-      });
-      initialStudents.forEach(s => {
-        const gCode = s.guardians[0]?.verificationCode;
-        if (gCode) {
-          if (s.email && !customPasswords[s.email.toLowerCase()]) {
-            customPasswords[s.email.toLowerCase()] = gCode;
-            updatedPasswords = true;
-          }
-        }
-      });
-      if (updatedPasswords) {
-        localStorage.setItem('edumed_custom_passwords', JSON.stringify(customPasswords));
-      }
-    } catch (e) {
-      console.error('Failed to seed staff users:', e);
-    }
-  }, []);
 
   const initialNotifications: AppNotification[] = [
     // 1. Personal Administrativo y Directivos
@@ -362,8 +267,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     },
     {
       id: 'notif-adm-4',
-      title: 'Cierre de Auditoría SIMAT 2025',
-      titleEn: 'SIMAT 2025 Audit Closing Notice',
+      title: 'Cierre de Auditoría SIMAT 2026',
+      titleEn: 'SIMAT 2026 Audit Closing Notice',
       message: 'Recordatorio oficial: Plazo de consolidación de cupos escolares ante Secretaría de Educación de Medellín.',
       messageEn: 'Official reminder: Deadline for consolidating school quotas with the Medellín Education Secretariat.',
       date: 'Ayer',
@@ -440,8 +345,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: 'notif-std-2',
       title: 'Horario y Asignación de Grupo',
       titleEn: 'Schedule & Classroom Assignment',
-      message: 'Tu salón y directores de área para el periodo 2025 ya están disponibles en tu expediente escolar.',
-      messageEn: 'Your classroom and subject teachers for the 2025 school year are now available in your portal.',
+      message: 'Tu salón y directores de área para el periodo 2026 ya están disponibles en tu expediente escolar.',
+      messageEn: 'Your classroom and subject teachers for the 2026 school year are now available in your portal.',
       date: 'Hace 2 horas',
       dateEn: '2 hours ago',
       read: false,
@@ -476,8 +381,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 4. Circular Institucional General
     {
       id: 'notif-gen-1',
-      title: 'Calendario Escolar y Recesos 2025',
-      titleEn: '2025 School Calendar & Holidays',
+      title: 'Calendario Escolar y Recesos 2026',
+      titleEn: '2026 School Calendar & Holidays',
       message: 'Publicado el cronograma oficial de semanas pedagógicas, evaluaciones institucionales y actos cívicos.',
       messageEn: 'The official schedule of pedagogical weeks, term exams, and civic assemblies is now published.',
       date: 'Esta semana',
@@ -552,16 +457,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // =========================================================================
   // PORTAL CONFIGURATION PER ROLE (ADMIN, GUARDIAN, STUDENT)
   // =========================================================================
-  const [portalConfigs, setPortalConfigs] = useState<Record<'admin' | 'guardian' | 'student' | 'directivo', RolePortalConfig>>(() => {
+  const [portalConfigs, setPortalConfigs] = useState<Record<'admin' | 'guardian' | 'student', RolePortalConfig>>(() => {
     const saved = localStorage.getItem('edumed_portal_configs');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.admin && parsed.guardian && parsed.student) {
-          return {
-            ...defaultPortalConfigs,
-            ...parsed
-          };
+          return parsed;
         }
       } catch (e) {
         console.error('Error parsing stored portal configs:', e);
@@ -604,7 +506,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [currentUser?.role, activeRole]);
 
   const updateRolePortalConfig = async (
-    role: 'admin' | 'guardian' | 'student' | 'directivo', 
+    role: 'admin' | 'guardian' | 'student', 
     updatedConfig: RolePortalConfig
   ): Promise<{ success: boolean; message?: string }> => {
     const finalizedConfig: RolePortalConfig = {
@@ -641,7 +543,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetRolePortalConfig = async (
-    role?: 'admin' | 'guardian' | 'student' | 'directivo'
+    role?: 'admin' | 'guardian' | 'student'
   ): Promise<{ success: boolean; message?: string }> => {
     if (role) {
       const freshDefault = JSON.parse(JSON.stringify(defaultPortalConfigs[role]));
@@ -678,7 +580,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isModuleEnabled = (role: UserRole, moduleId: string): boolean => {
     if (role === 'public') return true;
-    const config = portalConfigs[role as 'admin' | 'guardian' | 'student' | 'directivo'] || portalConfigs.admin;
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
     if (!config || !config.modules) return true;
     const mod = config.modules.find(m => m.id === moduleId);
     return mod ? mod.enabled : true;
@@ -686,7 +588,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isWidgetEnabled = (role: UserRole, widgetId: string): boolean => {
     if (role === 'public') return true;
-    const config = portalConfigs[role as 'admin' | 'guardian' | 'student' | 'directivo'] || portalConfigs.admin;
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
     if (!config || !config.widgets) return true;
     const widget = config.widgets.find(w => w.id === widgetId);
     return widget ? widget.enabled : true;
@@ -694,7 +596,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const hasPermission = (role: UserRole, permissionKey: keyof RolePermissions): boolean => {
     if (role === 'public') return false;
-    const config = portalConfigs[role as 'admin' | 'guardian' | 'student' | 'directivo'] || portalConfigs.admin;
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
     if (!config || !config.permissions) return false;
     return Boolean(config.permissions[permissionKey]);
   };
@@ -837,7 +739,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     guardian: Partial<Guardian>;
     documents: { name: string; file: File | null }[];
   }): string => {
-    const radicado = `#MAT-2024-${Math.floor(1000 + Math.random() * 9000)}`;
+    const radicado = `#MAT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const newStudentId = 'std-' + (students.length + 1);
 
     const newStudent: Student = {
@@ -878,7 +780,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       studentId: newStudentId,
       studentName: newStudent.fullName,
       studentDoc: newStudent.documentNumber,
-      academicYear: '2024 - 2025',
+      academicYear: '2026',
       grade: newStudent.grade,
       submissionDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
       status: 'in_review',
@@ -901,7 +803,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fileSize: '1.5 MB',
       uploadDate: 'Hoy',
       status: 'in_review',
-      fileUrl: '#'
+      fileUrl: doc.file ? URL.createObjectURL(doc.file) : '#'
     }));
 
     setStudents((prev) => [newStudent, ...prev]);
@@ -926,6 +828,47 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return radicado;
   };
 
+  const addStudentDocument = (docData: {
+    studentId: string;
+    name: string;
+    category?: 'identity' | 'health' | 'academic' | 'other';
+    fileName: string;
+    fileSize: string;
+    fileUrl?: string;
+    file?: File | null;
+  }): string => {
+    const newId = 'doc-upload-' + Date.now();
+    const generatedUrl = docData.fileUrl || (docData.file ? URL.createObjectURL(docData.file) : '#');
+    const newDoc: StudentDocument = {
+      id: newId,
+      studentId: docData.studentId,
+      name: docData.name,
+      category: docData.category || 'other',
+      fileName: docData.fileName,
+      fileSize: docData.fileSize,
+      uploadDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      status: 'in_review',
+      fileUrl: generatedUrl
+    };
+
+    setDocuments((prev) => [newDoc, ...prev]);
+
+    const std = students.find((s) => s.id === docData.studentId);
+    setActivities((prev) => [
+      {
+        id: 'act-' + Date.now(),
+        timeAgo: 'Justo ahora',
+        timeAgoEn: 'Just now',
+        description: `Nuevo documento "${docData.name}" subido para el estudiante ${std?.fullName || docData.studentId}`,
+        descriptionEn: `New document "${docData.name}" uploaded for student ${std?.fullName || docData.studentId}`,
+        type: 'review'
+      },
+      ...prev
+    ]);
+
+    return newId;
+  };
+
   const lookupEnrollmentStatus = (query: string): EnrollmentRecord | null => {
     const cleanQuery = query.trim().toLowerCase();
     if (!cleanQuery) return null;
@@ -937,12 +880,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         e.id.toLowerCase() === `#${cleanQuery}` ||
         e.id.toLowerCase().replace(/^#/, '') === strippedCode ||
         e.studentDoc.toLowerCase() === cleanQuery ||
-        (cleanQuery.replace(/\D/g, '') && e.studentDoc.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '')) ||
+        e.studentDoc.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '') ||
         e.studentName.toLowerCase().includes(cleanQuery) ||
-        (cleanQuery.replace(/\D/g, '') && e.guardianDoc && e.guardianDoc.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '')) ||
-        (e.guardianName && e.guardianName.toLowerCase().includes(cleanQuery)) ||
-        (cleanQuery === '101' && (e.id.includes('0101') || e.studentDoc.includes('1038809029') || (e.guardianDoc && e.guardianDoc.includes('1017287888')))) ||
-        (cleanQuery === '102' && (e.id.includes('0102') || e.studentDoc.includes('1025662108') || (e.guardianDoc && e.guardianDoc.includes('1064191482'))))
+        (e.guardianDoc && e.guardianDoc.replace(/\D/g, '') === cleanQuery.replace(/\D/g, '')) ||
+        (e.guardianName && e.guardianName.toLowerCase().includes(cleanQuery))
     );
 
     if (!found) return null;
@@ -994,59 +935,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       );
     });
 
-    // 2. Check predefined demo / seed users
-    const isDirectivoMatch =
-      cleanId === 'rectoria@edumed.edu.co' ||
-      cleanId === 'rector@edumed.edu.co' ||
-      cleanId === 'directivo@edumed.edu.co' ||
-      cleanId === 'coordinacion@edumed.edu.co' ||
-      cleanId === 'digitaledumed@gmail.com' ||
-      cleanId === '1013346890' ||
-      cleanId === 'digitaledumed' ||
-      cleanId === '13' ||
-      cleanId === '71654321';
+    // 2. Check institutional tables (Administrativos, Acudientes, Estudiantes) & system users
+    const foundInstAdmin = [...INSTITUTIONAL_ADMINISTRATIVOS, ...initialAdmins].find(a =>
+      a.email.toLowerCase() === cleanId ||
+      a.correo.toLowerCase() === cleanId ||
+      a.nombre.toLowerCase() === cleanId ||
+      (rawIdDigits && a.numeroDocumento.replace(/\D/g, '') === rawIdDigits)
+    );
 
-    const isAdminMatch = cleanId === 'admin@edumed.edu.co' || 
+    const isAdminMatch = Boolean(foundInstAdmin) ||
+      cleanId === 'admin@edumed.edu.co' || 
       cleanId === 'admin' || 
       cleanId === '43981245' || 
+      cleanId === 'rector@edumed.edu.co' || 
       cleanId === 'coordinador@edumed.edu.co' || 
-      cleanId === 'secretaria@edumed.edu.co' ||
-      cleanId === 'admisiones@edumed.edu.co' ||
-      cleanId === 'alexandermiranda270608@gmail.com' ||
-      cleanId === '1033184935' ||
-      cleanId === 'alexandermiranda' ||
-      cleanId === '12' ||
-      cleanId === '32456781';
+      cleanId === 'secretaria@edumed.edu.co';
     const isStudentMatch = cleanId === 'mateo.restrepo@edumed.edu.co' || cleanId === 'mateo' || cleanId === '1035982147' || cleanId === 'ti 1035982147';
     const isGuardianMatch = cleanId === 'maria.gonzalez@gmail.com' || cleanId === 'maria' || cleanId === '43892104' || cleanId === 'cc 43892104';
 
-    // 3. Check existing guardians and students in database (supports verification codes 101, 102)
-    const foundGuardian = !isDirectivoMatch && !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered
-      ? (preferredRole === 'student' && (cleanId === '101' || cleanId === '102')
-          ? null
-          : guardians.find(g => 
-              g.email?.toLowerCase() === cleanId || 
-              g.fullName?.toLowerCase() === cleanId || 
-              (g.documentNumber && g.documentNumber.replace(/\D/g, '') === rawIdDigits) || 
-              (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits) ||
-              (g.verificationCode && g.verificationCode.toLowerCase() === cleanId)
-            )
+    // 3. Check existing guardians and students in database
+    const foundGuardian = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered
+      ? guardians.find(g =>
+          g.email?.toLowerCase() === cleanId ||
+          g.fullName?.toLowerCase() === cleanId ||
+          (rawIdDigits && g.documentNumber && g.documentNumber.replace(/\D/g, '') === rawIdDigits) ||
+          (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits)
         )
       : null;
 
-    const foundStudent = !isDirectivoMatch && !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered && !foundGuardian
+    const foundStudent = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered && !foundGuardian
       ? students.find(s => 
           s.email?.toLowerCase() === cleanId || 
           s.fullName?.toLowerCase() === cleanId || 
-          (rawIdDigits && s.documentNumber && s.documentNumber.replace(/\D/g, '') === rawIdDigits) ||
-          (cleanId === '101' && s.id === 'std-8') ||
-          (cleanId === '102' && s.id === 'std-9') ||
-          (s.guardians?.some(g => g.verificationCode && g.verificationCode.toLowerCase() === cleanId))
+          (rawIdDigits && s.documentNumber && s.documentNumber.replace(/\D/g, '') === rawIdDigits)
         )
       : null;
 
     // Determine if ANY account exists
-    const accountExists = Boolean(foundRegistered || isDirectivoMatch || isAdminMatch || isStudentMatch || isGuardianMatch || foundGuardian || foundStudent);
+    const accountExists = Boolean(foundRegistered || isAdminMatch || isStudentMatch || isGuardianMatch || foundGuardian || foundStudent);
 
     if (!accountExists) {
       return {
@@ -1065,6 +991,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
     const userEmailKey = (
       foundRegistered?.email ||
+      foundInstAdmin?.email ||
       foundGuardian?.email ||
       foundStudent?.email ||
       (cleanId.includes('@') ? cleanId : '')
@@ -1093,67 +1020,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           phone: foundRegistered.phone,
           position: foundRegistered.position,
           department: foundRegistered.department,
-          institutionCode: foundRegistered.institutionCode
+          institutionCode: foundRegistered.institutionCode,
+          fichaNumber: foundRegistered.fichaNumber,
+          verificationCode: foundRegistered.verificationCode
         };
       }
-    } else if (isDirectivoMatch) {
-      const isJuanJose = cleanId.includes('digitaledumed') || cleanId === '1013346890' || cleanId === '13';
-      passwordValid = cleanPass === '13' || cleanPass === 'rector2026' || cleanPass === 'directivo2026' || cleanPass === '12345' || cleanPass === 'admin2025' || isCustomPasswordMatch;
+    } else if (foundInstAdmin) {
+      passwordValid =
+        cleanPass === foundInstAdmin.numeroDocumento ||
+        cleanPass === foundInstAdmin.codigoVerificacion ||
+        cleanPass === '12345' ||
+        cleanPass === 'admin2026' ||
+        cleanPass === 'admin2025' ||
+        isCustomPasswordMatch;
       if (passwordValid) {
-        if (isJuanJose) {
-          authUser = {
-            id: 'usr-staff-juanjose',
-            name: 'Juan Jose Torres',
-            email: 'digitaledumed@gmail.com',
-            role: 'directivo',
-            position: 'Rector — Dirección institucional',
-            department: 'Rectoría y Dirección Institucional',
-            documentNumber: '1013346890',
-            phone: '+57 312 101 3346',
-            guardianValidationCode: '13'
-          };
-        } else {
-          const isRector = cleanId.includes('rector') || cleanId === '71654321';
-          authUser = {
-            id: isRector ? 'usr-rector-1' : 'usr-directivo-1',
-            name: isRector ? 'Mag. Carlos Alberto Henao' : 'Dra. Elena Gómez Restrepo',
-            email: cleanId.includes('@') ? cleanId : (isRector ? 'rectoria@edumed.edu.co' : 'directivo@edumed.edu.co'),
-            role: 'directivo',
-            position: isRector ? 'Rector Institucional' : 'Coordinadora Académica Directiva',
-            department: 'Rectoría y Consejo Directivo',
-            documentNumber: isRector ? '71654321' : '43567890',
-            phone: '310 892 4567'
-          };
-        }
+        authUser = {
+          id: `admin-${foundInstAdmin.numeroDocumento}`,
+          name: foundInstAdmin.nombre,
+          email: foundInstAdmin.correo,
+          role: 'admin',
+          documentNumber: `${foundInstAdmin.documentType} ${foundInstAdmin.numeroDocumento}`,
+          verificationCode: foundInstAdmin.codigoVerificacion,
+          phone: '300 456 7890'
+        };
       }
     } else if (isAdminMatch) {
-      const isAlexander = cleanId.includes('alexandermiranda') || cleanId === '1033184935' || cleanId === '12';
-      passwordValid = cleanPass === '12' || cleanPass === 'admin2025' || cleanPass === 'secretaria2026' || cleanPass === '12345' || cleanPass === 'admin' || isCustomPasswordMatch;
+      passwordValid = cleanPass === 'admin2025' || cleanPass === '12345' || cleanPass === 'admin' || isCustomPasswordMatch;
       if (passwordValid) {
-        if (isAlexander) {
-          authUser = {
-            id: 'usr-staff-alexander',
-            name: 'Alexander Miranda',
-            email: 'alexandermiranda270608@gmail.com',
-            role: 'admin',
-            position: 'Coordinador — Gestión académica',
-            department: 'Coordinación y Gestión Académica',
-            documentNumber: '1033184935',
-            phone: '+57 310 331 8493',
-            guardianValidationCode: '12'
-          };
-        } else {
-          authUser = {
-            id: 'usr-admin-1',
-            name: 'Lic. Claudia Restrepo',
-            email: cleanId.includes('@') ? cleanId : 'admin@edumed.edu.co',
-            role: 'admin',
-            position: 'Secretaría Académica General',
-            department: 'Administración y Registro Escolar',
-            documentNumber: '43981245',
-            phone: '300 456 7890'
-          };
-        }
+        authUser = {
+          id: 'usr-admin-1',
+          name: 'Lic. Claudia Restrepo',
+          email: 'admin@edumed.edu.co',
+          role: 'admin',
+          documentNumber: '43981245',
+          phone: '300 456 7890'
+        };
       }
     } else if (isStudentMatch) {
       passwordValid = cleanPass === 'mateo2025' || cleanPass === '12345' || cleanPass === 'mateo' || isCustomPasswordMatch;
@@ -1185,35 +1086,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
     } else if (foundGuardian) {
-      const gCode = foundGuardian.verificationCode || '';
-      const gDocDigits = foundGuardian.documentNumber ? foundGuardian.documentNumber.replace(/\D/g, '') : '';
-      passwordValid = cleanPass === '12345' || 
-                      cleanPass === 'maria2025' || 
-                      (Boolean(gCode) && cleanPass === gCode) || 
-                      (Boolean(gDocDigits) && cleanPass === gDocDigits) ||
-                      cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345') || 
-                      isCustomPasswordMatch;
+      passwordValid =
+        cleanPass === '12345' ||
+        cleanPass === 'maria2025' ||
+        cleanPass === foundGuardian.documentNumber?.replace(/\D/g, '') ||
+        cleanPass === foundGuardian.verificationCode ||
+        cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345') ||
+        isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: foundGuardian.id,
           name: foundGuardian.fullName,
           email: foundGuardian.email || `${cleanId}@edumed.edu.co`,
           role: 'guardian',
-          documentNumber: foundGuardian.documentNumber,
+          documentNumber: `${foundGuardian.documentType} ${foundGuardian.documentNumber}`,
           phone: foundGuardian.phone,
-          guardianValidationCode: foundGuardian.verificationCode
+          fichaNumber: foundGuardian.fichaNumber,
+          verificationCode: foundGuardian.verificationCode
         };
       }
     } else if (foundStudent) {
-      const sDocDigits = foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '';
-      const gVerificationCode = foundStudent.guardians?.[0]?.verificationCode || '';
-      passwordValid = cleanPass === '12345' || 
-                      cleanPass === 'mateo2025' || 
-                      (Boolean(sDocDigits) && cleanPass === sDocDigits) || 
-                      (Boolean(gVerificationCode) && cleanPass === gVerificationCode) ||
-                      (foundStudent.id === 'std-8' && cleanPass === '101') ||
-                      (foundStudent.id === 'std-9' && cleanPass === '102') ||
-                      isCustomPasswordMatch;
+      passwordValid =
+        cleanPass === '12345' ||
+        cleanPass === 'mateo2025' ||
+        cleanPass === (foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '12345') ||
+        isCustomPasswordMatch;
       if (passwordValid) {
         const studentGender = foundStudent.gender || undefined;
         const customAvatar = getSavedCustomPhoto(foundStudent.id, foundStudent.email) ||
@@ -1226,8 +1123,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           role: 'student',
           gender: studentGender,
           avatarUrl: effectiveAvatar,
-          documentNumber: foundStudent.documentNumber,
-          phone: foundStudent.phone || '318 765 4321'
+          documentNumber: `${foundStudent.documentType} ${foundStudent.documentNumber}`,
+          phone: foundStudent.phone || '318 765 4321',
+          fichaNumber: foundStudent.fichaNumber
         };
       }
     }
@@ -1285,268 +1183,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome to the platform!' };
   };
 
-  const loginAdminDirectivo = (
-    identifier: string,
-    pass: string,
-    userType: 'Administrativo' | 'Directivo'
-  ): { success: boolean; message?: string; notFound?: boolean; unauthorizedRole?: boolean } => {
-    const cleanId = (identifier || '').trim().toLowerCase();
-    const cleanPass = (pass || '').trim();
-
-    // Requisito 3: Si faltan campos
-    if (!cleanId || !cleanPass || !userType) {
-      return {
-        success: false,
-        message: language === 'es'
-          ? 'Complete todos los campos obligatorios para continuar'
-          : 'Complete all required fields to continue'
-      };
-    }
-
-    // 1. Cuentas institucionales autorizadas como Directivo:
-    const isDirectivoPredefined =
-      cleanId === 'rectoria@edumed.edu.co' ||
-      cleanId === 'rector@edumed.edu.co' ||
-      cleanId === 'directivo@edumed.edu.co' ||
-      cleanId === 'coordinacion@edumed.edu.co' ||
-      cleanId === 'digitaledumed@gmail.com' ||
-      cleanId === '1013346890' ||
-      cleanId === 'digitaledumed' ||
-      cleanId === '13' ||
-      cleanId === '71654321';
-
-    // 2. Cuentas institucionales autorizadas como Administrativo:
-    const isAdministrativoPredefined =
-      cleanId === 'admin@edumed.edu.co' ||
-      cleanId === 'secretaria@edumed.edu.co' ||
-      cleanId === 'admisiones@edumed.edu.co' ||
-      cleanId === 'coordinador@edumed.edu.co' ||
-      cleanId === 'alexandermiranda270608@gmail.com' ||
-      cleanId === '1033184935' ||
-      cleanId === 'alexandermiranda' ||
-      cleanId === '12' ||
-      cleanId === 'admin' ||
-      cleanId === '43981245' ||
-      cleanId === '32456781';
-
-    // 3. Cuentas en almacenamiento local
-    const registeredUsers: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    const rawIdDigits = cleanId.replace(/\D/g, '');
-    const foundRegistered = registeredUsers.find((u: any) => {
-      const uEmail = (u.email || '').toLowerCase().trim();
-      const uName = (u.name || '').toLowerCase().trim();
-      const uDoc = (u.documentNumber || '').toLowerCase().trim();
-      const uDocDigits = uDoc.replace(/\D/g, '');
-      return (
-        uEmail === cleanId ||
-        uName === cleanId ||
-        uDoc === cleanId ||
-        (rawIdDigits && uDocDigits && rawIdDigits === uDocDigits)
-      );
-    });
-
-    // Validar si el usuario pertenece a estudiante o acudiente (no autorizado en este portal)
-    const isStudentAccount =
-      cleanId === 'mateo.restrepo@edumed.edu.co' ||
-      cleanId === '1035982147' ||
-      cleanId === 'molina12sara@gmail.com' ||
-      cleanId === '1038809029' ||
-      cleanId === 'yeleidy.davila22@gmail.com' ||
-      cleanId === '1025662108' ||
-      (foundRegistered && foundRegistered.role === 'student');
-
-    const isGuardianAccount =
-      cleanId === 'maria.gonzalez@gmail.com' ||
-      cleanId === '43892104' ||
-      cleanId === 'nicole.roa7729@gmail.com' ||
-      cleanId === '1017287888' ||
-      cleanId === 'luztoscano051@gmail.com' ||
-      cleanId === '1064191482' ||
-      (foundRegistered && foundRegistered.role === 'guardian');
-
-    if (isStudentAccount || isGuardianAccount) {
-      return {
-        success: false,
-        unauthorizedRole: true,
-        message: language === 'es'
-          ? 'La cuenta ingresada no cuenta con autorización para acceder al Portal Administrativo y Directivo. Por favor use el inicio de sesión correspondiente.'
-          : 'The entered account is not authorized to access the Administrative and Leadership Portal.'
-      };
-    }
-
-    // Verificar si la cuenta existe y a qué tipo corresponde
-    let accountAuthorizedType: 'Administrativo' | 'Directivo' | null = null;
-    let authUser: AuthUser | null = null;
-    let passwordValid = false;
-
-    const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
-    const isCustomMatch = (Boolean(customPasswords[cleanId]) && cleanPass === customPasswords[cleanId]);
-
-    if (isDirectivoPredefined) {
-      accountAuthorizedType = 'Directivo';
-      const isJuanJose = cleanId.includes('digitaledumed') || cleanId === '1013346890' || cleanId === '13';
-      passwordValid =
-        (isJuanJose && (cleanPass === '13' || cleanPass === '12345')) ||
-        cleanPass === 'rector2026' ||
-        cleanPass === 'directivo2026' ||
-        cleanPass === '12345' ||
-        cleanPass === 'admin2025' ||
-        cleanPass === 'rector' ||
-        cleanPass === 'directivo' ||
-        isCustomMatch;
-
-      if (passwordValid) {
-        if (isJuanJose) {
-          authUser = {
-            id: 'usr-staff-juanjose',
-            name: 'Juan Jose Torres',
-            email: 'digitaledumed@gmail.com',
-            role: 'directivo',
-            position: 'Rector — Dirección institucional',
-            department: 'Rectoría y Dirección Institucional',
-            documentNumber: '1013346890',
-            phone: '+57 312 101 3346',
-            guardianValidationCode: '13'
-          };
-        } else {
-          const isRector = cleanId.includes('rector') || cleanId === '71654321';
-          authUser = {
-            id: isRector ? 'usr-rector-1' : 'usr-directivo-1',
-            name: isRector ? 'Mag. Carlos Alberto Henao' : 'Dra. Elena Gómez Restrepo',
-            email: cleanId.includes('@') ? cleanId : (isRector ? 'rectoria@edumed.edu.co' : 'directivo@edumed.edu.co'),
-            role: 'directivo',
-            position: isRector ? 'Rector Institucional' : 'Coordinadora Académica Directiva',
-            department: 'Rectoría y Consejo Directivo',
-            documentNumber: isRector ? '71654321' : '43567890',
-            phone: '310 892 4567'
-          };
-        }
-      }
-    } else if (isAdministrativoPredefined) {
-      accountAuthorizedType = 'Administrativo';
-      const isAlexander = cleanId.includes('alexandermiranda') || cleanId === '1033184935' || cleanId === '12';
-      passwordValid =
-        (isAlexander && (cleanPass === '12' || cleanPass === '12345')) ||
-        cleanPass === 'admin2025' ||
-        cleanPass === 'secretaria2026' ||
-        cleanPass === '12345' ||
-        cleanPass === 'admin' ||
-        cleanPass === 'secretaria' ||
-        isCustomMatch;
-
-      if (passwordValid) {
-        if (isAlexander) {
-          authUser = {
-            id: 'usr-staff-alexander',
-            name: 'Alexander Miranda',
-            email: 'alexandermiranda270608@gmail.com',
-            role: 'admin',
-            position: 'Coordinador — Gestión académica',
-            department: 'Coordinación y Gestión Académica',
-            documentNumber: '1033184935',
-            phone: '+57 310 331 8493',
-            guardianValidationCode: '12'
-          };
-        } else {
-          const isSec = cleanId.includes('secretaria') || cleanId === '32456781';
-          authUser = {
-            id: isSec ? 'usr-sec-1' : 'usr-admin-1',
-            name: isSec ? 'Patricia Bustamante' : 'Lic. Claudia Restrepo',
-            email: cleanId.includes('@') ? cleanId : (isSec ? 'secretaria@edumed.edu.co' : 'admin@edumed.edu.co'),
-            role: 'admin',
-            position: isSec ? 'Auxiliar de Secretaría y SIMAT' : 'Secretaría Académica General',
-            department: 'Administración y Registro Escolar',
-            documentNumber: isSec ? '32456781' : '43981245',
-            phone: '300 456 7890'
-          };
-        }
-      }
-    } else if (foundRegistered && (foundRegistered.role === 'admin' || foundRegistered.role === 'directivo')) {
-      accountAuthorizedType = foundRegistered.role === 'directivo' ? 'Directivo' : 'Administrativo';
-      const storedPass = foundRegistered.password || '12345';
-      passwordValid = cleanPass === storedPass || cleanPass === '12345' || cleanPass === 'admin2025' || isCustomMatch;
-
-      if (passwordValid) {
-        authUser = {
-          id: foundRegistered.id,
-          name: foundRegistered.name,
-          email: foundRegistered.email,
-          role: foundRegistered.role,
-          position: foundRegistered.position || (foundRegistered.role === 'directivo' ? 'Directivo Institucional' : 'Personal Administrativo'),
-          department: foundRegistered.department || 'Administración Escolar',
-          documentNumber: foundRegistered.documentNumber,
-          phone: foundRegistered.phone
-        };
-      }
-    }
-
-    // Requisito 3: Si la cuenta no está registrada o autorizada
-    if (!accountAuthorizedType) {
-      return {
-        success: false,
-        notFound: true,
-        message: language === 'es'
-          ? 'La cuenta ingresada no está registrada o autorizada para el portal administrativo y directivo.'
-          : 'The account entered is not registered or authorized for this portal.'
-      };
-    }
-
-    // Requisito 3: Si la contraseña es incorrecta
-    if (!passwordValid) {
-      return {
-        success: false,
-        message: language === 'es'
-          ? 'Usuario o contraseña incorrectos. Verifique sus datos e intente nuevamente'
-          : 'Incorrect username or password. Please verify your credentials and try again'
-      };
-    }
-
-    // Requisito 3 & 4: Validar que el tipo de usuario seleccionado coincida con el rol de la cuenta
-    if (accountAuthorizedType !== userType) {
-      return {
-        success: false,
-        unauthorizedRole: true,
-        message: language === 'es'
-          ? 'Usuario o contraseña incorrectos. Verifique sus datos e intente nuevamente'
-          : 'Incorrect username or password. Please verify your credentials and try again'
-      };
-    }
-
-    if (authUser) {
-      setCurrentUser(authUser);
-      localStorage.setItem('edumed_current_user', JSON.stringify(authUser));
-      setActiveRole(authUser.role);
-      setActiveTab('dashboard');
-
-      setActivities((prev) => [
-        {
-          id: 'act-' + Date.now(),
-          timeAgo: 'Justo ahora',
-          timeAgoEn: 'Just now',
-          description: `Ingreso al ${userType === 'Directivo' ? 'Portal de Directivos' : 'Portal Administrativo'} por ${authUser?.name}`,
-          descriptionEn: `Logged in to ${userType} portal by ${authUser?.name}`,
-          type: 'admin',
-          userName: authUser?.name
-        },
-        ...prev
-      ]);
-
-      return {
-        success: true,
-        message: language === 'es'
-          ? `Bienvenido al ${userType === 'Directivo' ? 'Portal de Directivos' : 'Portal Administrativo'}, ${authUser.name}`
-          : `Welcome to the ${userType} portal, ${authUser.name}`
-      };
-    }
-
-    return {
-      success: false,
-      message: language === 'es'
-        ? 'Usuario o contraseña incorrectos. Verifique sus datos e intente nuevamente'
-        : 'Incorrect username or password. Please verify your credentials and try again'
-    };
-  };
-
   const isEmailRegistered = (email: string): boolean => {
     const clean = email.trim().toLowerCase();
     if (!clean || !clean.includes('@')) return false;
@@ -1562,88 +1198,52 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     }
 
-    // 3. Check in pre-configured institutional and system accounts
-    const systemEmails = [
-      'admin@edumed.edu.co',
-      'rector@edumed.edu.co',
-      'coordinador@edumed.edu.co',
-      'secretaria@edumed.edu.co',
-      'mateo.restrepo@edumed.edu.co',
-      'maria.gonzalez@gmail.com',
-      'alexandermiranda270608@gmail.com',
-      'digitaledumed@gmail.com',
-      'nicole.roa7729@gmail.com',
-      'luztoscano051@gmail.com',
-      'molina12sara@gmail.com',
-      'yeleidy.davila22@gmail.com'
-    ];
-    if (systemEmails.includes(clean)) {
-      return true;
-    }
-
-    // 4. Check in guardians list
-    const savedGuardians: Guardian[] = JSON.parse(localStorage.getItem('edumed_guardians') || '[]');
-    const allGuardians = [...guardians, ...savedGuardians];
-    if (allGuardians.some(g => g.email?.toLowerCase().trim() === clean)) {
-      return true;
-    }
-
-    // 5. Check in students list & nested guardians
-    const savedStudents: Student[] = JSON.parse(localStorage.getItem('edumed_students') || '[]');
-    const allStudents = [...students, ...savedStudents];
-    if (allStudents.some(s => s.email?.toLowerCase().trim() === clean)) {
-      return true;
-    }
-    if (allStudents.some(s => s.guardians?.some(g => g.email?.toLowerCase().trim() === clean))) {
-      return true;
-    }
-
     return false;
   };
 
-  const validateGuardianCode = (inputCode: string): boolean => {
+  const validateGuardianCode = (inputCode: string, email?: string, docNumber?: string): boolean => {
     if (!inputCode) return false;
     const cleanInput = inputCode.trim().toUpperCase();
     const cleanAlphaNum = cleanInput.replace(/[\s\.-]/g, '');
     if (!cleanAlphaNum) return false;
 
-    // 1. Official institutional guardian and staff validation codes stored in database
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanDocDigits = (docNumber || '').replace(/\D/g, '');
+
+    // 1. Verificar contra la tabla oficial de Acudientes en Firebase (101 -> Nicole Valentina Pereira, 102 -> Luz Adriana Toscano)
+    const matchedAcudiente = INSTITUTIONAL_ACUDIENTES.find(
+      a =>
+        (cleanEmail && a.correo.toLowerCase() === cleanEmail) ||
+        (cleanDocDigits && a.numeroDocumento.replace(/\D/g, '') === cleanDocDigits)
+    );
+    if (matchedAcudiente) {
+      return (
+        cleanAlphaNum === matchedAcudiente.codigoVerificacion.toUpperCase() ||
+        cleanAlphaNum === matchedAcudiente.numeroDocumento.replace(/\D/g, '')
+      );
+    }
+
+    // 2. Códigos de verificación de la tabla de Acudientes de Firebase y códigos oficiales
     const officialCodes = [
-      '101', '102', '12', '13',
+      '101', '102',
+      '1017287888', '1064191482',
       'ACUD-2026', 'ACU-2026', 'IEFB-2026', 'FENIX-2026', 'MED-2026',
       'FAMILIA-2026', 'ACUDIENTE-2026', 'ACU-8901', '12345', 'MED2026',
       'ACUD2026', 'IEFB2026', 'FENIX2026', 'FAMILIA2026', 'ACU2026',
       'ACUDIENTE2026'
     ];
 
-    // 2. Guardian documents, IDs, phones and verification codes in database
+    // 3. Guardian documents, verificationCodes, IDs and phones in database
     const guardianDbCodes: string[] = [];
     guardians.forEach(g => {
+      if (g.verificationCode) guardianDbCodes.push(g.verificationCode);
+      if (g.codigoVerificacion) guardianDbCodes.push(g.codigoVerificacion);
       if (g.id) guardianDbCodes.push(g.id);
       if (g.documentNumber) guardianDbCodes.push(g.documentNumber);
       if (g.phone) guardianDbCodes.push(g.phone);
-      if (g.verificationCode) guardianDbCodes.push(g.verificationCode);
     });
 
-    // 3. Enrollments in database
-    enrollments.forEach(e => {
-      if (e.guardianDoc) guardianDbCodes.push(e.guardianDoc);
-      if (e.id) guardianDbCodes.push(e.id);
-      if (e.studentDoc) guardianDbCodes.push(e.studentDoc);
-    });
-
-    // 4. Students in database
-    students.forEach(s => {
-      if (s.documentNumber) guardianDbCodes.push(s.documentNumber);
-      if (s.id) guardianDbCodes.push(s.id);
-      (s.guardians || []).forEach(sg => {
-        if (sg.id) guardianDbCodes.push(sg.id);
-        if (sg.phone) guardianDbCodes.push(sg.phone);
-        if (sg.verificationCode) guardianDbCodes.push(sg.verificationCode);
-      });
-    });
-
-    // 5. Custom codes stored in localStorage
+    // 4. Custom codes stored in localStorage
     const savedCodes: string[] = JSON.parse(localStorage.getItem('edumed_guardian_codes') || '[]');
 
     const allDbCodes = [...officialCodes, ...guardianDbCodes, ...savedCodes];
@@ -1651,10 +1251,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return allDbCodes.some(code => {
       const cleanDb = code.trim().toUpperCase();
       const cleanDbAlphaNum = cleanDb.replace(/[\s\.-]/g, '');
-      return cleanInput === cleanDb || 
-             cleanAlphaNum === cleanDbAlphaNum || 
-             (cleanAlphaNum.length >= 2 && cleanDbAlphaNum === cleanAlphaNum);
+      return cleanInput === cleanDb || cleanAlphaNum === cleanDbAlphaNum;
     });
+  };
+
+  const validateAdminCode = (inputCode: string, email?: string, docNumber?: string): boolean => {
+    if (!inputCode) return false;
+    const cleanInput = inputCode.trim().toUpperCase();
+    const cleanAlphaNum = cleanInput.replace(/[\s\.-]/g, '');
+    if (!cleanAlphaNum) return false;
+
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanDocDigits = (docNumber || '').replace(/\D/g, '');
+
+    // 1. Verificar contra la tabla oficial de Administrativos en Firebase (12 -> Alexander Miranda, 13 -> Juan Jose Torres)
+    const matchedAdmin = INSTITUTIONAL_ADMINISTRATIVOS.find(
+      a =>
+        (cleanEmail && a.correo.toLowerCase() === cleanEmail) ||
+        (cleanDocDigits && a.numeroDocumento.replace(/\D/g, '') === cleanDocDigits)
+    );
+    if (matchedAdmin) {
+      return (
+        cleanAlphaNum === matchedAdmin.codigoVerificacion.toUpperCase() ||
+        cleanAlphaNum === matchedAdmin.numeroDocumento.replace(/\D/g, '')
+      );
+    }
+
+    const adminCodes = [
+      '12',
+      '13',
+      '1033184935',
+      '1013346890',
+      ...INSTITUTIONAL_ADMINISTRATIVOS.map(a => a.codigoVerificacion)
+    ];
+
+    return adminCodes.some(code => cleanAlphaNum === code.trim().toUpperCase());
   };
 
   const register = (userData: { 
@@ -1669,6 +1300,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     department?: string;
     institutionCode?: string;
     guardianValidationCode?: string;
+    adminValidationCode?: string;
   }): { success: boolean; message?: string } => {
     if (!userData.name.trim()) {
       return { success: false, message: language === 'es' ? 'Ingrese sus nombres y apellidos completos.' : 'Please enter your full name.' };
@@ -1679,7 +1311,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const cleanEmail = userData.email.trim().toLowerCase();
     
-    // Strict block: Do not permit registration with any previously used or registered email
+    // Strict block: Do not permit registration with any previously registered account
     if (isEmailRegistered(cleanEmail)) {
       return {
         success: false,
@@ -1701,18 +1333,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
     }
 
-    // Strict requirement: Administrative and leadership personnel cannot register directly
-    if (userData.role === 'teacher' || (userData.role as string) === 'docente' || userData.role === 'admin') {
+    // Allow guardian, student, and admin registration
+    if ((userData.role as string) === 'teacher' || (userData.role as string) === 'docente') {
       return {
         success: false,
         message: language === 'es'
-          ? 'El registro directo de directivos y personal administrativo no está permitido. El acceso debe ser asignado y autorizado previamente por la administración de la I.E. Félix Henao Botero.'
-          : 'Direct registration for administrative and leadership staff is not permitted. Access must be assigned by the school administration.'
+          ? 'El registro directo de docentes no está permitido. El acceso debe ser asignado y autorizado previamente por la administración de la I.E. Félix Henao Botero.'
+          : 'Direct registration for teachers is not permitted. Access must be assigned by the school administration.'
       };
     }
 
+    const docClean = (userData.documentNumber || '').trim();
+    const docDigits = docClean.replace(/\D/g, '');
+
     if (userData.role === 'guardian') {
-      const docClean = (userData.documentNumber || '').trim();
       const docType = docClean.includes(' ') ? docClean.split(' ')[0].toUpperCase() : '';
       if (docType && docType !== 'CC' && docType !== 'CE') {
         return {
@@ -1727,16 +1361,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return {
           success: false,
           message: language === 'es'
-            ? 'Por favor ingrese el código de validación del acudiente.'
+            ? 'Por favor ingrese el código de validación del acudiente (ej. 101 o 102).'
             : 'Please enter the guardian validation code.'
         };
       }
-      if (!validateGuardianCode(gCode)) {
+      if (!validateGuardianCode(gCode, cleanEmail, docDigits)) {
         return {
           success: false,
           message: language === 'es'
-            ? 'El código de validación ingresado no coincide con los registros de la base de datos institucional. Por favor verifique el código asignado.'
+            ? 'El código de verificación ingresado no coincide con los registros de la base de datos de Firebase. Verifique el código asignado (101 o 102).'
             : 'The validation code does not match institutional database records. Please verify the code.'
+        };
+      }
+    }
+
+    if (userData.role === 'admin') {
+      const aCode = (userData.adminValidationCode || userData.guardianValidationCode || '').trim();
+      if (!aCode) {
+        return {
+          success: false,
+          message: language === 'es'
+            ? 'Por favor ingrese el código de verificación administrativo (ej. 12 o 13).'
+            : 'Please enter the administrative verification code.'
+        };
+      }
+      if (!validateAdminCode(aCode, cleanEmail, docDigits)) {
+        return {
+          success: false,
+          message: language === 'es'
+            ? 'El código de verificación administrativo no coincide con la base de datos de Firebase. Verifique el código asignado (12 o 13).'
+            : 'The administrative verification code does not match Firebase database records.'
         };
       }
     }
@@ -1751,6 +1405,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ? getDefaultAvatarByGender(studentGender)
       : undefined;
 
+    const matchedGuardianTable = INSTITUTIONAL_ACUDIENTES.find(
+      a => a.correo.toLowerCase() === cleanEmail || (docDigits && a.numeroDocumento === docDigits)
+    );
+    const matchedStudentTable = INSTITUTIONAL_ESTUDIANTES.find(
+      s => s.correo.toLowerCase() === cleanEmail || (docDigits && s.numeroDocumento === docDigits)
+    );
+    const matchedAdminTable = INSTITUTIONAL_ADMINISTRATIVOS.find(
+      a => a.correo.toLowerCase() === cleanEmail || (docDigits && a.numeroDocumento === docDigits)
+    );
+
+    const resolvedFicha =
+      matchedGuardianTable?.fichaNumber ||
+      matchedStudentTable?.fichaNumber ||
+      undefined;
+
+    const resolvedVerificationCode =
+      userData.adminValidationCode?.trim() ||
+      userData.guardianValidationCode?.trim() ||
+      matchedAdminTable?.codigoVerificacion ||
+      matchedGuardianTable?.codigoVerificacion ||
+      undefined;
+
     const newUser: AuthUser & { password?: string } = {
       id: 'usr-' + Date.now(),
       name: userData.name.trim(),
@@ -1763,29 +1439,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       position: userData.position?.trim(),
       department: userData.department?.trim(),
       institutionCode: userData.institutionCode?.trim(),
-      guardianValidationCode: userData.guardianValidationCode?.trim()
+      guardianValidationCode: userData.guardianValidationCode?.trim(),
+      adminValidationCode: userData.adminValidationCode?.trim(),
+      verificationCode: resolvedVerificationCode,
+      fichaNumber: resolvedFicha
     };
 
     registered.push({ ...newUser, password: userData.password });
     localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
 
+    // Sincronizar cuenta con Firebase Authentication y Firestore
+    void registerUserInFirebaseAuth(cleanEmail, userData.password);
+    void saveRegisteredUserToFirestore({
+      id: newUser.id,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      documentNumber: newUser.documentNumber,
+      phone: newUser.phone,
+      fichaNumber: newUser.fichaNumber,
+      verificationCode: newUser.verificationCode
+    });
+
     if (userData.role === 'student') {
       const parts = userData.name.trim().split(' ');
       const firstName = parts[0] || userData.name;
       const lastName = parts.slice(1).join(' ') || 'Estudiante';
-      const docClean = (userData.documentNumber || '').trim();
       const docType = docClean.includes(' ') ? docClean.split(' ')[0] : 'TI';
       const docNum = docClean.includes(' ') ? docClean.split(' ')[1] : (docClean || '10203040');
 
       const newStudentEntry: Student = {
-        id: newUser.id,
+        id: matchedStudentTable ? `std-${matchedStudentTable.numeroDocumento}` : newUser.id,
         documentType: docType,
         documentNumber: docNum,
         firstName,
         lastName,
         fullName: userData.name.trim(),
         birthDate: '15/03/2009',
-        gender: studentGender || 'Masculino',
+        gender: studentGender || 'Femenino',
         bloodType: 'O+',
         grade: '10°',
         shift: 'Mañana',
@@ -1796,32 +1487,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         email: cleanEmail,
         avatarUrl: studentAvatar,
         admissionDate: new Date().toLocaleDateString('es-CO'),
+        fichaNumber: resolvedFicha,
+        numeroFicha: resolvedFicha ? Number(resolvedFicha) : undefined,
         guardians: []
       };
-      setStudents(prev => [newStudentEntry, ...prev]);
+      setStudents(prev => {
+        const filtered = prev.filter(s => s.documentNumber.replace(/\D/g, '') !== docNum.replace(/\D/g, '') && s.email.toLowerCase() !== cleanEmail);
+        return [newStudentEntry, ...filtered];
+      });
     }
 
     if (userData.role === 'guardian') {
-      const docClean = (userData.documentNumber || '').trim();
       const docType = docClean.includes(' ') ? docClean.split(' ')[0].toUpperCase() : 'CC';
       const docNum = docClean.includes(' ') ? docClean.split(' ')[1] : docClean;
 
       const newGuardianEntry: Guardian = {
-        id: newUser.id,
+        id: matchedGuardianTable ? `grd-${matchedGuardianTable.numeroDocumento}` : newUser.id,
         documentType: docType,
         documentNumber: docNum,
         fullName: userData.name.trim(),
-        relationship: 'Padre / Acudiente',
+        relationship: 'Acudiente',
         phone: userData.phone || '+57 300 123 4567',
         email: cleanEmail,
-        address: 'Calle 50 # 40-20, Medellín',
+        address: 'Medellín, Antioquia',
+        fichaNumber: resolvedFicha,
+        numeroFicha: resolvedFicha ? Number(resolvedFicha) : undefined,
+        verificationCode: resolvedVerificationCode,
+        codigoVerificacion: resolvedVerificationCode,
         associatedStudents: []
       };
-      setGuardians(prev => [newGuardianEntry, ...prev]);
-
-      const savedGuardians: Guardian[] = JSON.parse(localStorage.getItem('edumed_guardians') || '[]');
-      savedGuardians.push(newGuardianEntry);
-      localStorage.setItem('edumed_guardians', JSON.stringify(savedGuardians));
+      setGuardians(prev => {
+        const filtered = prev.filter(g => g.documentNumber.replace(/\D/g, '') !== docNum.replace(/\D/g, '') && g.email.toLowerCase() !== cleanEmail);
+        const updated = [newGuardianEntry, ...filtered];
+        localStorage.setItem('edumed_guardians', JSON.stringify(updated));
+        return updated;
+      });
     }
 
     setCurrentUser(newUser);
@@ -1875,248 +1575,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           : `Please wait ${remainingSecs} seconds before requesting another recovery email.`
       };
     }
-    sessionStorage.setItem(`edumed_reset_cooldown_${cleanEmail}`, now.toString());
 
-    // Check account in platform
-    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    const regUser = registered.find((u: any) => u.email?.toLowerCase() === cleanEmail);
-
-    let foundUser: { name: string; email: string; role?: UserRole } | null = null;
-    if (regUser) {
-      foundUser = { name: regUser.name, email: regUser.email, role: regUser.role };
-    } else if (cleanEmail === 'admin@edumed.edu.co' || cleanEmail === 'profesor@edumed.edu.co') {
-      foundUser = { name: 'Lic. Claudia Restrepo', email: 'admin@edumed.edu.co', role: 'admin' };
-    } else if (cleanEmail === 'mateo.restrepo@edumed.edu.co') {
-      foundUser = { name: 'Mateo Restrepo', email: 'mateo.restrepo@edumed.edu.co', role: 'student' };
-    } else if (cleanEmail === 'maria.gonzalez@gmail.com') {
-      foundUser = { name: 'María González', email: 'maria.gonzalez@gmail.com', role: 'guardian' };
-    } else {
-      const g = guardians.find(x => x.email?.toLowerCase() === cleanEmail);
-      if (g) {
-        foundUser = { name: g.name, email: g.email || cleanEmail, role: 'guardian' };
-      } else {
-        const s = students.find(x => x.email?.toLowerCase() === cleanEmail);
-        if (s) {
-          foundUser = { name: s.fullName, email: s.email || cleanEmail, role: 'student' };
-        }
-      }
+    const result = await sendFirebasePasswordReset(cleanEmail, language);
+    if (result.success) {
+      sessionStorage.setItem(`edumed_reset_cooldown_${cleanEmail}`, now.toString());
     }
-
-    // Call server endpoint for real email sending
-    try {
-      await fetch('/api/auth/request-password-reset', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, origin: window.location.origin }),
-      });
-    } catch (err) {
-      console.warn('Backend reset call notice:', err);
-    }
-
-    // If account exists in platform, store active reset record with 15-minute expiration
-    if (foundUser) {
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      const token = 'rst-' + Math.random().toString(36).substring(2) + Date.now().toString(36);
-      const resetData = {
-        email: cleanEmail,
-        code,
-        token,
-        name: foundUser.name,
-        role: foundUser.role,
-        expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutos
-        createdAt: Date.now(),
-        attempts: 0,
-        maxAttempts: 5,
-        used: false
-      };
-      localStorage.setItem('edumed_active_reset', JSON.stringify(resetData));
-    }
-
-    // Generic response to never reveal whether email exists (Requirement 8)
-    // Never expose the code in UI or return value (Requirement 7)
     return {
-      success: true,
-      message: language === 'es'
-        ? 'Si la dirección de correo electrónico está registrada en nuestra plataforma, hemos enviado un correo con las instrucciones y el código de verificación para restablecer tu contraseña. Por favor revisa tu bandeja de entrada y la carpeta de spam.'
-        : 'If the email address is registered on our platform, we have sent instructions and a verification code to reset your password. Please check your inbox and spam folder.'
+      success: result.success,
+      message: result.message
     };
   };
 
-  const verifyPasswordResetCode = async (email: string, codeOrToken: string): Promise<{ success: boolean; message?: string }> => {
-    const cleanEmail = email.trim().toLowerCase();
+  const verifyPasswordResetCode = async (_email: string, codeOrToken: string): Promise<{ success: boolean; message?: string }> => {
     const cleanInput = codeOrToken.trim();
-
-    // First try backend verification if available
-    try {
-      const resp = await fetch('/api/auth/verify-reset-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, code: cleanInput }),
-      });
-      const data = await resp.json();
-      if (resp.ok && data.success) {
-        return {
-          success: true,
-          message: language === 'es' ? 'Código verificado correctamente.' : 'Code verified successfully.'
-        };
-      } else if (!resp.ok && resp.status !== 404) {
-        return {
-          success: false,
-          message: data.message || (language === 'es' ? 'Código de verificación no válido.' : 'Invalid code.')
-        };
-      }
-    } catch {
-      // Fallback to local verification
-    }
-
-    const storedStr = localStorage.getItem('edumed_active_reset');
-    if (!storedStr) {
-      return {
-        success: false,
-        message: language === 'es' 
-          ? 'No se encontró ninguna solicitud de restablecimiento activa. Por favor solicita un nuevo código.' 
-          : 'No active reset request found. Please request a new code.'
-      };
-    }
-
-    const stored = JSON.parse(storedStr);
-    if (stored.email !== cleanEmail) {
-      return {
-        success: false,
-        message: language === 'es' 
-          ? 'El correo ingresado no coincide con la solicitud de restablecimiento.' 
-          : 'Email does not match reset request.'
-      };
-    }
-
-    if (stored.used) {
-      return {
-        success: false,
-        message: language === 'es' 
-          ? 'Este código o enlace ya fue utilizado anteriormente.' 
-          : 'This code or link has already been used.'
-      };
-    }
-
-    if (Date.now() > stored.expiresAt) {
-      localStorage.removeItem('edumed_active_reset');
-      return {
-        success: false,
-        message: language === 'es' 
-          ? 'El código de verificación ha expirado (validez: 15 minutos). Por seguridad, debes solicitar uno nuevo.' 
-          : 'The verification code has expired (15-min validity). Please request a new one.'
-      };
-    }
-
-    if (stored.attempts >= (stored.maxAttempts || 5)) {
-      localStorage.removeItem('edumed_active_reset');
-      return {
-        success: false,
-        message: language === 'es' 
-          ? 'Has superado el número máximo de intentos permitidos (5). Por seguridad, el código ha sido invalidado. Solicita un nuevo código.' 
-          : 'Maximum attempts exceeded (5). The code has been invalidated for security.'
-      };
-    }
-
-    const matchesCode = stored.code === cleanInput;
-    const matchesToken = stored.token === cleanInput;
-
-    if (!matchesCode && !matchesToken) {
-      stored.attempts = (stored.attempts || 0) + 1;
-      const remaining = (stored.maxAttempts || 5) - stored.attempts;
-      localStorage.setItem('edumed_active_reset', JSON.stringify(stored));
-
-      if (remaining <= 0) {
-        localStorage.removeItem('edumed_active_reset');
-        return {
-          success: false,
-          message: language === 'es'
-            ? 'Has superado el número máximo de intentos permitidos (5). Por seguridad, el código ha sido invalidado.'
-            : 'Maximum verification attempts exceeded. Code invalidated.'
-        };
-      }
-
+    if (!cleanInput) {
       return {
         success: false,
         message: language === 'es'
-          ? `El código de verificación es incorrecto. Te quedan ${remaining} intento(s).`
-          : `Invalid verification code. Remaining attempts: ${remaining}.`
+          ? 'El enlace de recuperación no es válido.'
+          : 'The recovery link is invalid.'
       };
     }
 
+    const result = await verifyFirebaseOobCode(cleanInput, language);
     return {
-      success: true,
-      message: language === 'es' ? 'Código verificado correctamente.' : 'Code verified successfully.'
+      success: result.success,
+      message: result.message
     };
   };
 
   const resetPasswordWithCode = async (email: string, codeOrToken: string, newPassword: string): Promise<{ success: boolean; message?: string }> => {
-    if (!newPassword || newPassword.length < 5) {
+    if (!newPassword || newPassword.length < 6) {
       return {
         success: false,
-        message: language === 'es' ? 'La nueva contraseña debe tener al menos 5 caracteres.' : 'New password must have at least 5 characters.'
+        message: language === 'es'
+          ? 'La nueva contraseña debe tener al menos 6 caracteres para Firebase Authentication.'
+          : 'New password must have at least 6 characters for Firebase Authentication.'
       };
     }
 
-    const verification = await verifyPasswordResetCode(email, codeOrToken);
-    if (!verification.success) {
-      return verification;
+    const result = await confirmFirebaseNewPassword(codeOrToken, newPassword, language);
+    if (!result.success) {
+      return {
+        success: false,
+        message: result.message
+      };
     }
 
     const cleanEmail = email.trim().toLowerCase();
+    if (cleanEmail) {
+      const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+      const userIndex = registered.findIndex((u: any) => u.email?.toLowerCase() === cleanEmail);
+      if (userIndex >= 0) {
+        registered[userIndex].password = newPassword;
+        localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
+      }
 
-    // Call server to reset password
-    try {
-      await fetch('/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, code: codeOrToken, newPassword }),
-      });
-    } catch {
-      // Offline fallback
+      const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
+      customPasswords[cleanEmail] = newPassword;
+      localStorage.setItem('edumed_custom_passwords', JSON.stringify(customPasswords));
     }
-
-    // Persist new password in registered users
-    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
-    const userIndex = registered.findIndex((u: any) => u.email?.toLowerCase() === cleanEmail);
-
-    const storedStr = localStorage.getItem('edumed_active_reset');
-    const stored = storedStr ? JSON.parse(storedStr) : {};
-
-    if (userIndex >= 0) {
-      registered[userIndex].password = newPassword;
-    } else {
-      registered.push({
-        id: 'usr-reset-' + Date.now(),
-        name: stored.name || 'Usuario EduMed',
-        email: cleanEmail,
-        password: newPassword,
-        role: stored.role || 'guardian',
-        phone: '300 123 4567'
-      });
-    }
-    localStorage.setItem('edumed_registered_users', JSON.stringify(registered));
-
-    // Persist in custom passwords map (indexed by email and document number if available)
-    const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
-    customPasswords[cleanEmail] = newPassword;
-    if (userIndex >= 0 && registered[userIndex]?.documentNumber) {
-      const cleanDoc = registered[userIndex].documentNumber.replace(/^[A-Za-z.\s]+/, '').trim();
-      if (cleanDoc) customPasswords[cleanDoc] = newPassword;
-    }
-    localStorage.setItem('edumed_custom_passwords', JSON.stringify(customPasswords));
-
-    // Strictly enforce single-use: mark as used and remove
-    if (stored) {
-      stored.used = true;
-    }
-    localStorage.removeItem('edumed_active_reset');
 
     return {
       success: true,
-      message: language === 'es' 
-        ? 'Tu contraseña ha sido actualizada con éxito. Ya puedes iniciar sesión con tu nueva contraseña.' 
-        : 'Password updated successfully. You can now log in with your new password.'
+      message: result.message
     };
   };
 
@@ -2418,8 +1940,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         completeStudentEnrollment,
         resetStudentEnrollment,
         login,
-        loginAdminDirectivo,
         validateGuardianCode,
+        validateAdminCode,
         register,
         isEmailRegistered,
         logout,
@@ -2430,7 +1952,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCustomLogoUrl,
         students,
         guardians,
-        staffUsers,
         enrollments,
         documents,
         activities,
@@ -2440,6 +1961,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addGuardian,
         linkGuardianToStudent,
         submitNewEnrollment,
+        addStudentDocument,
         lookupEnrollmentStatus,
         notifications: userNotifications,
         markNotificationsAsRead,

@@ -1,0 +1,118 @@
+{
+  "entities": {
+    "Acudiente": {
+      "title": "Acudiente",
+      "description": "Registro institucional de acudiente en EduMed Digital",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Identificador único del acudiente" },
+        "nombre": { "type": "string", "description": "Nombre completo del acudiente" },
+        "fullName": { "type": "string", "description": "Nombre completo del acudiente" },
+        "tipoDocumento": { "type": "string", "description": "Tipo de documento (C.C, C.E)" },
+        "documentType": { "type": "string", "description": "Tipo de documento normalizado (CC, CE)" },
+        "numeroDocumento": { "type": "string", "description": "Número de documento de identidad" },
+        "documentNumber": { "type": "string", "description": "Número de documento de identidad" },
+        "correo": { "type": "string", "format": "email", "description": "Correo electrónico del acudiente" },
+        "email": { "type": "string", "format": "email", "description": "Correo electrónico del acudiente" },
+        "numeroFicha": { "type": "number", "description": "Número de ficha asignado" },
+        "fichaNumber": { "type": "string", "description": "Número de ficha en texto" },
+        "codigoVerificacion": { "type": "string", "description": "Código de verificación del acudiente (ej. 101, 102)" },
+        "verificationCode": { "type": "string", "description": "Código de verificación del acudiente" },
+        "role": { "type": "string", "enum": ["guardian"], "description": "Rol en la plataforma" },
+        "updatedAt": { "type": "string", "description": "Fecha de actualización ISO" }
+      },
+      "required": ["nombre", "tipoDocumento", "numeroDocumento", "correo", "numeroFicha", "codigoVerificacion"]
+    },
+    "Administrativo": {
+      "title": "Administrativo",
+      "description": "Registro institucional de personal administrativo en EduMed Digital",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Identificador único del administrativo" },
+        "nombre": { "type": "string", "description": "Nombre completo del administrativo" },
+        "fullName": { "type": "string", "description": "Nombre completo del administrativo" },
+        "tipoDocumento": { "type": "string", "description": "Tipo de documento (C.C)" },
+        "documentType": { "type": "string", "description": "Tipo de documento normalizado (CC)" },
+        "numeroDocumento": { "type": "string", "description": "Número de documento de identidad" },
+        "documentNumber": { "type": "string", "description": "Número de documento de identidad" },
+        "correo": { "type": "string", "format": "email", "description": "Correo electrónico del administrativo" },
+        "email": { "type": "string", "format": "email", "description": "Correo electrónico del administrativo" },
+        "codigoVerificacion": { "type": "string", "description": "Código de verificación administrativo (ej. 12, 13)" },
+        "verificationCode": { "type": "string", "description": "Código de verificación administrativo" },
+        "role": { "type": "string", "enum": ["admin"], "description": "Rol en la plataforma" },
+        "updatedAt": { "type": "string", "description": "Fecha de actualización ISO" }
+      },
+      "required": ["nombre", "tipoDocumento", "numeroDocumento", "correo", "codigoVerificacion"]
+    },
+    "Estudiante": {
+      "title": "Estudiante",
+      "description": "Registro institucional de estudiante en EduMed Digital",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Identificador único del estudiante" },
+        "nombre": { "type": "string", "description": "Nombre completo del estudiante" },
+        "fullName": { "type": "string", "description": "Nombre completo del estudiante" },
+        "firstName": { "type": "string", "description": "Nombres del estudiante" },
+        "lastName": { "type": "string", "description": "Apellidos del estudiante" },
+        "tipoDocumento": { "type": "string", "description": "Tipo de documento (T.I, C.C, R.C)" },
+        "documentType": { "type": "string", "description": "Tipo de documento normalizado (TI, CC, RC)" },
+        "numeroDocumento": { "type": "string", "description": "Número de documento de identidad" },
+        "documentNumber": { "type": "string", "description": "Número de documento de identidad" },
+        "correo": { "type": "string", "format": "email", "description": "Correo electrónico del estudiante" },
+        "email": { "type": "string", "format": "email", "description": "Correo electrónico del estudiante" },
+        "numeroFicha": { "type": "number", "description": "Número de ficha asignado" },
+        "fichaNumber": { "type": "string", "description": "Número de ficha en texto" },
+        "role": { "type": "string", "enum": ["student"], "description": "Rol en la plataforma" },
+        "updatedAt": { "type": "string", "description": "Fecha de actualización ISO" }
+      },
+      "required": ["nombre", "tipoDocumento", "numeroDocumento", "correo", "numeroFicha"]
+    },
+    "UsuarioPlataforma": {
+      "title": "UsuarioPlataforma",
+      "description": "Cuenta de usuario registrada en la plataforma EduMed Digital",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "ID del usuario" },
+        "name": { "type": "string", "description": "Nombre completo" },
+        "email": { "type": "string", "format": "email", "description": "Correo electrónico" },
+        "role": { "type": "string", "enum": ["guardian", "student", "admin"], "description": "Rol del usuario" },
+        "documentNumber": { "type": "string", "description": "Tipo y número de documento" },
+        "phone": { "type": "string", "description": "Teléfono de contacto" },
+        "fichaNumber": { "type": "string", "description": "Número de ficha asociado" },
+        "verificationCode": { "type": "string", "description": "Código de verificación validado" },
+        "createdAt": { "type": "string", "description": "Fecha de creación ISO" }
+      },
+      "required": ["id", "name", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/acudientes/{docId}": {
+      "schema": { "$ref": "#/entities/Acudiente" },
+      "description": "Tabla oficial de acudientes con código de verificación y número de ficha"
+    },
+    "/administrativos/{docId}": {
+      "schema": { "$ref": "#/entities/Administrativo" },
+      "description": "Tabla oficial de personal administrativo con código de verificación"
+    },
+    "/estudiantes/{docId}": {
+      "schema": { "$ref": "#/entities/Estudiante" },
+      "description": "Tabla oficial de estudiantes con número de ficha"
+    },
+    "/guardians/{docId}": {
+      "schema": { "$ref": "#/entities/Acudiente" },
+      "description": "Colección espejo de acudientes para compatibilidad de consultas"
+    },
+    "/admins/{docId}": {
+      "schema": { "$ref": "#/entities/Administrativo" },
+      "description": "Colección espejo de administrativos para compatibilidad de consultas"
+    },
+    "/students/{docId}": {
+      "schema": { "$ref": "#/entities/Estudiante" },
+      "description": "Colección espejo de estudiantes para compatibilidad de consultas"
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UsuarioPlataforma" },
+      "description": "Cuentas de usuarios registradas en EduMed Digital"
+    }
+  }
+}

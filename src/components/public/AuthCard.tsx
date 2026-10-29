@@ -35,6 +35,7 @@ import {
   Camera
 } from 'lucide-react';
 import { getDefaultAvatarByGender } from '../../utils/avatarUtils';
+import { isFirebaseConfigured, verifyFirebaseOobCode } from '../../config/firebase';
 
 interface AuthCardProps {
   defaultMode?: 'login' | 'register' | 'forgot-password';
@@ -60,7 +61,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const { 
     language, 
     login, 
-    loginAdminDirectivo,
     register, 
     isEmailRegistered,
     logout, 
@@ -70,12 +70,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     setActiveTab,
     customLogoUrl,
     validateGuardianCode,
+    validateAdminCode,
     requestPasswordResetCode,
     verifyPasswordResetCode,
     resetPasswordWithCode
   } = useApp();
 
-  const [mode, setMode] = useState<'login' | 'register' | 'forgot-password' | 'admin-directivo'>(defaultMode);
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot-password'>(defaultMode);
 
   React.useEffect(() => {
     if (defaultMode) {
@@ -83,13 +84,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
   }, [defaultMode]);
 
-  // Admin & Directivo Dedicated Form State
-  const [adminUserType, setAdminUserType] = useState<'Administrativo' | 'Directivo'>('Administrativo');
-  const [adminIdentifier, setAdminIdentifier] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [showAdminPassword, setShowAdminPassword] = useState(false);
-
-  // Login form state (Estudiante / Acudiente)
+  // Login form state
   const [loginIdentifier, setLoginIdentifier] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showLoginPassword, setShowLoginPassword] = useState(false);
@@ -104,14 +99,15 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
-  const [regRole, setRegRole] = useState<'guardian' | 'student'>('guardian');
+  const [regRole, setRegRole] = useState<'guardian' | 'student' | 'admin'>(initialRole || 'guardian');
   const [regGender, setRegGender] = useState<'Masculino' | 'Femenino' | 'LGBTIQ+' | 'Prefiero no decirlo'>('Masculino');
   const [guardianValidationCode, setGuardianValidationCode] = useState('');
+  const [adminValidationCode, setAdminValidationCode] = useState('');
   const [acceptTerms, setAcceptTerms] = useState(true);
 
-  // Restringir tipo de documento para rol Acudiente a C.C. o C.E.
+  // Restringir tipo de documento para rol Acudiente o Administrativo a C.C. o C.E.
   React.useEffect(() => {
-    if (regRole === 'guardian' && regDocType !== 'CC' && regDocType !== 'CE') {
+    if ((regRole === 'guardian' || regRole === 'admin') && regDocType !== 'CC' && regDocType !== 'CE') {
       setRegDocType('CC');
     }
   }, [regRole, regDocType]);
@@ -138,11 +134,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({
   }>({});
 
   const [regFieldErrors, setRegFieldErrors] = useState<{
+    role?: string;
     name?: string;
     docNumber?: string;
     email?: string;
     phone?: string;
     guardianCode?: string;
+    adminCode?: string;
     password?: string;
     confirmPassword?: string;
     terms?: string;
@@ -164,36 +162,32 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     return () => clearInterval(interval);
   }, [resendCooldown]);
 
-  // Direct reset link via URL query parameters
+  // Direct reset link via Firebase oobCode query parameter
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const tokenParam = params.get('reset_token');
-    const emailParam = params.get('email');
+    const oobCodeParam = params.get('oobCode') || params.get('reset_token');
+    const modeParam = params.get('mode');
 
-    if (tokenParam && emailParam) {
+    if (oobCodeParam && (!modeParam || modeParam === 'resetPassword')) {
       setMode('forgot-password');
-      setRecoveryEmail(emailParam);
-      setRecoveryCodeInput(tokenParam);
+      setRecoveryCodeInput(oobCodeParam);
       setIsLoading(true);
 
-      verifyPasswordResetCode(emailParam, tokenParam).then((res) => {
+      verifyFirebaseOobCode(oobCodeParam, language).then((res) => {
         setIsLoading(false);
         if (res.success) {
+          if (res.email) setRecoveryEmail(res.email);
           setRecoveryStep('new-password');
-          setSuccessMsg(language === 'es' 
-            ? 'Enlace de verificación validado con éxito. Ingresa tu nueva contraseña.' 
-            : 'Verification link validated successfully. Enter your new password.');
+          setSuccessMsg(res.message);
         } else {
           setRecoveryStep('request');
-          setErrorMsg(res.message || (language === 'es' 
-            ? 'El enlace de recuperación es inválido o ha expirado. Por favor solicita uno nuevo.' 
-            : 'The recovery link is invalid or expired. Please request a new one.'));
+          setErrorMsg(res.message);
         }
       });
 
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, []);
+  }, [language]);
 
   const clearAllErrors = () => {
     setErrorMsg(null);
@@ -245,34 +239,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }, 450);
   };
 
-  const handleAdminDirectivoLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    clearAllErrors();
-
-    // Requisito 3: Si faltan campos
-    if (!adminIdentifier.trim() || !adminPassword.trim() || !adminUserType) {
-      setErrorMsg(language === 'es' 
-        ? 'Complete todos los campos obligatorios para continuar' 
-        : 'Complete all required fields to continue');
-      return;
-    }
-
-    setIsLoading(true);
-    setTimeout(() => {
-      const res = loginAdminDirectivo(adminIdentifier, adminPassword, adminUserType);
-      setIsLoading(false);
-
-      if (!res.success) {
-        setErrorMsg(res.message || (language === 'es' 
-          ? 'Usuario o contraseña incorrectos. Verifique sus datos e intente nuevamente' 
-          : 'Incorrect username or password. Please verify your credentials and try again'));
-      } else {
-        setSuccessMsg(res.message || (language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome back!'));
-        if (onSuccess) onSuccess();
-      }
-    }, 400);
-  };
-
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     clearAllErrors();
@@ -282,6 +248,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       email?: string;
       phone?: string;
       guardianCode?: string;
+      adminCode?: string;
       password?: string;
       confirmPassword?: string;
       terms?: string;
@@ -296,15 +263,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     const cleanRegEmail = regEmail.trim().toLowerCase();
-    const cleanGCode = guardianValidationCode.trim();
-    const isPredefinedOfficialWithCode = 
-      (cleanRegEmail === 'nicole.roa7729@gmail.com' && (cleanGCode === '101' || cleanGCode === 'ACUD-2026')) ||
-      (cleanRegEmail === 'luztoscano051@gmail.com' && (cleanGCode === '102' || cleanGCode === 'ACUD-2026')) ||
-      (cleanGCode === '101' || cleanGCode === '102');
-
     if (!cleanRegEmail || !cleanRegEmail.includes('@')) {
       newErrors.email = language === 'es' ? 'Ingrese una dirección de correo electrónico válida.' : 'Please enter a valid email address.';
-    } else if (isEmailRegistered(cleanRegEmail) && !isPredefinedOfficialWithCode) {
+    } else if (isEmailRegistered(cleanRegEmail)) {
       newErrors.email = language === 'es' 
         ? 'Este correo electrónico ya se encuentra registrado en el sistema. No está permitido registrarse con un correo que ya se haya utilizado.' 
         : 'This email is already registered in the system. Registration with a previously used email is not permitted.';
@@ -325,12 +286,30 @@ export const AuthCard: React.FC<AuthCardProps> = ({
       const cleanGCode = guardianValidationCode.trim();
       if (!cleanGCode) {
         newErrors.guardianCode = language === 'es' 
-          ? 'Por favor ingrese el código de validación del acudiente.' 
-          : 'Please enter the guardian validation code.';
-      } else if (!validateGuardianCode(cleanGCode)) {
+          ? 'Por favor ingrese el código de verificación del acudiente (ej. 101 o 102).' 
+          : 'Please enter the guardian verification code.';
+      } else if (!validateGuardianCode(cleanGCode, cleanRegEmail, regDocNumber.trim())) {
         newErrors.guardianCode = language === 'es'
-          ? 'El código de validación no coincide con los registros de la base de datos institucional. Verifique el código asignado.'
-          : 'The validation code does not match institutional database records.';
+          ? 'El código de verificación no coincide con los registros de la base de datos de Firebase. Verifique el código asignado (101 o 102).'
+          : 'The verification code does not match institutional database records.';
+      }
+    }
+
+    if (regRole === 'admin') {
+      if (!regDocType || (regDocType !== 'CC' && regDocType !== 'CE')) {
+        newErrors.docNumber = language === 'es'
+          ? 'Para administrativos, el tipo de documento debe ser C.C. (Cédula de Ciudadanía) o C.E. (Cédula de Extranjería).'
+          : 'For administrative staff, document type must be C.C. or C.E.';
+      }
+      const cleanACode = adminValidationCode.trim();
+      if (!cleanACode) {
+        newErrors.adminCode = language === 'es'
+          ? 'Por favor ingrese el código de verificación administrativo (ej. 12 o 13).'
+          : 'Please enter the administrative verification code.';
+      } else if (!validateAdminCode(cleanACode, cleanRegEmail, regDocNumber.trim())) {
+        newErrors.adminCode = language === 'es'
+          ? 'El código de verificación administrativo no coincide con los registros de la base de datos de Firebase. Verifique el código asignado (12 o 13).'
+          : 'The administrative verification code does not match institutional database records.';
       }
     }
 
@@ -361,7 +340,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         gender: regRole === 'student' ? regGender : undefined,
         documentNumber: `${regDocType} ${regDocNumber}`,
         phone: regPhone,
-        guardianValidationCode: regRole === 'guardian' ? guardianValidationCode.trim() : undefined
+        guardianValidationCode: regRole === 'guardian' ? guardianValidationCode.trim() : undefined,
+        adminValidationCode: regRole === 'admin' ? adminValidationCode.trim() : undefined
       });
       setIsLoading(false);
 
@@ -625,70 +605,36 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         <span className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
           Medellín • Secretaría de Educación • DANE 105001002345
         </span>
-        <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 shadow-2xs">
-          <Building2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-          <span>
-            {mode === 'admin-directivo' 
-              ? (language === 'es' ? 'Portal Administrativo y Directivo' : 'Administrative & Leadership Portal')
-              : (language === 'es' ? 'Portal Oficial de Matrícula y Acceso' : 'Official Enrollment & Access Portal')}
-          </span>
-        </div>
       </div>
 
-      {/* Tab Switcher & Portal Administrativo y Directivo (Requisito 1) */}
-      <div className="mt-5 space-y-2">
-        <div className="grid grid-cols-2 p-1.5 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
-          <button
-            id="tab-btn-login"
-            type="button"
-            onClick={() => { setMode('login'); clearAllErrors(); }}
-            className={`py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              mode === 'login'
-                ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-slate-200/60 dark:border-slate-700'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <LogIn className="w-4 h-4" />
-            <span>{language === 'es' ? 'Iniciar Sesión' : 'Log In'}</span>
-          </button>
-
-          <button
-            id="tab-btn-register"
-            type="button"
-            onClick={() => { setMode('register'); clearAllErrors(); }}
-            className={`py-2.5 text-xs sm:text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-              mode === 'register'
-                ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-slate-200/60 dark:border-slate-700'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>{language === 'es' ? 'Crear Cuenta' : 'Register'}</span>
-          </button>
-        </div>
-
-        {/* Opción clara que dice: Portal administrativo y directivo (Requisito 1) */}
+      {/* Tab Switcher: Iniciar Sesión vs Crear Cuenta */}
+      <div className="mt-5 grid grid-cols-2 p-1.5 bg-slate-100 dark:bg-slate-800/90 rounded-2xl border border-slate-200/80 dark:border-slate-700/60">
         <button
-          id="btn-portal-admin-directivo"
+          id="tab-btn-login"
           type="button"
-          onClick={() => { setMode('admin-directivo'); clearAllErrors(); }}
-          className={`w-full py-2.5 px-3.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-between transition-all cursor-pointer border ${
-            mode === 'admin-directivo'
-              ? 'bg-gradient-to-r from-teal-800 to-slate-900 text-white border-teal-500 shadow-md ring-2 ring-teal-400/30'
-              : 'bg-teal-50/90 hover:bg-teal-100/90 dark:bg-teal-950/40 dark:hover:bg-teal-900/50 text-teal-900 dark:text-teal-200 border-teal-200/90 dark:border-teal-800/80 hover:border-teal-300'
+          onClick={() => { setMode('login'); clearAllErrors(); }}
+          className={`py-2.5 text-sm sm:text-base font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            mode === 'login'
+              ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-slate-200/60 dark:border-slate-700'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
           }`}
         >
-          <div className="flex items-center gap-2">
-            <Building2 className={`w-4 h-4 ${mode === 'admin-directivo' ? 'text-teal-300' : 'text-teal-600 dark:text-teal-400'}`} />
-            <span>{language === 'es' ? 'Portal administrativo y directivo' : 'Administrative & Leadership Portal'}</span>
-          </div>
-          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
-            mode === 'admin-directivo'
-              ? 'bg-teal-600 text-white'
-              : 'bg-teal-200/70 dark:bg-teal-800 text-teal-950 dark:text-teal-100'
-          }`}>
-            {language === 'es' ? 'Ingreso' : 'Access'}
-          </span>
+          <LogIn className="w-4.5 h-4.5" />
+          {language === 'es' ? 'Iniciar Sesión' : 'Log In'}
+        </button>
+
+        <button
+          id="tab-btn-register"
+          type="button"
+          onClick={() => { setMode('register'); clearAllErrors(); }}
+          className={`py-2.5 text-sm sm:text-base font-bold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer ${
+            mode === 'register'
+              ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm border border-slate-200/60 dark:border-slate-700'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+          }`}
+        >
+          <UserPlus className="w-4.5 h-4.5" />
+          {language === 'es' ? 'Crear Cuenta' : 'Register'}
         </button>
       </div>
 
@@ -836,7 +782,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
           </button>
 
           {/* Switch to Register link */}
-          <div className="text-center pt-2 space-y-2">
+          <div className="text-center pt-2">
             <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
               {language === 'es' ? '¿Aún no tiene usuario registrado?' : "Don't have an account yet?"}{' '}
               <button
@@ -847,228 +793,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 {language === 'es' ? 'Crear una cuenta aquí' : 'Create an account'}
               </button>
             </p>
-
-            <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-center">
-              <button
-                type="button"
-                id="link-login-to-admin-directivo"
-                onClick={() => { setMode('admin-directivo'); clearAllErrors(); }}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-pointer py-1 px-2.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                <span>{language === 'es' ? '¿Personal institucional? Portal administrativo y directivo' : 'School staff? Administrative & Leadership Portal'}</span>
-              </button>
-            </div>
           </div>
 
         </form>
-      ) : mode === 'admin-directivo' ? (
-        /* =========================================================================
-           FORMULARIO DE INICIO DE SESIÓN PARA ADMINISTRATIVO O DIRECTIVO
-           Requisitos 1, 2, 3, 4 y 5
-           ========================================================================= */
-        <div className="mt-5 space-y-4 text-left">
-          
-          {/* Header con botón para regresar a la pantalla principal */}
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-            <button
-              type="button"
-              id="admin-btn-back-header"
-              onClick={() => { setMode('login'); clearAllErrors(); }}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors cursor-pointer py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>{language === 'es' ? 'Regresar a la pantalla principal' : 'Back to main login'}</span>
-            </button>
-
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-              <ShieldCheck className="w-3 h-3 text-teal-600 dark:text-teal-400" />
-              <span>{language === 'es' ? 'Personal Autorizado' : 'Authorized Staff'}</span>
-            </span>
-          </div>
-
-          {/* Banner Institucional Informativo */}
-          <div className="p-3.5 rounded-2xl bg-gradient-to-br from-teal-50/90 to-slate-100/90 dark:from-teal-950/40 dark:to-slate-800/60 border border-teal-200/80 dark:border-teal-800/60 text-left">
-            <div className="flex items-start gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-teal-700 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
-                <Building2 className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs sm:text-sm font-black text-slate-900 dark:text-white">
-                  {language === 'es' ? 'Portal Administrativo y Directivo' : 'Administrative & Leadership Portal'}
-                </h4>
-                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed mt-0.5">
-                  {language === 'es'
-                    ? 'Seleccione su tipo de usuario e ingrese sus credenciales asignadas para acceder al portal correspondiente.'
-                    : 'Select your user type and enter your assigned credentials to access your portal.'}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <form onSubmit={handleAdminDirectivoLogin} className="space-y-4">
-            
-            {/* Campo 1: Tipo de usuario: Administrativo o Directivo */}
-            <div className="space-y-1.5">
-              <label 
-                htmlFor="admin-user-type-select" 
-                className="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300"
-              >
-                {language === 'es' ? 'Tipo de usuario:' : 'User type:'}
-              </label>
-              
-              {/* Selector visual interactivo */}
-              <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
-                <button
-                  type="button"
-                  id="btn-choose-type-administrativo"
-                  onClick={() => { setAdminUserType('Administrativo'); setErrorMsg(null); }}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    adminUserType === 'Administrativo'
-                      ? 'bg-teal-700 text-white shadow-xs font-black'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <Building2 className="w-3.5 h-3.5" />
-                  <span>{language === 'es' ? 'Administrativo' : 'Administrative'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  id="btn-choose-type-directivo"
-                  onClick={() => { setAdminUserType('Directivo'); setErrorMsg(null); }}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                    adminUserType === 'Directivo'
-                      ? 'bg-teal-700 text-white shadow-xs font-black'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>{language === 'es' ? 'Directivo' : 'Directivo'}</span>
-                </button>
-              </div>
-
-              {/* Input select estándar */}
-              <div className="relative">
-                <select
-                  id="admin-user-type-select"
-                  value={adminUserType}
-                  onChange={(e) => {
-                    setAdminUserType(e.target.value as 'Administrativo' | 'Directivo');
-                    setErrorMsg(null);
-                  }}
-                  className="w-full px-3 py-2 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                >
-                  <option value="Administrativo">
-                    {language === 'es' ? 'Administrativo' : 'Administrative'}
-                  </option>
-                  <option value="Directivo">
-                    {language === 'es' ? 'Directivo' : 'Directivo'}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            {/* Campo 2: Usuario o correo electrónico institucional */}
-            <div className="space-y-1.5">
-              <label 
-                htmlFor="admin-identifier-input" 
-                className="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300"
-              >
-                {language === 'es' ? 'Usuario o correo electrónico institucional:' : 'Institutional username or email:'}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Mail className="w-4 h-4" />
-                </div>
-                <input
-                  id="admin-identifier-input"
-                  type="text"
-                  required
-                  value={adminIdentifier}
-                  onChange={(e) => {
-                    setAdminIdentifier(e.target.value);
-                    if (errorMsg) setErrorMsg(null);
-                  }}
-                  placeholder={
-                    adminUserType === 'Directivo'
-                      ? 'rectoria@edumed.edu.co'
-                      : 'admin@edumed.edu.co'
-                  }
-                  className="w-full pl-10 pr-4 py-2.5 sm:py-3 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
-                />
-              </div>
-            </div>
-
-            {/* Campo 3: Contraseña con opción de mostrar u ocultar */}
-            <div className="space-y-1.5">
-              <label 
-                htmlFor="admin-password-input" 
-                className="block text-xs sm:text-sm font-bold text-slate-700 dark:text-slate-300"
-              >
-                {language === 'es' ? 'Contraseña:' : 'Password:'}
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Lock className="w-4 h-4" />
-                </div>
-                <input
-                  id="admin-password-input"
-                  type={showAdminPassword ? 'text' : 'password'}
-                  required
-                  value={adminPassword}
-                  onChange={(e) => {
-                    setAdminPassword(e.target.value);
-                    if (errorMsg) setErrorMsg(null);
-                  }}
-                  placeholder="••••••••"
-                  className="w-full pl-10 pr-11 py-2.5 sm:py-3 text-xs sm:text-sm rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all"
-                />
-                <button
-                  type="button"
-                  id="admin-show-hide-password-btn"
-                  onClick={() => setShowAdminPassword(!showAdminPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
-                  aria-label={showAdminPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                  title={showAdminPassword ? (language === 'es' ? 'Ocultar contraseña' : 'Hide password') : (language === 'es' ? 'Mostrar contraseña' : 'Show password')}
-                >
-                  {showAdminPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Botón: Iniciar sesión */}
-            <button
-              id="admin-login-submit-btn"
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 mt-2"
-            >
-              {isLoading ? (
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <LogIn className="w-4 h-4" />
-                  <span>{language === 'es' ? 'Iniciar sesión' : 'Log In'}</span>
-                </>
-              )}
-            </button>
-
-            {/* Botón para regresar a la pantalla principal de inicio de sesión */}
-            <div className="pt-2">
-              <button
-                type="button"
-                id="admin-btn-back-main"
-                onClick={() => { setMode('login'); clearAllErrors(); }}
-                className="w-full py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{language === 'es' ? 'Regresar a la pantalla principal de inicio de sesión' : 'Back to main login screen'}</span>
-              </button>
-            </div>
-          </form>
-
-        </div>
       ) : mode === 'forgot-password' ? (
         /* TAB 3: RECUPERACIÓN DE CONTRASEÑA POR CORREO ELECTRÓNICO */
         <div className="mt-5 space-y-4 text-left">
@@ -1094,9 +821,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             </span>
           </div>
 
-          {/* STEP 1: SOLICITAR CÓDIGO POR CORREO */}
+          {/* STEP 1: SOLICITAR ENLACE DE RECUPERACIÓN MEDIANTE FIREBASE AUTHENTICATION */}
           {recoveryStep === 'request' && (
             <form onSubmit={handleRequestRecoveryCode} className="space-y-4">
+              {!isFirebaseConfigured() && (
+                <div className="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs leading-relaxed">
+                  {language === 'es'
+                    ? 'Firebase Authentication no está configurado todavía. Por favor configure las variables de entorno VITE_FIREBASE_* en el archivo .env con las credenciales de Firebase Console para enviar correos reales.'
+                    : 'Firebase Authentication is not configured yet. Please configure the VITE_FIREBASE_* environment variables with your Firebase Console credentials to send real emails.'}
+                </div>
+              )}
+
               <div className="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/40 border border-teal-200/80 dark:border-teal-800/60">
                 <h4 className="text-xs sm:text-sm font-bold text-teal-950 dark:text-teal-200 flex items-center gap-2">
                   <KeyRound className="w-4 h-4 text-teal-600 dark:text-teal-400" />
@@ -1104,8 +839,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 </h4>
                 <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
                   {language === 'es'
-                    ? 'Ingresa el correo electrónico con el que registraste tu cuenta. Te enviaremos un código de seguridad de 6 dígitos y un enlace seguro para restablecer tu contraseña.'
-                    : 'Enter the email address you registered with. We will send you a 6-digit verification code and a secure link to reset your password.'}
+                    ? 'Ingresa el correo electrónico de tu cuenta registrada en Firebase Authentication. Te enviaremos un enlace oficial de restablecimiento de contraseña mediante sendPasswordResetEmail().'
+                    : 'Enter the email address of your registered account in Firebase Authentication. We will send you an official password reset link via sendPasswordResetEmail().'}
                 </p>
               </div>
 
@@ -1138,7 +873,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !isFirebaseConfigured()}
                 className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
               >
                 {isLoading ? (
@@ -1146,73 +881,47 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 ) : (
                   <>
                     <Mail className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Enviar Código y Enlace de Recuperación' : 'Send Verification Code & Link'}</span>
+                    <span>{language === 'es' ? 'Enviar Enlace de Recuperación' : 'Send Recovery Link'}</span>
                   </>
                 )}
               </button>
             </form>
           )}
 
-          {/* STEP 2: VERIFICAR CÓDIGO RECIBIDO POR CORREO */}
+          {/* STEP 2: CONFIRMACIÓN DE ENVÍO REAL DE CORREO DE FIREBASE AUTHENTICATION */}
           {recoveryStep === 'verify' && (
-            <form onSubmit={handleVerifyRecoveryCode} className="space-y-4">
-              
-              <div className="p-3.5 rounded-2xl bg-teal-50/80 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/80 shadow-xs">
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-teal-50/80 dark:bg-teal-950/50 border border-teal-200 dark:border-teal-800/80 shadow-xs">
                 <div className="flex items-start gap-2.5">
-                  <Mail className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
-                  <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                    <p className="font-semibold text-teal-950 dark:text-teal-200 mb-0.5">
-                      {language === 'es' ? 'Instrucciones enviadas por correo electrónico' : 'Instructions sent via email'}
+                  <Mail className="w-5 h-5 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                  <div className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed space-y-1.5">
+                    <p className="font-bold text-teal-950 dark:text-teal-200 text-sm">
+                      {language === 'es' ? 'Enlace de recuperación enviado por correo' : 'Password reset link sent via email'}
                     </p>
                     <p>
-                      {language === 'es' ? 'Hemos enviado un correo a ' : 'We sent an email to '}
+                      {language === 'es' ? 'Se ha enviado un correo electrónico real a través de Firebase Authentication a ' : 'A real password reset email has been sent via Firebase Authentication to '}
                       <strong className="text-slate-900 dark:text-white font-mono">{recoveryEmail}</strong>.
+                    </p>
+                    <p>
                       {language === 'es'
-                        ? ' Revisa tu bandeja de entrada o spam e ingresa el código de 6 dígitos recibido a continuación (válido por 15 minutos).'
-                        : ' Please check your inbox or spam folder and enter the 6-digit code below (valid for 15 minutes).'}
+                        ? 'Abre el mensaje en tu bandeja de entrada (o carpeta de spam / no deseado) y haz clic en el enlace seguro de Firebase para definir tu nueva contraseña.'
+                        : 'Open the email in your inbox (or spam folder) and click the secure Firebase link to set your new password.'}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label htmlFor="recovery-code-input" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  {language === 'es' ? 'Código de Verificación (6 dígitos recibido por correo):' : 'Verification Code (6 digits received via email):'}
-                </label>
-                <input
-                  id="recovery-code-input"
-                  type="text"
-                  maxLength={6}
-                  required
-                  autoFocus
-                  placeholder="------"
-                  value={recoveryCodeInput}
-                  onChange={(e) => {
-                    setRecoveryCodeInput(e.target.value.replace(/\D/g, ''));
-                    if (recoveryFieldErrors.code) setRecoveryFieldErrors(prev => ({ ...prev, code: undefined }));
-                  }}
-                  className={`w-full px-4 py-3 text-center text-xl font-mono font-black tracking-widest rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all ${
-                    recoveryFieldErrors.code
-                      ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500 bg-rose-50/40 dark:bg-rose-950/20'
-                      : 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 focus:ring-teal-500'
-                  }`}
-                />
-                <FieldError message={recoveryFieldErrors.code} />
-              </div>
-
               <button
-                type="submit"
-                disabled={isLoading || recoveryCodeInput.length < 6}
-                className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
+                type="button"
+                onClick={() => {
+                  setMode('login');
+                  setRecoveryStep('request');
+                  clearAllErrors();
+                }}
+                className="w-full py-3 px-4 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                {isLoading ? (
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>{language === 'es' ? 'Validar Código y Continuar' : 'Verify Code and Continue'}</span>
-                  </>
-                )}
+                <LogIn className="w-4 h-4" />
+                <span>{language === 'es' ? 'Volver a Iniciar Sesión' : 'Back to Sign In'}</span>
               </button>
 
               <div className="flex items-center justify-between text-xs pt-1">
@@ -1226,19 +935,19 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   <span>
                     {resendCooldown > 0 
                       ? (language === 'es' ? `Reenviar en ${resendCooldown}s` : `Resend in ${resendCooldown}s`)
-                      : (language === 'es' ? 'Reenviar código por correo' : 'Resend code via email')}
+                      : (language === 'es' ? 'Reenviar enlace por correo' : 'Resend link via email')}
                   </span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => { setRecoveryStep('request'); setErrorMsg(null); }}
+                  onClick={() => { setRecoveryStep('request'); setErrorMsg(null); setSuccessMsg(null); }}
                   className="text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
                 >
                   {language === 'es' ? 'Cambiar correo' : 'Change email'}
                 </button>
               </div>
-            </form>
+            </div>
           )}
 
           {/* STEP 3: CREAR NUEVA CONTRASEÑA */}
@@ -1337,12 +1046,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
         /* TAB 2: CREAR UNA CUENTA */
         <div className="mt-5 space-y-4">
           
-          {/* Institutional Guidance Notice for Administrative and Families */}
+          {/* Institutional Guidance Notice */}
           <div className="p-3.5 rounded-2xl bg-slate-100/90 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-left space-y-1">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                {language === "es" ? "Registro de Acudientes y Estudiantes" : "Guardians & Students Registration"}
+                {language === "es" ? "Registro de Acudientes, Estudiantes y Administrativos" : "Guardians, Students & Staff Registration"}
               </span>
               <span className="text-[10px] font-black uppercase text-teal-700 dark:text-teal-300 bg-teal-50 dark:bg-teal-950 px-2 py-0.5 rounded-full border border-teal-200 dark:border-teal-800">
                 {language === "es" ? "EduMed Oficial" : "Official"}
@@ -1350,20 +1059,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
               {language === "es"
-                ? "Las cuentas para el personal administrativo y directivo son asignadas y habilitadas formalmente por la administración escolar de la I.E. Félix Henao Botero (sin registro directo). Si es administrativo o directivo, inicie sesión con sus credenciales institucionales o acérquese a Secretaría."
-                : "Administrative and leadership accounts are managed exclusively by the school administration. Please sign in with your assigned institutional credentials."}
+                ? "Seleccione su perfil en la caja desplegable para crear su cuenta institucional en EduMed Digital de la I.E. Félix Henao Botero."
+                : "Select your role in the dropdown below to create your official institutional account in EduMed Digital."}
             </p>
-            <div className="pt-1.5">
-              <button
-                type="button"
-                id="reg-btn-to-admin-directivo"
-                onClick={() => { setMode('admin-directivo'); clearAllErrors(); }}
-                className="w-full py-2 px-3 rounded-xl bg-white dark:bg-slate-900 border border-teal-300 dark:border-teal-700 text-teal-800 dark:text-teal-200 hover:bg-teal-50 dark:hover:bg-teal-950/60 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-2xs"
-              >
-                <Building2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
-                <span>{language === 'es' ? 'Acceder al Portal administrativo y directivo' : 'Go to Administrative & Leadership Portal'}</span>
-              </button>
-            </div>
           </div>
             <form onSubmit={handleRegister} className="space-y-3.5 text-left">
               
@@ -1376,9 +1074,9 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   id="reg-role-select"
                   value={regRole}
                   onChange={(e) => {
-                    const selectedRole = e.target.value as 'guardian' | 'student';
+                    const selectedRole = e.target.value as 'guardian' | 'student' | 'admin';
                     setRegRole(selectedRole);
-                    if (selectedRole === 'guardian' && regDocType !== 'CC' && regDocType !== 'CE') {
+                    if ((selectedRole === 'guardian' || selectedRole === 'admin') && regDocType !== 'CC' && regDocType !== 'CE') {
                       setRegDocType('CC');
                     }
                     if (regFieldErrors.role) setRegFieldErrors(prev => ({ ...prev, role: undefined }));
@@ -1391,6 +1089,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 >
                   <option value="guardian">{language === 'es' ? '👨‍👩‍👦 Acudiente / Padre o Tutor de Familia' : 'Parent / Guardian'}</option>
                   <option value="student">{language === 'es' ? '🎓 Estudiante / Aspirante' : 'Student / Applicant'}</option>
+                  <option value="admin">{language === 'es' ? '🏛️ Administrativo' : 'Administrative'}</option>
                 </select>
                 <FieldError message={regFieldErrors.role} />
               </div>
@@ -1462,7 +1161,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                     onChange={(e) => setRegDocType(e.target.value)}
                     className="w-full px-2 py-2 text-xs sm:text-sm bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
                   >
-                    {regRole === 'guardian' ? (
+                    {regRole === 'guardian' || regRole === 'admin' ? (
                       <>
                         <option value="CC">{language === 'es' ? 'C.C. – Cédula de Ciudadanía' : 'C.C. – Citizenship Card'}</option>
                         <option value="CE">{language === 'es' ? 'C.E. – Cédula de Extranjería' : 'C.E. – Foreigner ID'}</option>
@@ -1504,7 +1203,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                 </div>
               </div>
 
-              {/* Código de Validación para Acudientes */}
+              {/* Código de Verificación para Acudientes */}
               {regRole === 'guardian' && (
                 <div className="space-y-1.5 p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/50">
                   <div className="flex items-center justify-between">
@@ -1512,7 +1211,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                       htmlFor="reg-guardian-code-input"
                       className="block text-xs font-bold text-amber-900 dark:text-amber-200"
                     >
-                      {language === 'es' ? 'Código de Validación del Acudiente *' : 'Guardian Validation Code *'}
+                      {language === 'es' ? 'Código de Verificación del Acudiente *' : 'Guardian Verification Code *'}
                     </label>
                     <span className="text-[10px] font-bold text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-800">
                       {language === 'es' ? 'Requerido' : 'Required'}
@@ -1525,7 +1224,7 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                     autoCorrect="off"
                     spellCheck={false}
                     required
-                    placeholder={language === 'es' ? 'Código de validación institucional' : 'Institutional validation code'}
+                    placeholder={language === 'es' ? 'Código de verificación (ej. 101 o 102)' : 'Verification code (e.g. 101 or 102)'}
                     value={guardianValidationCode}
                     onChange={(e) => {
                       setGuardianValidationCode(e.target.value);
@@ -1542,8 +1241,53 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   <div className="text-[11px] text-amber-900 dark:text-amber-300 pt-1">
                     <p className="leading-tight">
                       {language === 'es'
-                        ? 'Ingresa el código asignado por la institución o tu número de documento registrado en el expediente escolar.'
-                        : 'Enter the code assigned by the institution or your registered ID document number.'}
+                        ? 'Ingresa el código de verificación asignado en la tabla de acudientes (ej. 101 o 102).'
+                        : 'Enter the verification code assigned in the guardians table (e.g. 101 or 102).'}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Código de Verificación para Administrativos */}
+              {regRole === 'admin' && (
+                <div className="space-y-1.5 p-3 rounded-2xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200/80 dark:border-teal-900/50">
+                  <div className="flex items-center justify-between">
+                    <label 
+                      htmlFor="reg-admin-code-input"
+                      className="block text-xs font-bold text-teal-900 dark:text-teal-200"
+                    >
+                      {language === 'es' ? 'Código de Verificación Administrativo *' : 'Administrative Verification Code *'}
+                    </label>
+                    <span className="text-[10px] font-bold text-teal-700 dark:text-teal-300 bg-teal-100 dark:bg-teal-900/60 px-2 py-0.5 rounded-full border border-teal-300 dark:border-teal-800">
+                      {language === 'es' ? 'Requerido' : 'Required'}
+                    </span>
+                  </div>
+                  <input
+                    id="reg-admin-code-input"
+                    type="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    required
+                    placeholder={language === 'es' ? 'Código de verificación (ej. 12 o 13)' : 'Verification code (e.g. 12 or 13)'}
+                    value={adminValidationCode}
+                    onChange={(e) => {
+                      setAdminValidationCode(e.target.value);
+                      if (regFieldErrors.adminCode) setRegFieldErrors(prev => ({ ...prev, adminCode: undefined }));
+                    }}
+                    className={`w-full px-3 py-2 text-xs sm:text-sm rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 transition-all bg-white dark:bg-slate-900 ${
+                      regFieldErrors.adminCode
+                        ? 'border-rose-400 dark:border-rose-500 focus:ring-rose-500'
+                        : 'border border-teal-300 dark:border-teal-800 focus:ring-teal-500'
+                    }`}
+                  />
+                  <FieldError message={regFieldErrors.adminCode} />
+                  
+                  <div className="text-[11px] text-teal-900 dark:text-teal-300 pt-1">
+                    <p className="leading-tight">
+                      {language === 'es'
+                        ? 'Ingresa el código de verificación asignado en la tabla de administrativos (ej. 12 o 13).'
+                        : 'Enter the verification code assigned in the administrative table (e.g. 12 or 13).'}
                     </p>
                   </div>
                 </div>
