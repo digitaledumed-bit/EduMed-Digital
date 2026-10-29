@@ -151,8 +151,8 @@ export const GuardianMainDashboard: React.FC = () => {
               
               <p className="text-sm sm:text-base text-teal-100/90 leading-relaxed font-normal">
                 {isEs 
-                  ? 'Desde este portal oficial puedes consultar el estado de matrícula de tus hijos, verificar su radicado SIMAT, descargar certificados y acceder a los beneficios educativos de la I.E. Félix Henao Botero.'
-                  : 'From this official portal you can check your children’s enrollment status, verify their SIMAT registration, download certificates, and access school benefits.'}
+                  ? 'Desde este portal oficial puedes consultar el estado de matrícula de tus hijos, verificar su radicado oficial, descargar certificados y acceder a los beneficios educativos de la I.E. Félix Henao Botero.'
+                  : 'From this official portal you can check your children’s enrollment status, verify their official registration, download certificates, and access school benefits.'}
               </p>
 
               <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-teal-200/90">
@@ -273,8 +273,8 @@ export const GuardianMainDashboard: React.FC = () => {
                           <span className="font-mono">{student.documentNumber}</span>
                         </div>
                         <div className="flex items-center gap-1.5 truncate">
-                          <span className="font-semibold text-slate-700 dark:text-slate-300">SIMAT:</span>
-                          <span className="font-mono text-slate-800 dark:text-slate-200">105001-{student.documentNumber.slice(-4)}</span>
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">Radicado:</span>
+                          <span className="font-mono text-slate-800 dark:text-slate-200">RAD-2026-{student.documentNumber.slice(-4)}</span>
                         </div>
                       </div>
                     </div>
@@ -369,7 +369,7 @@ export const GuardianMainDashboard: React.FC = () => {
               <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-850 border border-slate-200/80 dark:border-slate-800 text-xs">
                 <span className="w-6 h-6 rounded-full bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 font-bold flex items-center justify-center mb-1.5 text-[11px]">3</span>
                 <p className="font-bold text-slate-800 dark:text-slate-200">{isEs ? 'Radicación y Cupo' : 'Formalization'}</p>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{isEs ? 'Obtén tu número oficial y seguimiento SIMAT.' : 'Get your docket number and SIMAT confirmation.'}</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{isEs ? 'Obtén tu número oficial y seguimiento institucional.' : 'Get your docket number and official confirmation.'}</p>
               </div>
             </div>
           </div>

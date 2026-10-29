@@ -386,7 +386,7 @@ export const DocumentViewerModal: React.FC<DocumentViewerModalProps> = ({
                     <span>Constancia de Radicación Digital</span>
                   </div>
                   <p className="text-[10.5px] leading-relaxed">
-                    Este soporte digital se encuentra custodiado y registrado en el repositorio documental del SIMAT y la Secretaría Académica de la Institución. Su validez puede ser comprobada mediante el identificador criptográfico institucional asignado.
+                    Este soporte digital se encuentra custodiado y registrado en el repositorio documental oficial y la Secretaría Académica de la Institución. Su validez puede ser comprobada mediante el identificador criptográfico institucional asignado.
                   </p>
                 </div>
 

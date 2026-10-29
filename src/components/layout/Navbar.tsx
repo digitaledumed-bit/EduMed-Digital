@@ -269,7 +269,7 @@ export const Navbar: React.FC = () => {
                         : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    {language === 'es' ? 'Estado SIMAT' : 'SIMAT Status'}
+                    {language === 'es' ? 'Estado Matrícula' : 'Enrollment Status'}
                   </button>
                 )}
                 {isModuleEnabled('guardian', 'beneficios') && (
@@ -710,7 +710,7 @@ export const Navbar: React.FC = () => {
                       }`}
                     >
                       <Search className="w-4 h-4 shrink-0" />
-                      <span>{language === 'es' ? 'Estado Matrícula SIMAT' : 'SIMAT Status'}</span>
+                      <span>{language === 'es' ? 'Estado de Matrícula' : 'Enrollment Status'}</span>
                     </button>
                   )}
 
@@ -988,7 +988,7 @@ export const Navbar: React.FC = () => {
                   className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   <Search className="w-4 h-4 text-teal-600" />
-                  <span>{language === 'es' ? 'Consultar Estado de Matrícula (SIMAT)' : 'Check Enrollment Status'}</span>
+                  <span>{language === 'es' ? 'Consultar Estado de Matrícula' : 'Check Enrollment Status'}</span>
                 </button>
 
                 <button

@@ -1092,8 +1092,8 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                   </select>
                   <p className="text-[10px] text-teal-800 dark:text-teal-300 leading-tight">
                     {language === 'es'
-                      ? 'Tu cuenta de Administrador General tendrá acceso completo al panel de gestión institucional, auditoría documental, matrículas y reportes SIMAT.'
-                      : 'Your General Administrator account will have full access to management, document auditing, enrollments, and SIMAT reports.'}
+                      ? 'Tu cuenta de Administrador General tendrá acceso completo al panel de gestión institucional, auditoría documental, matrículas y reportes oficiales.'
+                      : 'Your General Administrator account will have full access to management, document auditing, enrollments, and official reports.'}
                   </p>
                 </div>
               )}

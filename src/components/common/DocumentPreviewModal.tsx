@@ -276,7 +276,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
 
                 <div className="text-right">
                   <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-                    SIMAT 2026
+                    MATRÍCULA 2026
                   </span>
                 </div>
               </div>

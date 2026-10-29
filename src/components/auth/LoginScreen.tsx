@@ -109,7 +109,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
       action: 'matriculas',
       keyBenefits: [
         isEs ? '100% Gratuito y Oficial' : '100% Tuition-Free & Official',
-        isEs ? 'Conexión Directa SIMAT' : 'Direct SIMAT Records',
+        isEs ? 'Registro Oficial Institucional' : 'Official Institutional Records',
         isEs ? 'Gestión Virtual 24/7' : '24/7 Online Management'
       ],
       image: slideMatriculasImg,
@@ -704,8 +704,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                     </h3>
                     <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-normal">
                       {isEs 
-                        ? 'Auditoría SIMAT, validación documental, control de cupos y expedición de certificados oficiales.' 
-                        : 'SIMAT audits, document approval, spot quota allocation, and official certificate issuance.'}
+                        ? 'Gestión institucional, validación documental, control de cupos y expedición de certificados oficiales.' 
+                        : 'Institutional management, document approval, spot quota allocation, and official certificate issuance.'}
                     </p>
                   </div>
                 </div>
@@ -860,7 +860,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                 className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white font-medium text-xs border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
               >
                 <FileCheck2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{isEs ? 'Consultar SIMAT' : 'SIMAT Status'}</span>
+                <span>{isEs ? 'Consultar Matrícula' : 'Enrollment Status'}</span>
               </button>
 
               <button
@@ -1046,7 +1046,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                   className="w-full text-left py-1.5 px-2 rounded-lg text-slate-300 hover:text-teal-300 hover:bg-slate-900/60 transition-all flex items-center gap-2 cursor-pointer group"
                 >
                   <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 group-hover:text-teal-400 transition-all shrink-0" />
-                  <span className="text-xs font-normal">{isEs ? 'Consulta SIMAT' : 'SIMAT Status'}</span>
+                  <span className="text-xs font-normal">{isEs ? 'Consulta Matrícula' : 'Enrollment Status'}</span>
                 </button>
 
                 <button
@@ -1451,8 +1451,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                 </h4>
                 <p>
                   {isEs 
-                    ? 'El tratamiento de datos personales de menores responde al interés superior del estudiante, con fines formativos, registro SIMAT y comunicación con acudientes autorizados.'
-                    : 'Personal data handling of minors strictly adheres to the best interests of the student, serving exclusively educational, SIMAT registration, and verified guardian communication purposes.'}
+                    ? 'El tratamiento de datos personales de menores responde al interés superior del estudiante, con fines formativos, matrícula oficial y comunicación con acudientes autorizados.'
+                    : 'Personal data handling of minors strictly adheres to the best interests of the student, serving exclusively educational, official enrollment, and verified guardian communication purposes.'}
                 </p>
               </section>
 

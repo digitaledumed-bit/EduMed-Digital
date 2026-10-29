@@ -369,7 +369,7 @@ export const NotifyAssignmentModal: React.FC<NotifyAssignmentModalProps> = ({
             </div>
             <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-amber-200/80 dark:border-amber-800/40 text-slate-700 dark:text-slate-300 space-y-1 font-mono text-[11px] leading-relaxed">
               <p>
-                <strong>Asunto:</strong> Asignación Oficial: Grado {assignedGrade} - Jornada {assignedShift} (SIMAT 2026)
+                <strong>Asunto:</strong> Asignación Oficial: Grado {assignedGrade} - Jornada {assignedShift} (Año Lectivo 2026)
               </p>
               <p className="pt-1">
                 Hola <strong>{currentStudent.fullName}</strong>, la Secretaría Académica de la <strong>I.E. Félix Henao Botero</strong> te informa que has sido asignado(a) formalmente en el <strong>Grado {assignedGrade}</strong> en la <strong>Jornada {assignedShift}</strong> ({getShiftHours(assignedShift)}) en el <strong>{classroom}</strong>. Docente titular: <strong>{homeroomTeacher}</strong>.

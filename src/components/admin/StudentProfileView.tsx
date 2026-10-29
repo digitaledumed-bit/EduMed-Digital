@@ -414,8 +414,8 @@ export const StudentProfileView: React.FC = () => {
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   {language === 'es' 
-                    ? 'Documentos oficiales montados para el proceso de matrícula y verificación SIMAT.' 
-                    : 'Official files uploaded for enrollment and SIMAT verification.'}
+                    ? 'Documentos oficiales montados para el proceso de matrícula y verificación oficial.' 
+                    : 'Official files uploaded for enrollment and official verification.'}
                 </p>
               </div>
 
