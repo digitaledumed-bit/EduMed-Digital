@@ -55,7 +55,7 @@ export const InstitutionView: React.FC = () => {
                   DANE: 105001002345
                 </span>
                 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                  {language === 'es' ? 'Vigencia Activa 2026' : 'Active Term 2026'}
+                  Vigencia 2024 - 2025
                 </span>
               </div>
 

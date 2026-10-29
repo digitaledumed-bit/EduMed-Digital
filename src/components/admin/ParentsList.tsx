@@ -55,19 +55,31 @@ export const ParentsList: React.FC = () => {
           </span>
           <p className="text-[11px] text-amber-800/90 dark:text-amber-300">
             {language === 'es'
-              ? 'Cuando un padre o acudiente se registra en la plataforma, puede usar el código institucional oficial '
-              : 'When a guardian creates an account, they can use the official institutional code '}
+              ? 'Cuando un acudiente se registra en la plataforma, puede usar su código de verificación asignado ('
+              : 'When a guardian creates an account, they can use their assigned verification code ('}
+            <code className="font-mono font-bold bg-amber-200/80 dark:bg-amber-900 px-1 py-0.5 rounded text-amber-950 dark:text-amber-100">101</code>
+            {', '}
+            <code className="font-mono font-bold bg-amber-200/80 dark:bg-amber-900 px-1 py-0.5 rounded text-amber-950 dark:text-amber-100">102</code>
+            {language === 'es'
+              ? '), el código general '
+              : '), general code '}
             <code className="font-mono font-bold bg-amber-200/80 dark:bg-amber-900 px-1 py-0.5 rounded text-amber-950 dark:text-amber-100">ACUD-2026</code>
             {language === 'es'
-              ? ' o su número de documento de identidad registrado en esta base de datos institucional.'
-              : ' or their document number listed in this database.'}
+              ? ' o su número de documento registrado en la base de datos institucional.'
+              : ' or their registered document number.'}
           </p>
         </div>
-        <div className="shrink-0 flex items-center gap-1.5">
+        <div className="shrink-0 flex items-center gap-1.5 flex-wrap">
           <span className="text-[10px] uppercase font-bold text-amber-700 dark:text-amber-400 tracking-wider">
-            {language === 'es' ? 'Código Oficial:' : 'Official Code:'}
+            {language === 'es' ? 'Códigos Oficiales:' : 'Official Codes:'}
           </span>
-          <span className="px-2.5 py-1 rounded-lg bg-amber-200 dark:bg-amber-900 font-mono font-black text-amber-950 dark:text-amber-100 text-xs border border-amber-300 dark:border-amber-700">
+          <span className="px-2 py-0.5 rounded-lg bg-amber-200 dark:bg-amber-900 font-mono font-black text-amber-950 dark:text-amber-100 text-xs border border-amber-300 dark:border-amber-700">
+            101
+          </span>
+          <span className="px-2 py-0.5 rounded-lg bg-amber-200 dark:bg-amber-900 font-mono font-black text-amber-950 dark:text-amber-100 text-xs border border-amber-300 dark:border-amber-700">
+            102
+          </span>
+          <span className="px-2 py-0.5 rounded-lg bg-amber-200 dark:bg-amber-900 font-mono font-black text-amber-950 dark:text-amber-100 text-xs border border-amber-300 dark:border-amber-700">
             ACUD-2026
           </span>
         </div>
@@ -114,8 +126,25 @@ export const ParentsList: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1">
-                    <p>Doc: <strong className="text-slate-700 dark:text-slate-300">{guardian.documentType} {guardian.documentNumber}</strong></p>
+                  <div className="text-xs text-slate-500 dark:text-slate-400 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <p>Doc: <strong className="text-slate-700 dark:text-slate-300">{guardian.documentType} {guardian.documentNumber}</strong></p>
+                      {guardian.fileNumber && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 dark:bg-teal-950/70 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                          Ficha #{guardian.fileNumber}
+                        </span>
+                      )}
+                    </div>
+                    {guardian.verificationCode && (
+                      <div className="pt-0.5">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 text-[11px] font-semibold">
+                          <span>Código de verificación:</span>
+                          <code className="font-mono font-bold bg-amber-200/80 dark:bg-amber-900 px-1 py-0.5 rounded text-amber-950 dark:text-amber-100">
+                            {guardian.verificationCode}
+                          </code>
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1 text-slate-600 dark:text-slate-300">
                       <Phone className="w-3.5 h-3.5 text-teal-600" />
                       <span>{guardian.phone}</span>
@@ -185,8 +214,23 @@ export const ParentsList: React.FC = () => {
                 <tr key={guardian.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors">
                   
                   {/* Doc */}
-                  <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-300">
-                    {guardian.documentType} {guardian.documentNumber}
+                  <td className="px-6 py-4">
+                    <div className="font-semibold text-slate-700 dark:text-slate-300">
+                      {guardian.documentType} {guardian.documentNumber}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+                      {guardian.verificationCode && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-800 text-[10px] font-bold font-mono">
+                          <span>Cód:</span>
+                          <strong className="text-amber-950 dark:text-amber-100">{guardian.verificationCode}</strong>
+                        </span>
+                      )}
+                      {guardian.fileNumber && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
+                          Ficha #{guardian.fileNumber}
+                        </span>
+                      )}
+                    </div>
                   </td>
 
                   {/* Name */}

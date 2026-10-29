@@ -738,7 +738,7 @@ export const PortalConfigView: React.FC = () => {
                 },
                 {
                   key: 'canExportReports' as keyof RolePermissions,
-                  title: isEs ? 'Exportación de Reportes y Estadísticas' : 'Export Reports',
+                  title: isEs ? 'Exportación de Reportes y Estadísticas SIMAT' : 'Export Reports',
                   desc: isEs ? 'Descarga de bases de datos consolidadas para entes territoriales.' : 'Download consolidated datasets.'
                 },
                 {

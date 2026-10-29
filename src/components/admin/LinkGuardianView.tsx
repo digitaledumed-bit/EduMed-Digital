@@ -251,7 +251,7 @@ export const LinkGuardianView: React.FC = () => {
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">No. Documento</label>
                 <input
                   type="text"
-                  placeholder=""
+                  placeholder="Ej. 1020304050"
                   value={newGuardian.docNumber}
                   onChange={(e) => setNewGuardian({ ...newGuardian, docNumber: e.target.value })}
                   className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
@@ -262,7 +262,7 @@ export const LinkGuardianView: React.FC = () => {
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Nombres</label>
                 <input
                   type="text"
-                  placeholder=""
+                  placeholder="Ej. Carmen"
                   value={newGuardian.firstName}
                   onChange={(e) => setNewGuardian({ ...newGuardian, firstName: e.target.value })}
                   className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
@@ -273,7 +273,7 @@ export const LinkGuardianView: React.FC = () => {
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Apellidos</label>
                 <input
                   type="text"
-                  placeholder=""
+                  placeholder="Ej. Rojas"
                   value={newGuardian.lastName}
                   onChange={(e) => setNewGuardian({ ...newGuardian, lastName: e.target.value })}
                   className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
@@ -284,7 +284,7 @@ export const LinkGuardianView: React.FC = () => {
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Teléfono</label>
                 <input
                   type="tel"
-                  placeholder=""
+                  placeholder="+57 300 000 0000"
                   value={newGuardian.phone}
                   onChange={(e) => setNewGuardian({ ...newGuardian, phone: e.target.value })}
                   className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"
@@ -295,7 +295,7 @@ export const LinkGuardianView: React.FC = () => {
                 <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">Correo</label>
                 <input
                   type="email"
-                  placeholder=""
+                  placeholder="correo@ejemplo.com"
                   value={newGuardian.email}
                   onChange={(e) => setNewGuardian({ ...newGuardian, email: e.target.value })}
                   className="w-full px-2.5 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white"

@@ -1,7 +1,6 @@
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
-import fs from 'fs';
 import { fileURLToPath } from 'url';
 import nodemailer, { type Transporter } from 'nodemailer';
 import dotenv from 'dotenv';
@@ -16,110 +15,6 @@ const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
 
 app.use(express.json());
-
-// Public Firebase config extraction for runtime delivery
-function getFirebasePublicConfig() {
-  let apiKey = (process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || '').trim();
-  let authDomain = (process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN || '').trim();
-  let projectId = (process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || '').trim();
-  let storageBucket = (process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || '').trim();
-  let messagingSenderId = (process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || '').trim();
-  let appId = (process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || '').trim();
-  let measurementId = (process.env.VITE_FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID || '').trim();
-
-  // Also check candidate config files in workspace if env vars were not passed directly
-  if (!apiKey || !projectId) {
-    // 1. Check TypeScript source file
-    const tsFile = path.resolve(__dirname, 'src', 'config', 'firebaseCredentials.ts');
-    if (fs.existsSync(tsFile)) {
-      try {
-        const text = fs.readFileSync(tsFile, 'utf-8');
-        const getVal = (key: string) => {
-          const match = text.match(new RegExp(`${key}:\\s*['"\`]([^'"\`]*)['"\`]`));
-          return match ? match[1].trim() : '';
-        };
-        apiKey = apiKey || getVal('apiKey');
-        authDomain = authDomain || getVal('authDomain');
-        projectId = projectId || getVal('projectId');
-        storageBucket = storageBucket || getVal('storageBucket');
-        messagingSenderId = messagingSenderId || getVal('messagingSenderId');
-        appId = appId || getVal('appId');
-        measurementId = measurementId || getVal('measurementId');
-      } catch {
-        // ignore
-      }
-    }
-
-    // 2. Check JSON candidate files
-    const candidateFiles = [
-      path.resolve(__dirname, 'firebase-applet-config.json'),
-      path.resolve(__dirname, 'firebase-config.json'),
-      path.resolve(__dirname, 'src', 'config', 'firebase-credentials.json'),
-      path.resolve(__dirname, 'src', 'config', 'firebaseConfig.json'),
-    ];
-    for (const f of candidateFiles) {
-      if (fs.existsSync(f)) {
-        try {
-          const raw = JSON.parse(fs.readFileSync(f, 'utf-8'));
-          apiKey = apiKey || (raw.apiKey || raw.VITE_FIREBASE_API_KEY || '').trim();
-          authDomain = authDomain || (raw.authDomain || raw.VITE_FIREBASE_AUTH_DOMAIN || '').trim();
-          projectId = projectId || (raw.projectId || raw.VITE_FIREBASE_PROJECT_ID || '').trim();
-          storageBucket = storageBucket || (raw.storageBucket || raw.VITE_FIREBASE_STORAGE_BUCKET || '').trim();
-          messagingSenderId = messagingSenderId || (raw.messagingSenderId || raw.VITE_FIREBASE_MESSAGING_SENDER_ID || '').trim();
-          appId = appId || (raw.appId || raw.VITE_FIREBASE_APP_ID || '').trim();
-          measurementId = measurementId || (raw.measurementId || raw.VITE_FIREBASE_MEASUREMENT_ID || '').trim();
-          if (apiKey && projectId) break;
-        } catch {
-          // ignore corrupted JSON file
-        }
-      }
-    }
-  }
-
-  const hasApiKey = Boolean(apiKey && !apiKey.startsWith('your-') && !apiKey.startsWith('TU_') && !apiKey.includes('placeholder'));
-  const hasAuthDomain = Boolean(authDomain);
-  const hasProjectId = Boolean(projectId && !projectId.startsWith('your-') && !projectId.startsWith('tu-') && !projectId.includes('placeholder'));
-  const hasStorageBucket = Boolean(storageBucket);
-  const hasMessagingSenderId = Boolean(messagingSenderId);
-  const hasAppId = Boolean(appId);
-
-  const isConfigured = Boolean(hasApiKey && hasProjectId);
-
-  const missing: string[] = [];
-  if (!hasApiKey) missing.push('VITE_FIREBASE_API_KEY');
-  if (!hasProjectId) missing.push('VITE_FIREBASE_PROJECT_ID');
-  if (!hasAuthDomain) missing.push('VITE_FIREBASE_AUTH_DOMAIN');
-  if (!hasStorageBucket) missing.push('VITE_FIREBASE_STORAGE_BUCKET');
-  if (!hasMessagingSenderId) missing.push('VITE_FIREBASE_MESSAGING_SENDER_ID');
-  if (!hasAppId) missing.push('VITE_FIREBASE_APP_ID');
-
-  return {
-    configured: isConfigured,
-    variables: {
-      apiKey: hasApiKey,
-      authDomain: hasAuthDomain,
-      projectId: hasProjectId,
-      storageBucket: hasStorageBucket,
-      messagingSenderId: hasMessagingSenderId,
-      appId: hasAppId,
-    },
-    missingRequired: missing,
-    config: isConfigured ? {
-      apiKey,
-      authDomain: authDomain || (projectId ? `${projectId}.firebaseapp.com` : undefined),
-      projectId,
-      storageBucket: storageBucket || (projectId ? `${projectId}.appspot.com` : undefined),
-      messagingSenderId: messagingSenderId || undefined,
-      appId: appId || undefined,
-      measurementId: measurementId || undefined,
-    } : null
-  };
-}
-
-// GET /api/config/firebase - Returns runtime Firebase client config safely
-app.get('/api/config/firebase', (_req, res) => {
-  return res.json(getFirebasePublicConfig());
-});
 
 interface ResetRecord {
   code: string;
@@ -280,16 +175,9 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
     }
     cooldownStore.set(cleanEmail, Date.now());
 
-    // Generate or synchronize 6-digit verification code and secure token
-    const requestedCode = req.body.code ? req.body.code.toString().trim() : '';
-    const requestedToken = req.body.token ? req.body.token.toString().trim() : '';
-
-    const code = (requestedCode && /^\d{6}$/.test(requestedCode))
-      ? requestedCode
-      : Math.floor(100000 + Math.random() * 900000).toString();
-    const token = (requestedToken && requestedToken.length >= 8)
-      ? requestedToken
-      : crypto.randomBytes(24).toString('hex');
+    // Generate random 6-digit code and secure 48-char hex token
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const token = crypto.randomBytes(24).toString('hex');
     const expiresMinutes = 15;
     const expiresAt = Date.now() + expiresMinutes * 60 * 1000;
 
@@ -316,16 +204,14 @@ app.post('/api/auth/request-password-reset', async (req, res) => {
         html: generateResetEmailHtml({ code, token, email: cleanEmail, appUrl, expiresMinutes }),
         text: `EduMed Digital: Tu código de verificación para restablecer tu contraseña es ${code}. Válido por ${expiresMinutes} minutos. Enlace directo: ${appUrl}/?reset_token=${token}&email=${encodeURIComponent(cleanEmail)}`,
       });
-      console.log(`[AUTH] Sent reset code ${code} to ${cleanEmail}`);
     } catch (mailErr) {
       console.warn('Mail sending notice:', mailErr);
     }
 
+    // Do NOT leak existence of email or expose the code in response!
     return res.json({
       success: true,
-      code,
-      token,
-      message: `Hemos enviado un código de verificación de 6 dígitos al correo registrado: ${cleanEmail}. Por favor revisa tu bandeja de entrada y la carpeta de spam.`,
+      message: 'Si la dirección de correo electrónico está registrada en nuestra plataforma, hemos enviado un código de verificación y un enlace seguro para restablecer tu contraseña. Por favor revisa tu bandeja de entrada y la carpeta de spam.',
     });
   } catch (err) {
     console.error('Password reset request error:', err);
@@ -508,7 +394,7 @@ const initialServerPortalConfigs: Record<string, any> = {
       { id: 'kpi-retention', title: 'Retención Escolar', titleEn: 'Student Retention', description: 'Meta institucional de permanencia estudiantil.', descriptionEn: 'Institutional retention goal.', category: 'kpi', enabled: true, order: 5 },
       { id: 'progress-bar', title: 'Barra de Avance Institucional', titleEn: 'Institutional Goal Progress', description: 'Meta de 1.500 cupos escolares para la vigencia.', descriptionEn: '1,500 student slots goal for current term.', category: 'card', enabled: true, order: 6 },
       { id: 'chart-evolution', title: 'Evolución de Matrículas', titleEn: 'Enrollment Trend Chart', description: 'Gráfico comparativo mensual y semanal.', descriptionEn: 'Monthly and weekly comparative trend chart.', category: 'chart', enabled: true, order: 7 },
-      { id: 'chart-donut', title: 'Distribución por Estados', titleEn: 'Status Breakdown Donut', description: 'Proporción de estados de matrícula en tiempo real.', descriptionEn: 'Real-time enrollment status proportions.', category: 'chart', enabled: true, order: 8 }
+      { id: 'chart-donut', title: 'Distribución por Estados', titleEn: 'Status Breakdown Donut', description: 'Proporción de estados SIMAT en tiempo real.', descriptionEn: 'Real-time SIMAT status proportions.', category: 'chart', enabled: true, order: 8 }
     ],
     permissions: {
       canDownloadCertificates: true,
@@ -527,15 +413,15 @@ const initialServerPortalConfigs: Record<string, any> = {
     role: 'guardian',
     name: 'Acudiente / Familia',
     nameEn: 'Guardian & Family',
-    description: 'Portal familiar para seguimiento de acudidos, estado de matrícula y beneficios escolares.',
-    descriptionEn: 'Family portal for tracking children, enrollment status, and school benefits.',
+    description: 'Portal familiar para seguimiento de acudidos, estado SIMAT y beneficios escolares.',
+    descriptionEn: 'Family portal for tracking children, SIMAT status, and school benefits.',
     badgeLabel: 'Portal Acudiente',
     badgeLabelEn: 'Guardian Portal',
     defaultTab: 'dashboard',
     modules: [
       { id: 'dashboard', label: 'Portal del Acudiente', labelEn: 'Guardian Portal', description: 'Resumen familiar, acudidos vinculados y accesos rápidos.', descriptionEn: 'Family summary, linked children, and quick actions.', enabled: true, order: 1, iconName: 'LayoutDashboard', isCore: true },
       { id: 'student-profile', label: 'Expediente del Acudido', labelEn: 'Child Profile', description: 'Ficha del estudiante, datos personales y certificado.', descriptionEn: 'Student file, personal details, and certificate.', enabled: true, order: 2, iconName: 'GraduationCap' },
-      { id: 'status', label: 'Estado Matrícula', labelEn: 'Enrollment Status', description: 'Consulta oficial del estado del radicado de matrícula.', descriptionEn: 'Official enrollment docket lookup.', enabled: true, order: 3, iconName: 'Search' },
+      { id: 'status', label: 'Estado SIMAT', labelEn: 'SIMAT Status', description: 'Consulta oficial del estado del radicado de matrícula.', descriptionEn: 'Official enrollment docket lookup.', enabled: true, order: 3, iconName: 'Search' },
       { id: 'wizard', label: 'Inscribir Nuevo Estudiante', labelEn: 'Enroll New Student', description: 'Formulario paso a paso de registro de matrícula.', descriptionEn: 'Step-by-step enrollment registration.', enabled: true, order: 4, iconName: 'FilePlus' },
       { id: 'beneficios', label: 'Beneficios Escolares (PAE)', labelEn: 'School Meals & Benefits', description: 'Información del programa PAE y subsidios.', descriptionEn: 'School meals program and student benefits.', enabled: true, order: 5, iconName: 'Award' },
       { id: 'institucion', label: 'I.E. Félix Henao Botero', labelEn: 'School Info', description: 'Historia, sede, directivas y proyecto educativo.', descriptionEn: 'Campus history, administration, and school mission.', enabled: true, order: 6, iconName: 'Globe' },
@@ -545,7 +431,7 @@ const initialServerPortalConfigs: Record<string, any> = {
       { id: 'welcome-hero', title: 'Bienvenida y Resumen Familiar', titleEn: 'Family Welcome Banner', description: 'Saludo oficial y estado del año escolar 2026.', descriptionEn: 'Official greeting and active 2026 school year.', category: 'card', enabled: true, order: 1 },
       { id: 'my-students-cards', title: 'Estudiantes / Hijos Vinculados', titleEn: 'Linked Children Cards', description: 'Tarjetas individuales por cada hijo con grado y jornada.', descriptionEn: 'Individual cards for each child with grade and shift.', category: 'card', enabled: true, order: 2 },
       { id: 'download-certificate', title: 'Descarga de Comprobante Oficial', titleEn: 'Official Certificate Download', description: 'Generación directa de certificado de matrícula en PDF.', descriptionEn: 'Direct PDF enrollment certificate generation.', category: 'action', enabled: true, order: 3 },
-      { id: 'docket-status-widget', title: 'Consulta Rápida de Radicado', titleEn: 'Docket Quick Lookup', description: 'Verificación del radicado ante Secretaría de Educación.', descriptionEn: 'Verification of docket before Education Secretariat.', category: 'action', enabled: true, order: 4 },
+      { id: 'simat-status-widget', title: 'Consulta Rápida de Radicado SIMAT', titleEn: 'SIMAT Docket Quick Lookup', description: 'Verificación del radicado ante Secretaría de Educación.', descriptionEn: 'Verification of docket before Education Secretariat.', category: 'action', enabled: true, order: 4 },
       { id: 'benefits-pae-widget', title: 'Beneficios Escolares PAE', titleEn: 'School Meal Benefits (PAE)', description: 'Seguimiento del programa de alimentación escolar.', descriptionEn: 'Tracking of school meal programs.', category: 'card', enabled: true, order: 5 },
       { id: 'institutional-contact', title: 'Canales Directos con Secretaría', titleEn: 'Direct School Office Contact', description: 'Horarios de atención presencial y telefónica.', descriptionEn: 'On-site and telephone support schedules.', category: 'card', enabled: true, order: 6 }
     ],
@@ -583,13 +469,13 @@ const initialServerPortalConfigs: Record<string, any> = {
       { id: 'kpi-academic-summary', title: 'Resumen de Desempeño Escolar', titleEn: 'Academic Performance Summary', description: 'Promedio acumulado, materias aprobadas y puesto en el grupo.', descriptionEn: 'GPA, passed subjects, and group ranking.', category: 'kpi', enabled: true, order: 2 },
       { id: 'grades-table', title: 'Registro de Calificaciones (Periodo 1)', titleEn: 'Subject Grades Table', description: 'Notas por asignatura, docentes y escala de valoración.', descriptionEn: 'Subject scores, teachers, and performance scale.', category: 'card', enabled: true, order: 3 },
       { id: 'schedule-widget', title: 'Horario Semanal de Clases', titleEn: 'Weekly Class Schedule', description: 'Jornada diaria de lunes a viernes con descansos.', descriptionEn: 'Daily Monday to Friday timetable with breaks.', category: 'card', enabled: true, order: 4 },
-      { id: 'insurance-card', title: 'Póliza de Accidentes y Radicado', titleEn: 'Student Insurance Policy & Docket', description: 'Número de póliza 24/7 y radicado oficial.', descriptionEn: '24/7 accident policy and official docket.', category: 'card', enabled: true, order: 5 },
+      { id: 'insurance-card', title: 'Póliza de Accidentes y Radicado', titleEn: 'Student Insurance Policy & Docket', description: 'Número de póliza 24/7 y radicado oficial SIMAT.', descriptionEn: '24/7 accident policy and official SIMAT docket.', category: 'card', enabled: true, order: 5 },
       { id: 'guardian-summary', title: 'Acudiente Principal Responsable', titleEn: 'Primary Guardian Summary', description: 'Datos de contacto del acudiente ante la institución.', descriptionEn: 'Contact info of the responsible parent/guardian.', category: 'card', enabled: true, order: 6 }
     ],
     permissions: {
       canDownloadCertificates: true,
-      canEditProfile: false,
-      canUploadAvatar: false,
+      canEditProfile: true,
+      canUploadAvatar: true,
       canEnrollStudents: false,
       canAuditDocuments: false,
       canManageUsers: false,
@@ -751,20 +637,9 @@ app.get('/api/portal-config/roles/meta', (req, res) => {
 // Dev / Prod Vite mounting
 async function startServer() {
   if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.resolve(__dirname, 'dist'), { index: false }));
+    app.use(express.static(path.resolve(__dirname, 'dist')));
     app.get('*', (_req, res) => {
-      const indexPath = path.resolve(__dirname, 'dist', 'index.html');
-      if (!fs.existsSync(indexPath)) {
-        return res.status(404).send('Build not found. Please run npm run build.');
-      }
-      let html = fs.readFileSync(indexPath, 'utf-8');
-      const fb = getFirebasePublicConfig();
-      if (fb.configured && fb.config) {
-        const injection = `<script>window.__FIREBASE_CONFIG__ = ${JSON.stringify(fb.config)};</script>`;
-        html = html.replace('</head>', `${injection}\n</head>`);
-      }
-      res.setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.send(html);
+      res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
   } else {
     const vite = await createViteServer({

@@ -1,7 +1,7 @@
 export type Language = 'es' | 'en';
 export type Theme = 'light' | 'dark';
 export type FontSize = 'normal' | 'large' | 'xlarge';
-export type UserRole = 'public' | 'admin' | 'guardian' | 'student' | 'teacher';
+export type UserRole = 'public' | 'admin' | 'guardian' | 'student' | 'teacher' | 'directivo';
 
 export interface TeacherCourseAssignment {
   id: string;
@@ -55,6 +55,7 @@ export interface Student {
   previousSchool?: string;
   medicalNotes?: string;
   guardians: GuardianRef[];
+  fileNumber?: number;
 }
 
 export interface GuardianRef {
@@ -65,6 +66,10 @@ export interface GuardianRef {
   email: string;
   isPrimary: boolean;
   livesWithStudent: boolean;
+  documentType?: string;
+  documentNumber?: string;
+  verificationCode?: string;
+  fileNumber?: number;
 }
 
 export interface Guardian {
@@ -76,6 +81,8 @@ export interface Guardian {
   phone: string;
   email: string;
   address: string;
+  verificationCode?: string;
+  fileNumber?: number;
   associatedStudents: {
     id: string;
     name: string;
@@ -113,10 +120,6 @@ export interface StudentDocument {
   status: DocumentStatus;
   rejectionReason?: string;
   fileUrl?: string;
-  fileType?: string;
-  fileData?: string;
-  uploadedBy?: string;
-  studentName?: string;
 }
 
 export interface ActivityItem {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { 
   LayoutDashboard, 
@@ -18,8 +18,10 @@ import {
   LifeBuoy,
   Globe,
   FilePlus,
+  Camera,
   Sliders
 } from 'lucide-react';
+import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { getDefaultAvatarByGender, isMaleGender } from '../../utils/avatarUtils';
 
 export const AdminSidebar: React.FC = () => {
@@ -35,9 +37,11 @@ export const AdminSidebar: React.FC = () => {
     portalConfigs
   } = useApp();
 
+  const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
+
   const pendingDocsCount = documents.filter(d => d.status === 'in_review' || d.status === 'pending').length;
 
-  const role = (currentUser?.role as 'admin' | 'guardian' | 'student' | 'teacher') || 'admin';
+  const role = (currentUser?.role as 'admin' | 'guardian' | 'student' | 'teacher' | 'directivo') || 'admin';
 
   // Icon lookup for dynamic role modules
   const iconLookup: Record<string, React.ElementType> = {
@@ -57,18 +61,6 @@ export const AdminSidebar: React.FC = () => {
 
   // Build role-specific menu items dynamically respecting the administrator's configuration and order
   const getMenuItems = () => {
-    // Dedicated Student Navigation: strictly limited to viewing assigned grade and shift
-    if (role === 'student') {
-      return [
-        {
-          id: 'dashboard',
-          label: language === 'es' ? 'Mi Grado y Jornada' : 'My Grade & Shift',
-          icon: GraduationCap,
-          badge: null
-        }
-      ];
-    }
-
     // Dedicated Teacher Navigation: strictly limited to authorized scope
     if (role === 'teacher') {
       return [
@@ -93,7 +85,7 @@ export const AdminSidebar: React.FC = () => {
       ];
     }
 
-    const roleConfig = portalConfigs[role as 'admin' | 'guardian' | 'student'];
+    const roleConfig = portalConfigs[role as 'admin' | 'guardian' | 'student' | 'directivo'];
     if (roleConfig && roleConfig.modules) {
       return roleConfig.modules
         .filter(m => m.enabled && m.id !== 'portal-config' && m.id !== 'settings')
@@ -146,10 +138,17 @@ export const AdminSidebar: React.FC = () => {
         subtitle: language === 'es' ? 'Portal Docente' : 'Faculty Portal'
       };
     }
+    if (role === 'directivo') {
+      return {
+        title: 'EduMed',
+        accent: language === 'es' ? 'Directivos' : 'Leadership',
+        subtitle: language === 'es' ? 'Portal de Directivos' : 'Leadership Portal'
+      };
+    }
     return {
       title: 'EduMed',
       accent: 'Admin',
-      subtitle: language === 'es' ? 'Rectoría y Personal Directivo' : 'Leadership & Staff'
+      subtitle: language === 'es' ? 'Portal Administrativo' : 'Administrative Portal'
     };
   };
 
@@ -274,11 +273,18 @@ export const AdminSidebar: React.FC = () => {
       <div className="p-3 border-t border-slate-800/80 bg-slate-950/40">
         <div className="flex items-center justify-between">
           <div 
-            onClick={() => setActiveTab('dashboard')}
+            onClick={() => setActiveTab(currentUser?.role === 'student' ? 'student-profile' : 'dashboard')}
             className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition-opacity"
           >
             {currentUser?.role === 'student' ? (
-              <div className="relative shrink-0">
+              <div 
+                className="relative group cursor-pointer"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowAvatarModal(true);
+                }}
+                title={language === 'es' ? 'Cambiar foto de avatar' : 'Change avatar photo'}
+              >
                 <img
                   src={currentUser.avatarUrl || getDefaultAvatarByGender(currentUser.gender)}
                   alt={currentUser.name}
@@ -287,6 +293,9 @@ export const AdminSidebar: React.FC = () => {
                     (e.currentTarget as HTMLImageElement).src = getDefaultAvatarByGender(currentUser.gender);
                   }}
                 />
+                <div className="absolute inset-0 rounded-full bg-slate-900/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                  <Camera className="w-3 h-3" />
+                </div>
               </div>
             ) : (
               <div className="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-white text-xs font-bold border border-teal-500/60">
@@ -299,8 +308,10 @@ export const AdminSidebar: React.FC = () => {
                 {currentUser?.name || 'Administración'}
               </div>
               <div className="text-[10px] text-teal-400 font-medium truncate capitalize">
-                {currentUser?.role === 'admin' 
-                  ? (language === 'es' ? 'Directivo / Administrativo' : 'Administrative / Staff')
+                {currentUser?.role === 'directivo'
+                  ? (language === 'es' ? 'Directivo Institucional' : 'Executive Leadership')
+                  : currentUser?.role === 'admin' 
+                  ? (language === 'es' ? 'Personal Administrativo' : 'Administrative Staff')
                   : currentUser?.role === 'student'
                   ? (language === 'es' ? 'Estudiante' : 'Student')
                   : (language === 'es' ? 'Acudiente' : 'Guardian')}
@@ -309,6 +320,17 @@ export const AdminSidebar: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-1">
+            {currentUser?.role === 'student' && (
+              <button
+                type="button"
+                onClick={() => setShowAvatarModal(true)}
+                className="p-1.5 text-teal-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                title={language === 'es' ? 'Cambiar foto' : 'Change photo'}
+              >
+                <Camera className="w-3.5 h-3.5" />
+              </button>
+            )}
+
             <button
               id="sidebar-logout-btn"
               onClick={logout}
@@ -320,6 +342,17 @@ export const AdminSidebar: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Avatar Change Modal for Student */}
+      {currentUser && currentUser.role === 'student' && (
+        <AvatarChangeModal
+          isOpen={showAvatarModal}
+          onClose={() => setShowAvatarModal(false)}
+          studentName={currentUser.name}
+          studentGender={currentUser.gender}
+          currentAvatarUrl={currentUser.avatarUrl}
+        />
+      )}
     </aside>
     </>
   );

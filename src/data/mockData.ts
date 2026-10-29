@@ -95,7 +95,7 @@ export const initialStudents: Student[] = [
     phone: '+57 311 987 6543',
     email: 'sofia.g@edumed.edu.co',
     avatarUrl: getDefaultAvatarByGender('Femenino'),
-    admissionDate: '10/01/2026',
+    admissionDate: '10/01/2024',
     previousSchool: 'Colegio María Montessori',
     medicalNotes: 'Uso de lentes formulados',
     guardians: [
@@ -194,7 +194,7 @@ export const initialStudents: Student[] = [
     phone: '+57 300 123 4567',
     email: 'mariana.rios@edumed.edu.co',
     avatarUrl: getDefaultAvatarByGender('Femenino'),
-    admissionDate: '12/04/2026',
+    admissionDate: '12/04/2024',
     previousSchool: 'Colegio San José Medellín',
     medicalNotes: 'Asma leve controlada',
     guardians: [
@@ -231,11 +231,125 @@ export const initialStudents: Student[] = [
     previousSchool: 'Liceo Antioqueño',
     medicalNotes: 'Sin observaciones',
     guardians: []
+  },
+  {
+    id: 'std-8',
+    documentType: 'TI',
+    documentNumber: '1038809029',
+    firstName: 'Sara',
+    lastName: 'Molina Jimenez',
+    fullName: 'Sara Molina Jimenez',
+    birthDate: '14/03/2009',
+    gender: 'Femenino',
+    bloodType: 'O+',
+    grade: '10mo Grado (10-A)',
+    shift: 'Mañana',
+    status: 'active',
+    address: 'Calle 52 #43-18, Medellín',
+    neighborhood: 'Buenos Aires',
+    phone: '+57 300 456 7891',
+    email: 'molina12sara@gmail.com',
+    avatarUrl: getDefaultAvatarByGender('Femenino'),
+    admissionDate: '15/01/2024',
+    previousSchool: 'I.E. Félix Henao Botero',
+    medicalNotes: 'Sin antecedentes patológicos reportados',
+    fileNumber: 1,
+    guardians: [
+      {
+        id: 'grd-101',
+        name: 'Nicole Valentina Pereira',
+        relationship: 'Madre / Acudiente',
+        phone: '+57 312 456 7890',
+        email: 'nicole.roa7729@gmail.com',
+        documentType: 'CC',
+        documentNumber: '1017287888',
+        verificationCode: '101',
+        fileNumber: 1,
+        isPrimary: true,
+        livesWithStudent: true
+      }
+    ]
+  },
+  {
+    id: 'std-9',
+    documentType: 'TI',
+    documentNumber: '1025662108',
+    firstName: 'Yeleidy',
+    lastName: 'Davila Moreno',
+    fullName: 'Yeleidy Davila Moreno',
+    birthDate: '22/07/2008',
+    gender: 'Femenino',
+    bloodType: 'A+',
+    grade: '11mo Grado (11-B)',
+    shift: 'Mañana',
+    status: 'active',
+    address: 'Carrera 45 #58-30, Medellín',
+    neighborhood: 'Boston',
+    phone: '+57 301 234 5678',
+    email: 'yeleidy.davila22@gmail.com',
+    avatarUrl: getDefaultAvatarByGender('Femenino'),
+    admissionDate: '15/01/2024',
+    previousSchool: 'I.E. Félix Henao Botero',
+    medicalNotes: 'Ninguna condición médica reportada',
+    fileNumber: 2,
+    guardians: [
+      {
+        id: 'grd-102',
+        name: 'Luz Adriana Toscano',
+        relationship: 'Madre / Acudiente',
+        phone: '+57 315 678 9012',
+        email: 'luztoscano051@gmail.com',
+        documentType: 'CC',
+        documentNumber: '1064191482',
+        verificationCode: '102',
+        fileNumber: 2,
+        isPrimary: true,
+        livesWithStudent: true
+      }
+    ]
   }
 ];
 
 
 export const initialGuardians: Guardian[] = [
+  {
+    id: 'grd-101',
+    documentType: 'CC',
+    documentNumber: '1017287888',
+    fullName: 'Nicole Valentina Pereira',
+    relationship: 'Madre / Acudiente',
+    phone: '+57 312 456 7890',
+    email: 'nicole.roa7729@gmail.com',
+    address: 'Calle 52 #43-18, Medellín',
+    fileNumber: 1,
+    verificationCode: '101',
+    associatedStudents: [
+      {
+        id: 'std-8',
+        name: 'Sara Molina Jimenez',
+        grade: 'Grado 10°A'
+      }
+    ]
+  },
+  {
+    id: 'grd-102',
+    documentType: 'CC',
+    documentNumber: '1064191482',
+    fullName: 'Luz Adriana Toscano',
+    relationship: 'Madre / Acudiente',
+    phone: '+57 315 678 9012',
+    email: 'luztoscano051@gmail.com',
+    address: 'Carrera 45 #58-30, Medellín',
+    fileNumber: 2,
+    verificationCode: '102',
+    associatedStudents: [
+      {
+        id: 'std-9',
+        name: 'Yeleidy Davila Moreno',
+        grade: 'Grado 11°B'
+      }
+    ]
+  },
   {
     id: 'grd-7',
     documentType: 'CC',
@@ -308,17 +422,17 @@ export const initialGuardians: Guardian[] = [
 
 export const initialEnrollments: EnrollmentRecord[] = [
   {
-    id: '#MAT-2026-001',
+    id: '#MAT-24-001',
     studentId: 'std-4',
-    studentName: 'Mateo Vargas Ramírez',
+    studentName: 'Mateo Restrepo',
     studentDoc: '1001234567',
-    academicYear: '2026',
+    academicYear: '2024 - 2025',
     grade: 'Undécimo (11°)',
-    submissionDate: '15 Oct 2026',
-    status: 'in_review',
-    step: 4,
-    lastUpdated: '15 Oct 2026, 09:30 AM',
-    notes: 'Documentos radicados por acudiente. Pendiente de validación documental.',
+    submissionDate: '15 May 2024',
+    status: 'pending',
+    step: 3,
+    lastUpdated: '15 May 2024, 09:30 AM',
+    notes: 'Esperando validación de paz y salvo financiero.',
     guardianName: 'Ana Ramírez',
     guardianDoc: 'CC 43.892.104',
     guardianPhone: '+57 320 456 7890',
@@ -326,17 +440,17 @@ export const initialEnrollments: EnrollmentRecord[] = [
     guardianRelationship: 'Madre'
   },
   {
-    id: '#MAT-2026-002',
+    id: '#MAT-24-002',
     studentId: 'std-3',
-    studentName: 'Sofía Valentina Gómez Pérez',
+    studentName: 'Valentina Gómez',
     studentDoc: '1098273645',
-    academicYear: '2026',
+    academicYear: '2024 - 2025',
     grade: 'Sexto (6°)',
-    submissionDate: '14 Oct 2026',
+    submissionDate: '14 May 2024',
     status: 'in_review',
     step: 4,
-    lastUpdated: '14 Oct 2026, 11:20 AM',
-    notes: 'Documentos radicados por acudiente en revisión por Administración General.',
+    lastUpdated: '14 May 2024, 11:20 AM',
+    notes: 'Documentos en revisión por coordinación académica.',
     guardianName: 'Ana María González López',
     guardianDoc: 'CC 43.567.891',
     guardianPhone: '+57 310 987 6543',
@@ -344,34 +458,34 @@ export const initialEnrollments: EnrollmentRecord[] = [
     guardianRelationship: 'Madre'
   },
   {
-    id: '#MAT-2026-003',
+    id: '#MAT-24-003',
     studentId: 'std-2',
-    studentName: 'Alejandro Martínez Rojas',
+    studentName: 'Santiago Jaramillo',
     studentDoc: '1029384756',
-    academicYear: '2026',
+    academicYear: '2024 - 2025',
     grade: 'Noveno (9°)',
-    submissionDate: '12 Oct 2026',
+    submissionDate: '12 May 2024',
     status: 'approved',
     step: 6,
-    lastUpdated: '13 Oct 2026, 04:15 PM',
+    lastUpdated: '13 May 2024, 04:15 PM',
     notes: 'Matrícula aprobada oficialmente. Asignado a grupo 9-A.',
-    guardianName: 'Carmen Rojas',
+    guardianName: 'Roberto Carlos Domínguez',
     guardianDoc: 'CE 987654',
     guardianPhone: '+57 320 456 7890',
-    guardianEmail: 'carmen.rojas@email.com',
-    guardianRelationship: 'Madre'
+    guardianEmail: 'roberto.d@ejemplo.com',
+    guardianRelationship: 'Tutor Legal'
   },
   {
-    id: '#MAT-2026-004',
+    id: '#MAT-24-004',
     studentId: 'std-5',
-    studentName: 'Daniela López Osorio',
+    studentName: 'Luciana Pérez',
     studentDoc: '1122334455',
-    academicYear: '2026',
+    academicYear: '2024 - 2025',
     grade: 'Octavo (8°)',
-    submissionDate: '10 Oct 2026',
+    submissionDate: '10 May 2024',
     status: 'rejected',
     step: 4,
-    lastUpdated: '11 Oct 2026, 02:40 PM',
+    lastUpdated: '11 May 2024, 02:40 PM',
     notes: 'Certificado de notas anterior no cumple requisitos de legalización.',
     guardianName: 'Martha Lucía Pérez',
     guardianDoc: 'CC 32.456.789',
@@ -380,361 +494,105 @@ export const initialEnrollments: EnrollmentRecord[] = [
     guardianRelationship: 'Madre'
   },
   {
-    id: '#MAT-2026-8932',
+    id: '#MAT-2024-8932',
     studentId: 'std-6',
-    studentName: 'Mariana Ríos Osorio',
-    studentDoc: '10023498',
-    academicYear: '2026',
+    studentName: 'María Valentina López',
+    studentDoc: '1020304050',
+    academicYear: '2024 - 2025',
     grade: 'Décimo (10°)',
-    submissionDate: '21 Oct 2026',
+    submissionDate: '22 Oct 2024',
     status: 'in_review',
     step: 4,
-    lastUpdated: '21 Oct 2026, 10:30 AM',
-    notes: 'Documentos radicados por acudiente. Pendiente de validación documental.',
-    guardianName: 'Carlos Eduardo Ramírez',
+    lastUpdated: '24 Oct 2024, 10:30 AM',
+    notes: 'Sus documentos están siendo validados por el equipo de admisiones.',
+    guardianName: 'Juan Carlos Gómez',
     guardianDoc: 'CC 1.020.304.050',
     guardianPhone: '+57 300 123 4567',
-    guardianEmail: 'carlos.ramirez@email.com',
-    guardianRelationship: 'Padre / Acudiente Principal'
+    guardianEmail: 'jc.gomez@email.com',
+    guardianRelationship: 'Padre'
+  },
+  {
+    id: '#MAT-26-0101',
+    studentId: 'std-8',
+    studentName: 'Sara Molina Jimenez',
+    studentDoc: '1038809029',
+    academicYear: '2024 - 2025',
+    grade: '10mo Grado (10-A)',
+    submissionDate: '20 Ene 2025',
+    status: 'approved',
+    step: 6,
+    lastUpdated: '20 Ene 2025, 10:15 AM',
+    notes: 'Matrícula formalizada en SIMAT. Ficha N° 1.',
+    guardianName: 'Nicole Valentina Pereira',
+    guardianDoc: 'CC 1017287888',
+    guardianPhone: '+57 312 456 7890',
+    guardianEmail: 'nicole.roa7729@gmail.com',
+    guardianRelationship: 'Madre / Acudiente'
+  },
+  {
+    id: '#MAT-26-0102',
+    studentId: 'std-9',
+    studentName: 'Yeleidy Davila Moreno',
+    studentDoc: '1025662108',
+    academicYear: '2024 - 2025',
+    grade: '11mo Grado (11-B)',
+    submissionDate: '22 Ene 2025',
+    status: 'approved',
+    step: 6,
+    lastUpdated: '22 Ene 2025, 11:30 AM',
+    notes: 'Matrícula formalizada en SIMAT. Ficha N° 2.',
+    guardianName: 'Luz Adriana Toscano',
+    guardianDoc: 'CC 1064191482',
+    guardianPhone: '+57 315 678 9012',
+    guardianEmail: 'luztoscano051@gmail.com',
+    guardianRelationship: 'Madre / Acudiente'
   }
 ];
 
 export const initialDocuments: StudentDocument[] = [
-  // Documentos Mariana Ríos Osorio (std-6) - Radicados por acudiente
   {
     id: 'doc-1',
     studentId: 'std-6',
-    studentName: 'Mariana Ríos Osorio',
-    name: 'Documento de Identidad (TI)',
+    name: 'Documento de Identidad',
     category: 'identity',
     fileName: 'TI_Mariana_Rios.pdf',
     fileSize: '2.4 MB',
-    fileType: 'application/pdf',
-    uploadDate: '12/10/2026',
-    uploadedBy: 'Carlos Eduardo Ramírez (Acudiente)',
+    uploadDate: '12/04/2024',
     status: 'approved',
     fileUrl: '#'
   },
   {
     id: 'doc-2',
     studentId: 'std-6',
-    studentName: 'Mariana Ríos Osorio',
-    name: 'Certificado de Afiliación EPS',
+    name: 'Certificado Médico',
     category: 'health',
-    fileName: 'Certificado_EPS_Sura.pdf',
+    fileName: 'foto_eps.jpg',
     fileSize: '1.1 MB',
-    fileType: 'application/pdf',
-    uploadDate: '12/10/2026',
-    uploadedBy: 'Carlos Eduardo Ramírez (Acudiente)',
-    status: 'in_review',
+    uploadDate: '12/04/2024',
+    status: 'rejected',
+    rejectionReason: 'El documento subido es ilegible. Por favor, subir un PDF escaneado con buena iluminación, no una foto.',
     fileUrl: '#'
   },
   {
     id: 'doc-3',
     studentId: 'std-6',
-    studentName: 'Mariana Ríos Osorio',
-    name: 'Certificado de Notas Grado 9°',
+    name: 'Certificado Notas Anteriores',
     category: 'academic',
     fileName: 'Notas_Grado9_ColegioAnterior.pdf',
     fileSize: '4.5 MB',
-    fileType: 'application/pdf',
     uploadDate: 'Hace 2 horas',
-    uploadedBy: 'Carlos Eduardo Ramírez (Acudiente)',
     status: 'in_review',
     fileUrl: '#'
   },
-  {
-    id: 'doc-6-4',
-    studentId: 'std-6',
-    studentName: 'Mariana Ríos Osorio',
-    name: 'Carné de Vacunación y Salud',
-    category: 'health',
-    fileName: 'Vacunacion_Mariana_Rios.pdf',
-    fileSize: '1.6 MB',
-    fileType: 'application/pdf',
-    uploadDate: 'Hace 2 horas',
-    uploadedBy: 'Carlos Eduardo Ramírez (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-
-  // Documentos Sofía Valentina Gómez Pérez (std-3) - Radicados por acudiente
-  {
-    id: 'doc-std3-1',
-    studentId: 'std-3',
-    studentName: 'Sofía Valentina Gómez Pérez',
-    name: 'Tarjeta de Identidad (TI)',
-    category: 'identity',
-    fileName: 'TI_Sofia_Gomez.pdf',
-    fileSize: '1.9 MB',
-    fileType: 'application/pdf',
-    uploadDate: '14/10/2026',
-    uploadedBy: 'Ana María González López (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std3-2',
-    studentId: 'std-3',
-    studentName: 'Sofía Valentina Gómez Pérez',
-    name: 'Certificado de Afiliación EPS Savia Salud',
-    category: 'health',
-    fileName: 'Certificado_EPS_SaviaSalud.pdf',
-    fileSize: '1.2 MB',
-    fileType: 'application/pdf',
-    uploadDate: '14/10/2026',
-    uploadedBy: 'Ana María González López (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std3-3',
-    studentId: 'std-3',
-    studentName: 'Sofía Valentina Gómez Pérez',
-    name: 'Certificado de Calificaciones Grado 5°',
-    category: 'academic',
-    fileName: 'Certificado_Notas_Grado5.pdf',
-    fileSize: '2.5 MB',
-    fileType: 'application/pdf',
-    uploadDate: '14/10/2026',
-    uploadedBy: 'Ana María González López (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std3-4',
-    studentId: 'std-3',
-    studentName: 'Sofía Valentina Gómez Pérez',
-    name: 'Certificado Médico Escolar',
-    category: 'health',
-    fileName: 'Certificado_Medico_Escolar.pdf',
-    fileSize: '1.1 MB',
-    fileType: 'application/pdf',
-    uploadDate: '14/10/2026',
-    uploadedBy: 'Ana María González López (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-
-  // Documentos Mateo Vargas Ramírez (std-4) - Radicados por acudiente
-  {
-    id: 'doc-std4-1',
-    studentId: 'std-4',
-    studentName: 'Mateo Vargas Ramírez',
-    name: 'Cédula de Ciudadanía / TI',
-    category: 'identity',
-    fileName: 'CC_Mateo_Vargas.pdf',
-    fileSize: '2.1 MB',
-    fileType: 'application/pdf',
-    uploadDate: '15/10/2026',
-    uploadedBy: 'Ana Ramírez (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std4-2',
-    studentId: 'std-4',
-    studentName: 'Mateo Vargas Ramírez',
-    name: 'Certificado EPS Sura Vigente',
-    category: 'health',
-    fileName: 'Certificado_EPS_Sura_2026.pdf',
-    fileSize: '1.3 MB',
-    fileType: 'application/pdf',
-    uploadDate: '15/10/2026',
-    uploadedBy: 'Ana Ramírez (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std4-3',
-    studentId: 'std-4',
-    studentName: 'Mateo Vargas Ramírez',
-    name: 'Certificado de Calificaciones Grado 10°',
-    category: 'academic',
-    fileName: 'Notas_Grado_Decimo_Oficial.pdf',
-    fileSize: '3.2 MB',
-    fileType: 'application/pdf',
-    uploadDate: '15/10/2026',
-    uploadedBy: 'Ana Ramírez (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std4-4',
-    studentId: 'std-4',
-    studentName: 'Mateo Vargas Ramírez',
-    name: 'Paz y Salvo Institucional',
-    category: 'academic',
-    fileName: 'Paz_y_Salvo_Colegio_Anterior.pdf',
-    fileSize: '850 KB',
-    fileType: 'application/pdf',
-    uploadDate: '15/10/2026',
-    uploadedBy: 'Ana Ramírez (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-
-  // Documentos Alejandro Martínez Rojas (std-2) - Aprobados
-  {
-    id: 'doc-std2-1',
-    studentId: 'std-2',
-    studentName: 'Alejandro Martínez Rojas',
-    name: 'Tarjeta de Identidad (TI)',
-    category: 'identity',
-    fileName: 'TI_Alejandro_Martinez.pdf',
-    fileSize: '1.7 MB',
-    fileType: 'application/pdf',
-    uploadDate: '12/10/2026',
-    uploadedBy: 'Carmen Rojas (Acudiente)',
-    status: 'approved',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std2-2',
-    studentId: 'std-2',
-    studentName: 'Alejandro Martínez Rojas',
-    name: 'Certificado EPS Sura',
-    category: 'health',
-    fileName: 'Certificado_EPS_Alejandro.pdf',
-    fileSize: '1.0 MB',
-    fileType: 'application/pdf',
-    uploadDate: '12/10/2026',
-    uploadedBy: 'Carmen Rojas (Acudiente)',
-    status: 'approved',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std2-3',
-    studentId: 'std-2',
-    studentName: 'Alejandro Martínez Rojas',
-    name: 'Certificado de Notas Grado 8°',
-    category: 'academic',
-    fileName: 'Notas_Grado8_Alejandro.pdf',
-    fileSize: '2.2 MB',
-    fileType: 'application/pdf',
-    uploadDate: '12/10/2026',
-    uploadedBy: 'Carmen Rojas (Acudiente)',
-    status: 'approved',
-    fileUrl: '#'
-  },
-
-  // Documentos Daniela López Osorio (std-5) - Rechazado en notas
-  {
-    id: 'doc-std5-1',
-    studentId: 'std-5',
-    studentName: 'Daniela López Osorio',
-    name: 'Tarjeta de Identidad (TI)',
-    category: 'identity',
-    fileName: 'TI_Daniela_Lopez.pdf',
-    fileSize: '1.5 MB',
-    fileType: 'application/pdf',
-    uploadDate: '10/10/2026',
-    uploadedBy: 'Martha Lucía Pérez (Acudiente)',
-    status: 'approved',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std5-2',
-    studentId: 'std-5',
-    studentName: 'Daniela López Osorio',
-    name: 'Certificado de Notas Anterior',
-    category: 'academic',
-    fileName: 'Notas_Colegio_Anterior.pdf',
-    fileSize: '3.1 MB',
-    fileType: 'application/pdf',
-    uploadDate: '10/10/2026',
-    uploadedBy: 'Martha Lucía Pérez (Acudiente)',
-    status: 'rejected',
-    rejectionReason: 'Certificado de notas anterior no cumple requisitos de legalización y membrete.',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std5-3',
-    studentId: 'std-5',
-    studentName: 'Daniela López Osorio',
-    name: 'Certificado EPS',
-    category: 'health',
-    fileName: 'Certificado_EPS_Daniela.pdf',
-    fileSize: '980 KB',
-    fileType: 'application/pdf',
-    uploadDate: '10/10/2026',
-    uploadedBy: 'Martha Lucía Pérez (Acudiente)',
-    status: 'in_review',
-    fileUrl: '#'
-  },
-
-  // Documentos Mariana Gómez Ríos (std-1)
   {
     id: 'doc-4',
     studentId: 'std-1',
-    studentName: 'Mariana Gómez Ríos',
-    name: 'Carné de Vacunación y Salud',
+    name: 'Carné de Vacunación',
     category: 'health',
     fileName: 'Vacunacion_Completa.pdf',
     fileSize: '1.8 MB',
-    fileType: 'application/pdf',
-    uploadDate: '10/10/2026',
-    uploadedBy: 'Carlos Gómez (Acudiente / Padre)',
+    uploadDate: '10/04/2024',
     status: 'approved',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-std1-1',
-    studentId: 'std-1',
-    studentName: 'Mariana Gómez Ríos',
-    name: 'Tarjeta de Identidad (TI)',
-    category: 'identity',
-    fileName: 'TI_Mariana_Gomez.pdf',
-    fileSize: '2.0 MB',
-    fileType: 'application/pdf',
-    uploadDate: '10/10/2026',
-    uploadedBy: 'Carlos Gómez (Acudiente / Padre)',
-    status: 'approved',
-    fileUrl: '#'
-  },
-
-  // Documentos Estudiante EduMed (std-current)
-  {
-    id: 'doc-5',
-    studentId: 'std-current',
-    studentName: 'Estudiante EduMed',
-    name: 'Documento de Identidad del Estudiante (TI)',
-    category: 'identity',
-    fileName: 'TI_Estudiante_1035982147.pdf',
-    fileSize: '1.4 MB',
-    fileType: 'application/pdf',
-    uploadDate: '15/10/2026',
-    uploadedBy: 'Estudiante EduMed',
-    status: 'approved',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-6',
-    studentId: 'std-current',
-    studentName: 'Estudiante EduMed',
-    name: 'Certificado de Afiliación EPS Vigente',
-    category: 'health',
-    fileName: 'Certificado_EPS_Vigente_2026.pdf',
-    fileSize: '820 KB',
-    fileType: 'application/pdf',
-    uploadDate: '15/10/2026',
-    uploadedBy: 'Acudiente Autorizado',
-    status: 'approved',
-    fileUrl: '#'
-  },
-  {
-    id: 'doc-7',
-    studentId: 'std-current',
-    studentName: 'Estudiante EduMed',
-    name: 'Paz y Salvo Colegio de Procedencia',
-    category: 'academic',
-    fileName: 'Paz_y_Salvo_Colegio_Anterior_2026.pdf',
-    fileSize: '540 KB',
-    fileType: 'application/pdf',
-    uploadDate: '15/10/2026',
-    uploadedBy: 'Acudiente Autorizado',
-    status: 'rejected',
-    rejectionReason: 'El certificado de paz y salvo del año escolar 2026 presenta baja resolución y los sellos de la secretaría de procedencia no son legibles.',
     fileUrl: '#'
   }
 ];
@@ -813,3 +671,47 @@ export const gradeDistributionData = [
   { grade: '10°', count: 260 },
   { grade: '11°', count: 130 },
 ];
+
+export interface StaffUser {
+  id: string;
+  name: string;
+  email: string;
+  role: 'admin' | 'directivo';
+  documentType: string;
+  documentNumber: string;
+  phone: string;
+  position: string;
+  department: string;
+  verificationCode: string;
+  password?: string;
+}
+
+export const initialStaffUsers: StaffUser[] = [
+  {
+    id: 'usr-staff-alexander',
+    name: 'Alexander Miranda',
+    email: 'alexandermiranda270608@gmail.com',
+    role: 'admin',
+    documentType: 'C.C',
+    documentNumber: '1033184935',
+    phone: '+57 310 331 8493',
+    position: 'Coordinador — Gestión académica',
+    department: 'Coordinación y Gestión Académica',
+    verificationCode: '12',
+    password: '12'
+  },
+  {
+    id: 'usr-staff-juanjose',
+    name: 'Juan Jose Torres',
+    email: 'digitaledumed@gmail.com',
+    role: 'directivo',
+    documentType: 'C.C',
+    documentNumber: '1013346890',
+    phone: '+57 312 101 3346',
+    position: 'Rector — Dirección institucional',
+    department: 'Rectoría y Dirección Institucional',
+    verificationCode: '13',
+    password: '13'
+  }
+];
+

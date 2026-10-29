@@ -115,7 +115,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
         ? 'Infraestructura tecnológica moderna, acompañamiento psicosocial, laboratorio de ciencias y plan de alimentación escolar PAE en la Comuna 8 de Medellín.'
         : 'Modern tech labs, robotics clubs, bilingual English training, and full student welfare support.',
       ctaPrimary: language === 'es' ? 'Conocer Nuestra Institución' : 'Learn About School',
-      ctaSecondary: language === 'es' ? 'Consultar Estado de Matrícula' : 'Check Enrollment Status',
+      ctaSecondary: language === 'es' ? 'Consultar Estado SIMAT' : 'Check SIMAT Status',
       bgGradient: 'from-slate-950 via-teal-950 to-blue-950',
       tag: 'Comuna 8 Medellín • DANE 105001002345'
     }
@@ -663,11 +663,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        if (slide.id === 3) {
-                          setActiveTab('status');
-                        } else {
-                          document.getElementById('oferta-educativa')?.scrollIntoView({ behavior: 'smooth' });
-                        }
+                        document.getElementById('oferta-educativa')?.scrollIntoView({ behavior: 'smooth' });
                       }}
                       className="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 backdrop-blur-xs transition-colors cursor-pointer"
                     >
@@ -902,7 +898,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                 </h3>
                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {language === 'es'
-                    ? 'Diligencia el formulario oficial de inscripción para estudiantes nuevos o antiguos con validación en el sistema institucional.'
+                    ? 'Diligencia el formulario oficial de inscripción para estudiantes nuevos o antiguos con validación en el sistema SIMAT.'
                     : 'Complete official school registration for new or continuing students.'}
                 </p>
               </div>
@@ -927,7 +923,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {language === 'es'
                     ? 'Ingresa tu número de documento de identidad para verificar la asignación de cupo escolar y la revisión de tus documentos.'
-                    : 'Check your application review status and official verification using your ID number.'}
+                    : 'Check your application review status and SIMAT verification using your ID number.'}
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-blue-700 dark:text-blue-400">
@@ -1016,8 +1012,8 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                 </h3>
                 <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
                   {language === 'es'
-                    ? 'Acceso exclusivo para rectoría, secretaría académica y coordinación: gestión institucional, validación documental y reportes.'
-                    : 'Exclusive portal for school leadership, academic registry, document validation, and institutional reports.'}
+                    ? 'Acceso exclusivo para rectoría, secretaría académica y coordinación: auditoría SIMAT, validación documental y reportes.'
+                    : 'Exclusive portal for school leadership, academic registry, document validation, and SIMAT audits.'}
                 </p>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -1278,7 +1274,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                 {language === 'es' ? 'Asignación de Cupos' : 'Spot Allocation'}
               </span>
               <h3 className="font-bold text-slate-900 dark:text-white text-sm mt-1">
-                {language === 'es' ? 'Publicación de Listas Oficiales' : 'Official Lists Announcement'}
+                {language === 'es' ? 'Publicación en SIMAT' : 'SIMAT Announcement'}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-1">
                 5 al 15 de Diciembre
@@ -1476,7 +1472,7 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
                 4
               </div>
               <h3 className="font-bold text-slate-900 dark:text-white text-sm">
-                {language === 'es' ? 'Confirmación y Código de Matrícula' : 'Confirmation & Docket Code'}
+                {language === 'es' ? 'Confirmación y Código SIMAT' : 'Confirmation & SIMAT'}
               </h3>
               <p className="text-xs text-slate-600 dark:text-slate-400 mt-1.5 leading-relaxed">
                 {language === 'es'
@@ -1837,6 +1833,8 @@ export const BetowaPortalHome: React.FC<BetowaPortalHomeProps> = ({
             </div>
             <div className="flex items-center gap-3">
               <span>Medellín, Colombia</span>
+              <span>·</span>
+              <span>SIMAT V4.2</span>
               <span>·</span>
               <span>Políticas de Privacidad y Hábeas Data</span>
               {onReplaySplash && (

@@ -23,11 +23,8 @@ import {
   MapPin,
   HeartPulse,
   Clock,
-  FileText,
-  Eye
+  FileText
 } from 'lucide-react';
-import { DocumentViewerModal } from '../common/DocumentViewerModal';
-import { StudentDocument } from '../../types';
 
 interface MandatoryEnrollmentGateProps {
   onEnrollmentCompleted: () => void;
@@ -83,21 +80,12 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
   });
 
   // Step 5: Required Documents
-  const [docs, setDocs] = useState<{
-    id: string;
-    name: string;
-    required: boolean;
-    uploaded: boolean;
-    fileName: string;
-    fileData?: string;
-  }>([
+  const [docs, setDocs] = useState([
     { id: 'doc-ti', name: 'Documento de Identidad del Estudiante (TI/CC/RC)', required: true, uploaded: true, fileName: 'Documento_Identidad_Estudiante.pdf' },
     { id: 'doc-guard', name: 'Documento de Identidad del Acudiente (CC/CE)', required: true, uploaded: true, fileName: 'Cedula_Acudiente_Padre.pdf' },
     { id: 'doc-eps', name: 'Certificado de Afiliación a EPS (Vigente)', required: true, uploaded: true, fileName: 'Certificado_EPS_Sura.pdf' },
     { id: 'doc-grades', name: 'Certificado de Notas o Calificaciones Año Anterior', required: true, uploaded: false, fileName: '' }
   ]);
-
-  const [previewDoc, setPreviewDoc] = useState<StudentDocument | null>(null);
 
   const stepConfig = ENROLLMENT_STEPS_CONFIG.find(s => s.stepNumber === currentStep) || ENROLLMENT_STEPS_CONFIG[0];
   const progressPercent = Math.round((currentStep / TOTAL_ENROLLMENT_STEPS) * 100);
@@ -126,13 +114,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
   const handleFileUpload = (index: number, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const fileData = reader.result as string;
-        setDocs(prev => prev.map((d, i) => i === index ? { ...d, uploaded: true, fileName: file.name, fileData } : d));
-      };
-      reader.readAsDataURL(file);
-
+      setDocs(prev => prev.map((d, i) => i === index ? { ...d, uploaded: true, fileName: file.name } : d));
       if (errors[`doc_${index}`] || errors.documents) {
         setErrors(prev => {
           const next = { ...prev };
@@ -278,7 +260,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
 
           <div className="bg-white dark:bg-slate-900 px-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 text-center shrink-0 shadow-xs">
             <span className="text-[10px] font-bold text-slate-400 block uppercase">{isEs ? 'Año Lectivo' : 'Academic Year'}</span>
-            <span className="text-base font-black text-teal-700 dark:text-teal-400">2026</span>
+            <span className="text-base font-black text-teal-700 dark:text-teal-400">2025</span>
           </div>
         </div>
       </div>
@@ -397,7 +379,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
                       : 'bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:ring-teal-500'
                   }`}
-                  placeholder=""
+                  placeholder="Ej: 1035982147"
                 />
                 {errors.docNumber && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.docNumber}</p>}
               </div>
@@ -416,7 +398,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
                       : 'bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:ring-teal-500'
                   }`}
-                  placeholder=""
+                  placeholder="Ej: Mateo"
                 />
                 {errors.firstNames && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.firstNames}</p>}
               </div>
@@ -435,7 +417,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
                       : 'bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 focus:ring-teal-500'
                   }`}
-                  placeholder=""
+                  placeholder="Ej: Restrepo"
                 />
                 {errors.lastNames && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.lastNames}</p>}
               </div>
@@ -500,7 +482,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="315 987 6543"
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.phone 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -519,7 +501,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="mateo.restrepo@edumed.edu.co"
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.email 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -538,7 +520,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="address"
                   value={formData.address}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="Calle 45 # 12-34"
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.address 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -557,7 +539,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="neighborhood"
                   value={formData.neighborhood}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="Boston, Laureles, Belén..."
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.neighborhood 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -593,7 +575,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="previousSchool"
                   value={formData.previousSchool}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="Ej: Colegio San José o Misma Institución"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
                 {errors.previousSchool && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.previousSchool}</p>}
@@ -645,7 +627,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="eps"
                   value={formData.eps}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="Ej: SURA, Savia Salud, Sanitas..."
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500"
                 />
                 {errors.eps && <p className="text-[11px] font-bold text-rose-600 mt-1">{errors.eps}</p>}
@@ -661,7 +643,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   value={formData.medicalConditions}
                   onChange={handleInputChange}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  placeholder=""
+                  placeholder="Describa si el estudiante tiene alguna condición médica especial..."
                 />
               </div>
             </div>
@@ -691,7 +673,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="guardianFullName"
                   value={formData.guardianFullName}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="Ej: Carlos Eduardo Ramírez"
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.guardianFullName 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -710,7 +692,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="guardianDocNumber"
                   value={formData.guardianDocNumber}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="Ej: 1034567890"
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.guardianDocNumber 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -748,7 +730,7 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   name="guardianPhone"
                   value={formData.guardianPhone}
                   onChange={handleInputChange}
-                  placeholder=""
+                  placeholder="300 123 4567"
                   className={`w-full px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
                     errors.guardianPhone 
                       ? 'border-2 border-rose-500 bg-rose-50/50 dark:bg-rose-950/20' 
@@ -818,32 +800,6 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-center">
-                    {doc.uploaded && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPreviewDoc({
-                            id: doc.id,
-                            studentId: currentUser?.id || 'std-current',
-                            studentName: `${formData.firstNames} ${formData.lastNames}`.trim() || currentUser?.name || 'Estudiante',
-                            name: doc.name,
-                            category: doc.name.toLowerCase().includes('médico') || doc.name.toLowerCase().includes('eps') ? 'health' : 'identity',
-                            fileName: doc.fileName,
-                            fileSize: '1.4 MB',
-                            fileType: doc.fileName.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg',
-                            fileData: doc.fileData,
-                            uploadDate: 'Hoy',
-                            uploadedBy: currentUser?.name || 'Estudiante',
-                            status: 'pending'
-                          });
-                        }}
-                        className="px-3 py-1.5 rounded-xl bg-teal-50 dark:bg-teal-950/70 border border-teal-200 dark:border-teal-800 text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
-                        title="Visualizar archivo montado"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-teal-600" />
-                        <span>Visualizar</span>
-                      </button>
-                    )}
                     <label className="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-teal-500/40 text-teal-700 dark:text-teal-300 hover:bg-teal-50 dark:hover:bg-teal-950/50 text-xs font-bold cursor-pointer transition-all shadow-xs inline-flex items-center gap-1.5">
                       <Upload className="w-3.5 h-3.5" />
                       <span>{doc.uploaded ? (isEs ? 'Reemplazar' : 'Replace') : (isEs ? 'Adjuntar archivos' : 'Attach Files')}</span>
@@ -998,13 +954,6 @@ export const MandatoryEnrollmentGate: React.FC<MandatoryEnrollmentGateProps> = (
           </button>
         </div>
 
-      {/* Universal Document Preview Modal */}
-      <DocumentViewerModal
-        isOpen={Boolean(previewDoc)}
-        onClose={() => setPreviewDoc(null)}
-        document={previewDoc}
-        isAdmin={false}
-      />
       </div>
     </div>
   );

@@ -1,14 +1,14 @@
 import { RolePortalConfig } from '../types';
 
-export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', RolePortalConfig> = {
+export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student' | 'directivo', RolePortalConfig> = {
   admin: {
     role: 'admin',
-    name: 'Directivo / Administrativo',
-    nameEn: 'Administrative / Leadership Staff',
-    description: 'Portal de gestión integral, control de cupos, auditoría documental y liderazgo escolar.',
-    descriptionEn: 'Comprehensive management portal, quota control, document audit, and school leadership.',
-    badgeLabel: 'Portal Administrativo / Directivo',
-    badgeLabelEn: 'Administrative / Leadership Portal',
+    name: 'Personal Administrativo',
+    nameEn: 'Administrative Staff',
+    description: 'Portal de gestión integral de secretaría académica, matrículas y expedientes.',
+    descriptionEn: 'Comprehensive registry management portal, enrollment control, and document audit.',
+    badgeLabel: 'Portal Administrativo',
+    badgeLabelEn: 'Administrative Portal',
     defaultTab: 'dashboard',
     modules: [
       {
@@ -148,8 +148,8 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         id: 'chart-donut',
         title: 'Distribución por Estados',
         titleEn: 'Status Breakdown Donut',
-        description: 'Proporción de estados de matrícula en tiempo real.',
-        descriptionEn: 'Real-time enrollment status proportions.',
+        description: 'Proporción de estados SIMAT en tiempo real.',
+        descriptionEn: 'Real-time SIMAT status proportions.',
         category: 'chart',
         enabled: true,
         order: 8
@@ -173,8 +173,8 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
     role: 'guardian',
     name: 'Acudiente / Familia',
     nameEn: 'Guardian & Family',
-    description: 'Portal familiar para seguimiento de acudidos, estado de matrícula y beneficios escolares.',
-    descriptionEn: 'Family portal for tracking children, enrollment status, and school benefits.',
+    description: 'Portal familiar para seguimiento de acudidos, estado SIMAT y beneficios escolares.',
+    descriptionEn: 'Family portal for tracking children, SIMAT status, and school benefits.',
     badgeLabel: 'Portal Acudiente',
     badgeLabelEn: 'Guardian Portal',
     defaultTab: 'dashboard',
@@ -201,23 +201,13 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         iconName: 'GraduationCap'
       },
       {
-        id: 'documents',
-        label: 'Expediente y Documentos',
-        labelEn: 'Files & Documents',
-        description: 'Consulta, vista previa y subida de documentos al expediente escolar.',
-        descriptionEn: 'Review, preview, and upload official student documents.',
-        enabled: true,
-        order: 3,
-        iconName: 'FolderKanban'
-      },
-      {
         id: 'status',
-        label: 'Estado Matrícula',
-        labelEn: 'Enrollment Status',
+        label: 'Estado SIMAT',
+        labelEn: 'SIMAT Status',
         description: 'Consulta oficial del estado del radicado de matrícula.',
         descriptionEn: 'Official enrollment docket lookup.',
         enabled: true,
-        order: 4,
+        order: 3,
         iconName: 'Search'
       },
       {
@@ -227,7 +217,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         description: 'Formulario paso a paso de registro de matrícula.',
         descriptionEn: 'Step-by-step enrollment registration.',
         enabled: true,
-        order: 5,
+        order: 4,
         iconName: 'FilePlus'
       },
       {
@@ -293,9 +283,9 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         order: 3
       },
       {
-        id: 'docket-status-widget',
-        title: 'Consulta Rápida de Radicado',
-        titleEn: 'Docket Quick Lookup',
+        id: 'simat-status-widget',
+        title: 'Consulta Rápida de Radicado SIMAT',
+        titleEn: 'SIMAT Docket Quick Lookup',
         description: 'Verificación del radicado ante Secretaría de Educación.',
         descriptionEn: 'Verification of docket before Education Secretariat.',
         category: 'action',
@@ -341,18 +331,18 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
     role: 'student',
     name: 'Estudiante',
     nameEn: 'Student',
-    description: 'Consulta oficial del grado y la jornada escolar asignada.',
-    descriptionEn: 'Official view of assigned grade and school shift.',
+    description: 'Portal académico con calificaciones, horario de clases y carnet estudiantil.',
+    descriptionEn: 'Academic portal with grades, class schedule, and student ID.',
     badgeLabel: 'Portal Estudiante',
     badgeLabelEn: 'Student Portal',
     defaultTab: 'dashboard',
     modules: [
       {
         id: 'dashboard',
-        label: 'Mi Grado y Jornada',
-        labelEn: 'My Grade & Shift',
-        description: 'Información oficial del grado y la jornada escolar asignada.',
-        descriptionEn: 'Official information of assigned grade and school shift.',
+        label: 'Mi Portal y Notas',
+        labelEn: 'My Portal & Grades',
+        description: 'Calificaciones del periodo, horario semanal y avatar.',
+        descriptionEn: 'Term grades, weekly schedule, and profile avatar.',
         enabled: true,
         order: 1,
         iconName: 'GraduationCap',
@@ -364,7 +354,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         labelEn: 'My Enrollment Status',
         description: 'Verificación del código de radicado oficial.',
         descriptionEn: 'Verification of official docket code.',
-        enabled: false,
+        enabled: true,
         order: 2,
         iconName: 'Search'
       },
@@ -374,7 +364,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         labelEn: 'My Student Benefits',
         description: 'Acceso a programas PAE y eventos del colegio.',
         descriptionEn: 'Access to PAE programs and school events.',
-        enabled: false,
+        enabled: true,
         order: 3,
         iconName: 'Award'
       },
@@ -384,7 +374,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         labelEn: 'My School',
         description: 'Himno, valores, misión y proyectos estudiantiles.',
         descriptionEn: 'Anthem, values, mission, and student projects.',
-        enabled: false,
+        enabled: true,
         order: 4,
         iconName: 'Globe'
       },
@@ -394,7 +384,7 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         labelEn: 'Counseling & Support',
         description: 'Contacto con psicoorientación y bienestar escolar.',
         descriptionEn: 'School counseling and wellness contact.',
-        enabled: false,
+        enabled: true,
         order: 5,
         iconName: 'LifeBuoy'
       }
@@ -444,8 +434,8 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
         id: 'insurance-card',
         title: 'Póliza de Accidentes y Radicado',
         titleEn: 'Student Insurance Policy & Docket',
-        description: 'Número de póliza 24/7 y radicado oficial.',
-        descriptionEn: '24/7 accident policy and official docket.',
+        description: 'Número de póliza 24/7 y radicado oficial SIMAT.',
+        descriptionEn: '24/7 accident policy and official SIMAT docket.',
         category: 'card',
         enabled: true,
         order: 5
@@ -463,14 +453,161 @@ export const defaultPortalConfigs: Record<'admin' | 'guardian' | 'student', Role
     ],
     permissions: {
       canDownloadCertificates: true,
-      canEditProfile: false,
-      canUploadAvatar: false,
+      canEditProfile: true,
+      canUploadAvatar: true,
       canEnrollStudents: false,
       canAuditDocuments: false,
       canManageUsers: false,
       canExportReports: false,
       canViewAcademicRecords: true,
       canConfigurePortals: false
+    },
+    lastUpdated: new Date().toISOString()
+  },
+  directivo: {
+    role: 'directivo',
+    name: 'Rectoría y Directivos',
+    nameEn: 'Leadership & Rectorate',
+    description: 'Portal estratégico institucional, retención escolar, metas SIMAT y resoluciones rectorales.',
+    descriptionEn: 'Strategic institutional portal, student retention, SIMAT goals, and executive leadership.',
+    badgeLabel: 'Portal de Directivos',
+    badgeLabelEn: 'Leadership Portal',
+    defaultTab: 'dashboard',
+    modules: [
+      {
+        id: 'dashboard',
+        label: 'Panel Directivo',
+        labelEn: 'Leadership Dashboard',
+        description: 'Métricas estratégicas, retención escolar y metas SIMAT de la vigencia.',
+        descriptionEn: 'Strategic metrics, school retention, and current SIMAT targets.',
+        enabled: true,
+        order: 1,
+        iconName: 'LayoutDashboard',
+        isCore: true
+      },
+      {
+        id: 'enrollments',
+        label: 'Aprobación de Cupos y SIMAT',
+        labelEn: 'Quota Approval & SIMAT',
+        description: 'Supervisión y legalización de matrículas escolares.',
+        descriptionEn: 'Supervision and legalization of school enrollments.',
+        enabled: true,
+        order: 2,
+        iconName: 'FileText'
+      },
+      {
+        id: 'students',
+        label: 'Registro Institucional',
+        labelEn: 'Student Records',
+        description: 'Consolidado general de estudiantes por sedes y grados.',
+        descriptionEn: 'General student consolidated records by campuses and grades.',
+        enabled: true,
+        order: 3,
+        iconName: 'Users'
+      },
+      {
+        id: 'parents',
+        label: 'Comunidad de Familias',
+        labelEn: 'Families Community',
+        description: 'Directorio institucional de acudientes y comités escolares.',
+        descriptionEn: 'Official guardian directory and school committees.',
+        enabled: true,
+        order: 4,
+        iconName: 'UserCheck'
+      },
+      {
+        id: 'documents',
+        label: 'Supervisión Documental',
+        labelEn: 'Document Oversight',
+        description: 'Control de archivos legales y actas de grado.',
+        descriptionEn: 'Legal student files and graduation certificates.',
+        enabled: true,
+        order: 5,
+        iconName: 'FolderKanban'
+      },
+      {
+        id: 'institucion',
+        label: 'Información Institucional',
+        labelEn: 'School Information',
+        description: 'Sedes oficiales, historia y resoluciones de rectoría.',
+        descriptionEn: 'Official campuses, history, and rectoral resolutions.',
+        enabled: true,
+        order: 6,
+        iconName: 'Globe'
+      }
+    ],
+    widgets: [
+      {
+        id: 'kpi-retention',
+        title: 'Retención Escolar',
+        titleEn: 'Student Retention',
+        description: 'Meta institucional de permanencia estudiantil (98.4%).',
+        descriptionEn: 'Institutional retention goal (98.4%).',
+        category: 'kpi',
+        enabled: true,
+        order: 1
+      },
+      {
+        id: 'kpi-total-students',
+        title: 'Cobertura Oficial SIMAT',
+        titleEn: 'Official SIMAT Coverage',
+        description: 'Meta de 1.500 cupos escolares asignados.',
+        descriptionEn: '1,500 student slots target assigned.',
+        category: 'kpi',
+        enabled: true,
+        order: 2
+      },
+      {
+        id: 'kpi-completed',
+        title: 'Matrículas Legalizadas',
+        titleEn: 'Finalized Enrollments',
+        description: 'Estudiantes formalmente inscritos y aprobados.',
+        descriptionEn: 'Formally enrolled and approved students.',
+        category: 'kpi',
+        enabled: true,
+        order: 3
+      },
+      {
+        id: 'progress-bar',
+        title: 'Meta Institucional de Cupos',
+        titleEn: 'Institutional Slot Target',
+        description: 'Avance del 92% respecto a la capacidad de sedes.',
+        descriptionEn: '92% progress towards total school capacity.',
+        category: 'card',
+        enabled: true,
+        order: 4
+      },
+      {
+        id: 'chart-evolution',
+        title: 'Evolución de Matrículas por Periodo',
+        titleEn: 'Enrollment Trend by Term',
+        description: 'Comportamiento histórico y balance comparativo.',
+        descriptionEn: 'Historical behavior and comparative balance.',
+        category: 'chart',
+        enabled: true,
+        order: 5
+      },
+      {
+        id: 'chart-donut',
+        title: 'Distribución por Estados SIMAT',
+        titleEn: 'SIMAT Status Distribution',
+        description: 'Porcentaje en tiempo real de cupos y revisiones.',
+        descriptionEn: 'Real-time percentage of slots and reviews.',
+        category: 'chart',
+        enabled: true,
+        order: 6
+      }
+    ],
+    permissions: {
+      canDownloadCertificates: true,
+      canEditProfile: true,
+      canUploadAvatar: true,
+      canEnrollStudents: true,
+      canAuditDocuments: true,
+      canManageUsers: true,
+      canExportReports: true,
+      canViewAcademicRecords: true,
+      canConfigurePortals: true
     },
     lastUpdated: new Date().toISOString()
   }

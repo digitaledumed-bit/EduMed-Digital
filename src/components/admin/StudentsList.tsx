@@ -9,11 +9,9 @@ import {
   ChevronRight, 
   UserCheck,
   UserPlus,
-  Inbox,
-  BellRing
+  Inbox
 } from 'lucide-react';
 import { UserAvatar } from '../common/UserAvatar';
-import { NotifyAssignmentModal, StudentAssignmentTarget } from './NotifyAssignmentModal';
 
 export const StudentsList: React.FC = () => {
   const { 
@@ -27,8 +25,6 @@ export const StudentsList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [gradeFilter, setGradeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [notifyTarget, setNotifyTarget] = useState<StudentAssignmentTarget | null>(null);
-  const [isNotifyOpen, setIsNotifyOpen] = useState(false);
 
   const filteredStudents = students.filter((std) => {
     const matchesSearch =
@@ -56,27 +52,13 @@ export const StudentsList: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            onClick={() => {
-              setNotifyTarget(null);
-              setIsNotifyOpen(true);
-            }}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
-            title={language === 'es' ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
-          >
-            <BellRing className="w-4 h-4" />
-            <span>{language === 'es' ? 'Avisar Grado y Jornada' : 'Notify Shift & Grade'}</span>
-          </button>
-
-          <button
-            onClick={() => setActiveTab('wizard')}
-            className="px-4 py-2 bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{t.admin.students.newStudentBtn}</span>
-          </button>
-        </div>
+        <button
+          onClick={() => setActiveTab('wizard')}
+          className="px-4 py-2 bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold rounded-xl shadow-xs transition-colors flex items-center gap-2 cursor-pointer self-start sm:self-auto"
+        >
+          <Plus className="w-4 h-4" />
+          <span>{t.admin.students.newStudentBtn}</span>
+        </button>
       </div>
 
       {/* Filter and Search Bar */}
@@ -191,27 +173,6 @@ export const StudentsList: React.FC = () => {
 
                       <button
                         onClick={() => {
-                          setNotifyTarget({
-                            id: std.id,
-                            studentName: std.fullName,
-                            studentDoc: std.documentNumber,
-                            studentEmail: std.email,
-                            grade: std.grade,
-                            shift: std.shift,
-                            guardianName: primaryGuardian?.name,
-                            guardianPhone: primaryGuardian?.phone
-                          });
-                          setIsNotifyOpen(true);
-                        }}
-                        className="min-h-[44px] px-3 py-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold hover:bg-amber-100 flex items-center justify-center gap-1 cursor-pointer"
-                        title={language === 'es' ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
-                      >
-                        <BellRing className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                        <span>{language === 'es' ? 'Avisar' : 'Notify'}</span>
-                      </button>
-
-                      <button
-                        onClick={() => {
                           setSelectedStudentId(std.id);
                           setActiveTab('link-guardian');
                         }}
@@ -311,27 +272,6 @@ export const StudentsList: React.FC = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => {
-                            setNotifyTarget({
-                              id: std.id,
-                              studentName: std.fullName,
-                              studentDoc: std.documentNumber,
-                              studentEmail: std.email,
-                              grade: std.grade,
-                              shift: std.shift,
-                              guardianName: primaryGuardian?.name,
-                              guardianPhone: primaryGuardian?.phone
-                            });
-                            setIsNotifyOpen(true);
-                          }}
-                          className="px-2.5 py-1 text-xs font-bold rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/60 border border-amber-200 dark:border-amber-800 transition-colors flex items-center gap-1 cursor-pointer"
-                          title={language === 'es' ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
-                        >
-                          <BellRing className="w-3.5 h-3.5 text-amber-600" />
-                          <span>{language === 'es' ? 'Avisar' : 'Notify'}</span>
-                        </button>
-
-                        <button
-                          onClick={() => {
                             setSelectedStudentId(std.id);
                             setActiveTab('student-profile');
                           }}
@@ -346,7 +286,7 @@ export const StudentsList: React.FC = () => {
                             setSelectedStudentId(std.id);
                             setActiveTab('link-guardian');
                           }}
-                          className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors cursor-pointer"
+                          className="p-1.5 text-slate-400 hover:text-teal-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                           title={language === 'es' ? 'Vincular Acudiente' : 'Link Guardian'}
                         >
                           <UserPlus className="w-4 h-4" />
@@ -395,16 +335,6 @@ export const StudentsList: React.FC = () => {
         </div>
 
       </div>
-
-      {/* Modal de Aviso de Grado y Jornada */}
-      <NotifyAssignmentModal 
-        isOpen={isNotifyOpen} 
-        onClose={() => {
-          setIsNotifyOpen(false);
-          setNotifyTarget(null);
-        }} 
-        initialStudent={notifyTarget || undefined} 
-      />
 
     </div>
   );

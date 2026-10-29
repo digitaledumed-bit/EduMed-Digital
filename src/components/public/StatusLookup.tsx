@@ -474,7 +474,7 @@ export const StatusLookup: React.FC = () => {
                             </span>
                           </div>
                           <div className="text-lg font-black text-slate-900 dark:text-white">
-                            {result.academicYear || '2026'}
+                            {result.academicYear || '2024 - 2025'}
                           </div>
                           <div className="mt-1 text-xs text-slate-600 dark:text-slate-300">
                             Grado: <span className="font-bold">{result.grade}</span> • Jornada Mañana

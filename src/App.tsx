@@ -18,11 +18,12 @@ import { ParentsList } from './components/admin/ParentsList';
 import { DocumentsManagement } from './components/admin/DocumentsManagement';
 import { InstitutionalSettings } from './components/admin/InstitutionalSettings';
 import { PortalConfigView } from './components/admin/PortalConfigView';
+import { MandatoryEnrollmentGate } from './components/student/MandatoryEnrollmentGate';
 import { StudentMainDashboard } from './components/student/StudentMainDashboard';
 import { GuardianMainDashboard } from './components/guardian/GuardianMainDashboard';
 import { TeacherMainDashboard } from './components/teacher/TeacherMainDashboard';
 import { StudentEditProfileModal } from './components/student/StudentEditProfileModal';
-import { ShieldAlert } from 'lucide-react';
+import { ShieldAlert, ArrowLeft } from 'lucide-react';
 
 const MainAppContent: React.FC = () => {
   const { 
@@ -49,14 +50,9 @@ const MainAppContent: React.FC = () => {
   const isGuardian = currentUser.role === 'guardian';
   const isTeacher = currentUser.role === 'teacher';
   const isAdmin = currentUser.role === 'admin';
+  const isDirectivo = currentUser.role === 'directivo';
+  const isStaff = isAdmin || isDirectivo;
   const isEnrollmentDone = isStudent ? isStudentEnrollmentCompleted(currentUser.id) : true;
-
-  // Student role restriction: strictly only allowed to view assigned grade and shift on dashboard
-  React.useEffect(() => {
-    if (isStudent && activeTab !== 'dashboard') {
-      setActiveTab('dashboard');
-    }
-  }, [isStudent, activeTab, setActiveTab]);
 
   // Configuration screens (portal-config, settings) must remain strictly hidden from navigation
   React.useEffect(() => {
@@ -65,16 +61,18 @@ const MainAppContent: React.FC = () => {
     }
   }, [activeTab, setActiveTab]);
 
-  // Define admin-only views to enforce strict role isolation
-  const adminOnlyTabs = ['enrollments', 'link-guardian', 'parents', 'settings', 'portal-config'];
-  const isUnauthorizedAdminTab = !isAdmin && (
-    adminOnlyTabs.includes(activeTab) || 
-    (!isTeacher && activeTab === 'students') ||
-    (!isTeacher && !isGuardian && activeTab === 'documents')
+  // Define staff (admin & directivo) role isolation
+  // Directivos have executive oversight of enrollments, students, parents, documents, institucion.
+  // Administrative secretary operations like 'link-guardian' are restricted to administrative staff.
+  const isDirectivoRestrictedTab = isDirectivo && (activeTab === 'link-guardian' || activeTab === 'settings' || activeTab === 'portal-config');
+
+  const staffOnlyTabs = ['enrollments', 'link-guardian', 'parents', 'settings', 'portal-config'];
+  const isUnauthorizedStaffTab = !isStaff && (
+    staffOnlyTabs.includes(activeTab) || 
+    (!isTeacher && (activeTab === 'students' || activeTab === 'documents'))
   );
-  const isUnauthorizedStudentTab = isStudent && activeTab !== 'dashboard';
-  const isModuleAllowed = activeTab === 'dashboard' || isAdmin || isTeacher || isModuleEnabled(currentUser.role, activeTab);
-  const isUnauthorized = isUnauthorizedAdminTab || isUnauthorizedStudentTab || !isModuleAllowed;
+  const isModuleAllowed = activeTab === 'dashboard' || isStaff || isTeacher || isModuleEnabled(currentUser.role, activeTab);
+  const isUnauthorized = isDirectivoRestrictedTab || isUnauthorizedStaffTab || !isModuleAllowed;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col">
@@ -109,8 +107,8 @@ const MainAppContent: React.FC = () => {
                   </h2>
                   <p className="mt-3 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                     {language === 'es'
-                      ? (isUnauthorizedAdminTab
-                          ? `Esta sección pertenece exclusivamente al Portal Administrativo y Directivo de la I.E. Félix Henao Botero. Tu cuenta actual (${currentUser.name}) tiene asignado el rol de ${currentUser.role === 'student' ? 'Estudiante' : 'Acudiente'} y no tiene autorización para consultar estos registros.`
+                      ? (isUnauthorizedStaffTab
+                          ? `Esta sección pertenece exclusivamente al Portal Administrativo y Directivo de la I.E. Félix Henao Botero. Tu cuenta actual (${currentUser.name}) tiene asignado el rol de ${currentUser.role === 'student' ? 'Estudiante' : currentUser.role === 'guardian' ? 'Acudiente' : 'Usuario'} y no tiene autorización para consultar estos registros.`
                           : `El módulo solicitado ('${activeTab}') no se encuentra activo o autorizado en la configuración del portal para tu rol (${currentUser.role === 'student' ? 'Estudiante' : currentUser.role === 'guardian' ? 'Acudiente' : 'Usuario'}). Por favor consulta con la secretaría académica.`
                         )
                       : `This module is restricted or not authorized for your current user role. Please contact school administration.`}
@@ -132,11 +130,16 @@ const MainAppContent: React.FC = () => {
                     </button>
                   </div>
                 </div>
+              ) : isStudent && !isEnrollmentDone ? (
+                /* MANDATORY ENROLLMENT PROCESS GATE FOR STUDENTS */
+                <MandatoryEnrollmentGate 
+                  onEnrollmentCompleted={() => setActiveTab('dashboard')} 
+                />
               ) : (
                 <>
                   {activeTab === 'dashboard' && (
                     isStudent ? (
-                      <StudentMainDashboard />
+                      <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} />
                     ) : isGuardian ? (
                       <GuardianMainDashboard />
                     ) : isTeacher ? (
@@ -159,7 +162,7 @@ const MainAppContent: React.FC = () => {
                       <DocumentsManagement />
                     )
                   )}
-                  {activeTab === 'enrollments' && isAdmin && <EnrollmentsTable />}
+                  {activeTab === 'enrollments' && isStaff && <EnrollmentsTable />}
                   {activeTab === 'student-profile' && (
                     isStudent ? (
                       <StudentMainDashboard onResetEnrollmentForTest={() => resetStudentEnrollment(currentUser.id)} />
@@ -168,7 +171,7 @@ const MainAppContent: React.FC = () => {
                     )
                   )}
                   {activeTab === 'link-guardian' && isAdmin && <LinkGuardianView />}
-                  {activeTab === 'parents' && isAdmin && <ParentsList />}
+                  {activeTab === 'parents' && isStaff && <ParentsList />}
                   
                   {/* Direct views accessible to authorized users */}
                   {(activeTab === 'wizard') && <EnrollmentWizard />}
@@ -183,46 +186,38 @@ const MainAppContent: React.FC = () => {
           </div>
         )}
 
-        {/* Institutional Global Footer (rendered for internal views, wizard, status lookup, etc.) */}
-        {!(activeRole === 'public' && (activeTab === 'landing' || activeTab === 'home')) && (
-          <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/90 py-4 px-4 sm:px-6">
-            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 text-xs text-slate-500 dark:text-slate-400">
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <img 
-                  src={customLogoUrl} 
-                  alt="Escudo Institución Educativa Félix Henao Botero" 
-                  className="w-7 h-7 rounded-full object-cover border border-amber-400 bg-white shadow-2xs"
-                  onError={(e) => {
-                    (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
-                  }}
-                />
-                <span className="font-semibold text-slate-800 dark:text-slate-200 text-xs">I.E. Félix Henao Botero</span>
-                <span className="text-slate-400">·</span>
-                <span className="text-slate-500 dark:text-slate-400 text-xs">
-                  {language === 'es' ? 'EduMed Digital · Sistema Oficial de Matrícula y Gestión Escolar' : 'EduMed Digital · Official School Management System'}
-                </span>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[11px] text-slate-500 dark:text-slate-400">
-                <span>DANE: <strong className="font-mono text-slate-700 dark:text-slate-300">105001002345</strong></span>
-                <span>·</span>
-                <span>NIT: <strong className="font-mono text-slate-700 dark:text-slate-300">890980123-1</strong></span>
-                <span>·</span>
-                <span>Medellín, Colombia</span>
-                <span>·</span>
-                <span>© {new Date().getFullYear()}</span>
-              </div>
+        {/* Institutional Global Footer */}
+        <footer className="border-t border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 py-6 px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2.5">
+              <img 
+                src={customLogoUrl} 
+                alt="Escudo Institución Educativa" 
+                className="w-7 h-7 rounded-full object-cover border border-teal-600/50 bg-white shadow-xs"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
+                }}
+              />
+              <span className="font-bold text-slate-800 dark:text-slate-200">I.E. Félix Henao Botero</span>
+              <span>•</span>
+              <span>{language === 'es' ? 'Sistema Oficial de Matrícula y Gestión Escolar' : 'Official Enrollment & School Management System'}</span>
             </div>
-          </footer>
-        )}
 
-        {/* User Profile Editing Modal (Disabled for students as per institutional policy) */}
-        {currentUser?.role !== 'student' && (
-          <StudentEditProfileModal 
-            isOpen={isProfileModalOpen} 
-            onClose={() => setIsProfileModalOpen(false)} 
-          />
-        )}
+            <div className="flex items-center gap-3 sm:gap-4 text-xs">
+              <span>DANE: 105001002345</span>
+              <span>•</span>
+              <span>Medellín, Antioquia</span>
+              <span>•</span>
+              <span>© {new Date().getFullYear()}</span>
+            </div>
+          </div>
+        </footer>
+
+        {/* User Profile Editing Modal */}
+        <StudentEditProfileModal 
+          isOpen={isProfileModalOpen} 
+          onClose={() => setIsProfileModalOpen(false)} 
+        />
 
       </div>
   );

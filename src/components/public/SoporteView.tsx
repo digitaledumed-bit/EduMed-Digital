@@ -143,8 +143,8 @@ export const SoporteView: React.FC = () => {
                   </h4>
                   <p className="text-xs mt-1 text-emerald-700 dark:text-emerald-300">
                     {language === 'es'
-                      ? 'Número de radicado: #PQRS-2026-' + Math.floor(1000 + Math.random() * 9000) + '. La secretaría responderá a su correo registrado.'
-                      : 'Ticket #PQRS-2026-' + Math.floor(1000 + Math.random() * 9000) + '. We will reply to your email shortly.'}
+                      ? 'Número de radicado: #PQRS-2025-' + Math.floor(1000 + Math.random() * 9000) + '. La secretaría responderá a su correo registrado.'
+                      : 'Ticket #PQRS-2025-' + Math.floor(1000 + Math.random() * 9000) + '. We will reply to your email shortly.'}
                   </p>
                   <button
                     onClick={() => { setTicketSent(false); setTicketSubject(''); setTicketMessage(''); }}

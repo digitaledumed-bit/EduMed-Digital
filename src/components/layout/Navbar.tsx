@@ -17,14 +17,10 @@ import {
   Sparkles,
   LogOut,
   LogIn,
-  Menu,
-  LayoutDashboard,
-  FolderKanban,
-  Award,
-  LifeBuoy,
-  UserCheck,
-  FilePlus
+  Camera,
+  Menu
 } from 'lucide-react';
+import { AvatarChangeModal } from '../common/AvatarChangeModal';
 import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
 
 export const Navbar: React.FC = () => {
@@ -50,6 +46,7 @@ export const Navbar: React.FC = () => {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [showAvatarModal, setShowAvatarModal] = useState(false);
   const [showMobileNav, setShowMobileNav] = useState(false);
 
   const handleRoleChange = (role: 'public' | 'admin' | 'guardian' | 'student') => {
@@ -269,7 +266,7 @@ export const Navbar: React.FC = () => {
                         : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                     }`}
                   >
-                    {language === 'es' ? 'Estado Matrícula' : 'Enrollment Status'}
+                    {language === 'es' ? 'Estado SIMAT' : 'SIMAT Status'}
                   </button>
                 )}
                 {isModuleEnabled('guardian', 'beneficios') && (
@@ -287,18 +284,56 @@ export const Navbar: React.FC = () => {
               </>
             )}
 
-            {/* Student Portal Quick Links: strictly only assigned grade and shift */}
+            {/* Student Portal Quick Links (respects administrator's portal configuration) */}
             {currentUser && currentUser.role === 'student' && (
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`px-3.5 py-2 rounded-xl text-sm font-bold transition-colors ${
-                  activeTab === 'dashboard'
-                    ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-black'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                {language === 'es' ? 'Mi Grado y Jornada' : 'My Grade & Shift'}
-              </button>
+              <>
+                <button
+                  onClick={() => setActiveTab('dashboard')}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === 'dashboard' || activeTab === 'student-profile'
+                      ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                  }`}
+                >
+                  {language === 'es' ? 'Mi Portal y Notas' : 'My Grades'}
+                </button>
+                {isModuleEnabled('student', 'status') && (
+                  <button
+                    onClick={() => setActiveTab('status')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'status'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Estado Matrícula' : 'Enrollment Status'}
+                  </button>
+                )}
+                {isModuleEnabled('student', 'beneficios') && (
+                  <button
+                    onClick={() => setActiveTab('beneficios')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'beneficios'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Mis Beneficios' : 'My Benefits'}
+                  </button>
+                )}
+                {isModuleEnabled('student', 'institucion') && (
+                  <button
+                    onClick={() => setActiveTab('institucion')}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activeTab === 'institucion'
+                        ? 'text-teal-700 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40 font-semibold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    {language === 'es' ? 'Mi Colegio' : 'My School'}
+                  </button>
+                )}
+              </>
             )}
           </nav>
 
@@ -311,14 +346,17 @@ export const Navbar: React.FC = () => {
                 <span 
                   id="navbar-portal-badge"
                   className={`px-3 py-1 text-xs font-extrabold rounded-full border shadow-xs ${
-                    currentUser.role === 'admin'
+                    currentUser.role === 'directivo'
                       ? 'bg-amber-50 dark:bg-amber-950/70 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                      : currentUser.role === 'admin'
+                      ? 'bg-teal-50 dark:bg-teal-950/70 text-teal-800 dark:text-teal-300 border-teal-300 dark:border-teal-800'
                       : currentUser.role === 'student'
                       ? 'bg-blue-50 dark:bg-blue-950/70 text-blue-800 dark:text-blue-300 border-blue-300 dark:border-blue-800'
-                      : 'bg-teal-50 dark:bg-teal-950/70 text-teal-800 dark:text-teal-300 border-teal-300 dark:border-teal-800'
+                      : 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-800 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800'
                   }`}
                 >
-                  {currentUser.role === 'admin' && (language === 'es' ? 'Portal Administrativo / Directivo' : 'Administrative / Staff Portal')}
+                  {currentUser.role === 'directivo' && (language === 'es' ? 'Portal de Directivos' : 'Executive Leadership Portal')}
+                  {currentUser.role === 'admin' && (language === 'es' ? 'Portal Administrativo' : 'Administrative Portal')}
                   {currentUser.role === 'student' && (language === 'es' ? 'Portal Estudiante' : 'Student Portal')}
                   {currentUser.role === 'guardian' && (language === 'es' ? 'Portal Acudiente' : 'Guardian Portal')}
                 </span>
@@ -421,7 +459,7 @@ export const Navbar: React.FC = () => {
                           {language === 'es' ? 'Perfil: ' : 'Profile: '}
                           <strong className="text-slate-700 dark:text-slate-200">
                             {currentUser.role === 'admin'
-                              ? (currentUser.position || (language === 'es' ? 'Administrador General' : 'General Administrator'))
+                              ? (currentUser.position || (language === 'es' ? 'Personal Administrativo' : 'Administrative Staff'))
                               : currentUser.role === 'student'
                               ? 'Estudiante'
                               : 'Acudiente'}
@@ -480,10 +518,14 @@ export const Navbar: React.FC = () => {
             {currentUser ? (
               <div className="flex items-center gap-1.5 sm:gap-2 pl-1 sm:pl-2 shrink-0">
                 {currentUser.role === 'student' ? (
-                  /* Student Profile Badge with Gender-Based Avatar (Read-Only) */
+                  /* Student Profile Badge with Gender-Based Avatar & Photo Customizer */
                   <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1 rounded-2xl bg-teal-50 dark:bg-slate-800 border border-teal-300 dark:border-slate-700 shadow-xs">
-                    {/* Non-editable Avatar */}
-                    <div className="relative shrink-0">
+                    {/* Interactive Avatar with Gender and Photo-Changer */}
+                    <div 
+                      onClick={() => setShowAvatarModal(true)}
+                      className="relative group cursor-pointer shrink-0"
+                      title={language === 'es' ? 'Cambiar tu foto de avatar' : 'Change avatar photo'}
+                    >
                       <img
                         src={currentUser.avatarUrl || getDefaultAvatarByGender(currentUser.gender)}
                         alt={currentUser.name}
@@ -492,13 +534,16 @@ export const Navbar: React.FC = () => {
                           (e.currentTarget as HTMLImageElement).src = getDefaultAvatarByGender(currentUser.gender);
                         }}
                       />
+                      <div className="absolute inset-0 rounded-full bg-slate-900/50 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity">
+                        <Camera className="w-3.5 h-3.5" />
+                      </div>
                     </div>
 
                     {/* Student Name & Clean Label */}
                     <div 
-                      onClick={() => { setActiveRole('student'); setActiveTab('dashboard'); }}
+                      onClick={() => { setActiveRole('student'); setActiveTab('student-profile'); }}
                       className="text-left cursor-pointer hidden min-[400px]:block"
-                      title={language === 'es' ? 'Mi Grado y Jornada' : 'My Grade & Shift'}
+                      title={language === 'es' ? 'Ver expediente del estudiante' : 'View student record'}
                     >
                       <p className="text-xs sm:text-sm font-black text-slate-900 dark:text-white leading-tight truncate max-w-[90px] sm:max-w-[130px] md:max-w-[150px]">
                         {currentUser.name}
@@ -507,6 +552,17 @@ export const Navbar: React.FC = () => {
                         {language === 'es' ? 'Estudiante' : 'Student'}
                       </span>
                     </div>
+
+                    {/* Quick Button to Change Avatar Photo (Desktop & Tablet) */}
+                    <button
+                      type="button"
+                      onClick={() => setShowAvatarModal(true)}
+                      className="hidden md:inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-lg bg-white dark:bg-slate-700 hover:bg-teal-100 dark:hover:bg-slate-600 text-teal-700 dark:text-teal-200 border border-teal-200 dark:border-slate-600 transition-colors cursor-pointer shadow-2xs"
+                      title={language === 'es' ? 'Cambiar foto de avatar' : 'Change avatar photo'}
+                    >
+                      <Camera className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span>{language === 'es' ? 'Cambiar foto' : 'Change'}</span>
+                    </button>
                   </div>
                 ) : (
                   /* Admin / Guardian Chip */
@@ -540,18 +596,6 @@ export const Navbar: React.FC = () => {
                   <LogOut className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                   <span className="hidden sm:inline">{language === 'es' ? 'Cerrar Sesión' : 'Log Out'}</span>
                   <span className="sm:hidden text-xs">{language === 'es' ? 'Salir' : 'Exit'}</span>
-                </button>
-
-                {/* Mobile Navigation Toggle for Authenticated User */}
-                <button
-                  type="button"
-                  id="btn-mobile-nav-toggle-auth"
-                  onClick={() => setShowMobileNav(!showMobileNav)}
-                  className="md:hidden flex items-center justify-center min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] p-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors cursor-pointer"
-                  aria-label={showMobileNav ? 'Cerrar menú' : 'Abrir menú'}
-                  aria-expanded={showMobileNav}
-                >
-                  {showMobileNav ? <X className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400" /> : <Menu className="w-4.5 h-4.5" />}
                 </button>
               </div>
             ) : (
@@ -611,401 +655,113 @@ export const Navbar: React.FC = () => {
       {showMobileNav && (
         <div 
           id="mobile-nav-drawer"
-          className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-slate-900/98 backdrop-blur-md px-4 py-4 space-y-2 shadow-xl animate-in slide-in-from-top duration-200 max-h-[calc(100vh-5rem)] overflow-y-auto"
+          className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white/98 dark:bg-slate-900/98 backdrop-blur-md px-4 py-4 space-y-2 shadow-xl animate-in slide-in-from-top duration-200"
         >
-          {currentUser ? (
-            <>
-              {/* Authenticated User Header Card */}
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-full bg-teal-600 text-white font-bold flex items-center justify-center text-xs shadow-xs">
-                    {currentUser.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
-                      {currentUser.name}
-                    </div>
-                    <span className="text-[11px] font-semibold text-teal-600 dark:text-teal-400 capitalize">
-                      {currentUser.role === 'admin' 
-                        ? (language === 'es' ? 'Portal Directivo' : 'Admin Portal')
-                        : currentUser.role === 'student'
-                        ? (language === 'es' ? 'Portal Estudiante' : 'Student Portal')
-                        : currentUser.role === 'teacher'
-                        ? (language === 'es' ? 'Portal Docente' : 'Teacher Portal')
-                        : (language === 'es' ? 'Portal Acudiente' : 'Guardian Portal')}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-1">
+            {language === 'es' ? 'Navegación Institucional' : 'School Navigation'}
+          </div>
 
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2 pb-1">
-                {language === 'es' ? 'Módulos Disponibles' : 'Available Modules'}
-              </div>
+          <button
+            onClick={() => {
+              setActiveTab('home');
+              setShowMobileNav(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
+              activeTab === 'home' || activeTab === 'landing'
+                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{t.nav.home}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+          </button>
 
-              {/* Student Mobile Links: strictly only assigned grade and shift */}
-              {currentUser.role === 'student' && (
-                <button
-                  onClick={() => {
-                    setActiveRole('student');
-                    setActiveTab('dashboard');
-                    setShowMobileNav(false);
-                  }}
-                  className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-colors text-left cursor-pointer ${
-                    activeTab === 'dashboard'
-                      ? 'bg-teal-700 text-white font-bold shadow-xs'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                  }`}
-                >
-                  <GraduationCap className="w-4 h-4 shrink-0 text-teal-400" />
-                  <span>{language === 'es' ? 'Mi Grado y Jornada' : 'My Grade & Shift'}</span>
-                </button>
-              )}
+          <button
+            onClick={() => {
+              setActiveTab('institucion');
+              setShowMobileNav(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
+              activeTab === 'institucion'
+                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{language === 'es' ? 'La Institución Educativa' : 'School Information'}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+          </button>
 
-              {/* Guardian Mobile Links */}
-              {currentUser.role === 'guardian' && (
-                <>
-                  <button
-                    onClick={() => {
-                      setActiveRole('guardian');
-                      setActiveTab('dashboard');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'dashboard'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Users className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Portal del Acudiente' : 'Guardian Portal'}</span>
-                  </button>
+          <button
+            onClick={() => {
+              setActiveTab('beneficios');
+              setShowMobileNav(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
+              activeTab === 'beneficios'
+                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{language === 'es' ? 'Beneficios (PAE y Transporte)' : 'Benefits'}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+          </button>
 
-                  {isModuleEnabled('guardian', 'student-profile') && (
-                    <button
-                      onClick={() => {
-                        setActiveTab('student-profile');
-                        setShowMobileNav(false);
-                      }}
-                      className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                        activeTab === 'student-profile'
-                          ? 'bg-teal-700 text-white font-bold shadow-xs'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <GraduationCap className="w-4 h-4 shrink-0" />
-                      <span>{language === 'es' ? 'Expediente del Acudido' : 'Child Profile'}</span>
-                    </button>
-                  )}
+          <button
+            onClick={() => {
+              setActiveTab('soporte');
+              setShowMobileNav(false);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
+              activeTab === 'soporte'
+                ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+            }`}
+          >
+            <span>{language === 'es' ? 'Canal de Soporte y Contacto' : 'Support & Help'}</span>
+            <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
+          </button>
 
-                  {isModuleEnabled('guardian', 'status') && (
-                    <button
-                      onClick={() => {
-                        setActiveTab('status');
-                        setShowMobileNav(false);
-                      }}
-                      className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                        activeTab === 'status'
-                          ? 'bg-teal-700 text-white font-bold shadow-xs'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <Search className="w-4 h-4 shrink-0" />
-                      <span>{language === 'es' ? 'Estado de Matrícula' : 'Enrollment Status'}</span>
-                    </button>
-                  )}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
+            <button
+              onClick={() => {
+                setActiveTab('status');
+                setShowMobileNav(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <Search className="w-4 h-4 text-teal-600" />
+              <span>{language === 'es' ? 'Consultar Estado de Matrícula (SIMAT)' : 'Check Enrollment Status'}</span>
+            </button>
 
-                  {isModuleEnabled('guardian', 'beneficios') && (
-                    <button
-                      onClick={() => {
-                        setActiveTab('beneficios');
-                        setShowMobileNav(false);
-                      }}
-                      className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                        activeTab === 'beneficios'
-                          ? 'bg-teal-700 text-white font-bold shadow-xs'
-                          : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
-                    >
-                      <Award className="w-4 h-4 shrink-0" />
-                      <span>{language === 'es' ? 'Beneficios PAE y Transporte' : 'School Meals & Benefits'}</span>
-                    </button>
-                  )}
-
-                  <button
-                    onClick={() => {
-                      setActiveTab('wizard');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'wizard'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <FilePlus className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Inscribir Nuevo Estudiante' : 'Enroll New Student'}</span>
-                  </button>
-                </>
-              )}
-
-              {/* Admin Mobile Links */}
-              {currentUser.role === 'admin' && (
-                <>
-                  <button
-                    onClick={() => {
-                      setActiveRole('admin');
-                      setActiveTab('dashboard');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'dashboard'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <LayoutDashboard className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Panel de Control' : 'Dashboard'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveTab('enrollments');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'enrollments'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <FileText className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Gestión de Matrículas' : 'Enrollments'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveTab('students');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'students' || activeTab === 'student-profile'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Users className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Directorio de Estudiantes' : 'Students'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveTab('parents');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'parents'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <UserCheck className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Familias y Acudientes' : 'Guardians'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveTab('documents');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'documents'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <FolderKanban className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Validación Documental' : 'Documents'}</span>
-                  </button>
-                </>
-              )}
-
-              {/* Teacher Mobile Links */}
-              {currentUser.role === 'teacher' && (
-                <>
-                  <button
-                    onClick={() => {
-                      setActiveRole('teacher');
-                      setActiveTab('dashboard');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'dashboard'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <LayoutDashboard className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Portal Docente y Cursos' : 'Teacher Portal'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveTab('students');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'students'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <Users className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Mis Estudiantes' : 'My Students'}</span>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setActiveTab('documents');
-                      setShowMobileNav(false);
-                    }}
-                    className={`w-full flex items-center gap-3 min-h-[44px] px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors text-left cursor-pointer ${
-                      activeTab === 'documents'
-                        ? 'bg-teal-700 text-white font-bold shadow-xs'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
-                  >
-                    <FolderKanban className="w-4 h-4 shrink-0" />
-                    <span>{language === 'es' ? 'Documentos de Área' : 'Course Documents'}</span>
-                  </button>
-                </>
-              )}
-
-              {/* Bottom Mobile Action Buttons */}
-              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                <button
-                  onClick={() => {
-                    setActiveRole('public');
-                    setActiveTab('home');
-                    setShowMobileNav(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                >
-                  <Globe className="w-4 h-4 text-teal-600" />
-                  <span>{language === 'es' ? 'Ver Portal Institucional Público' : 'View Public Portal'}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setShowMobileNav(false);
-                    logout();
-                  }}
-                  className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800 text-xs font-bold transition-colors cursor-pointer"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>{language === 'es' ? 'Cerrar Sesión' : 'Log Out'}</span>
-                </button>
-              </div>
-            </>
-          ) : (
-            /* Public Mobile Navigation */
-            <>
-              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 pb-1">
-                {language === 'es' ? 'Navegación Institucional' : 'School Navigation'}
-              </div>
-
-              <button
-                onClick={() => {
-                  setActiveTab('home');
-                  setShowMobileNav(false);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
-                  activeTab === 'home' || activeTab === 'landing'
-                    ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <span>{t.nav.home}</span>
-                <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab('institucion');
-                  setShowMobileNav(false);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
-                  activeTab === 'institucion'
-                    ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <span>{language === 'es' ? 'La Institución Educativa' : 'School Information'}</span>
-                <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab('beneficios');
-                  setShowMobileNav(false);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
-                  activeTab === 'beneficios'
-                    ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <span>{language === 'es' ? 'Beneficios (PAE y Transporte)' : 'Benefits'}</span>
-                <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveTab('soporte');
-                  setShowMobileNav(false);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className={`w-full flex items-center justify-between min-h-[44px] px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-colors text-left cursor-pointer ${
-                  activeTab === 'soporte'
-                    ? 'bg-teal-50 dark:bg-teal-950/60 text-teal-700 dark:text-teal-300 font-bold'
-                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
-                }`}
-              >
-                <span>{language === 'es' ? 'Canal de Soporte y Contacto' : 'Support & Help'}</span>
-                <ChevronDown className="w-4 h-4 -rotate-90 opacity-40" />
-              </button>
-
-              <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                <button
-                  onClick={() => {
-                    setActiveTab('status');
-                    setShowMobileNav(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
-                >
-                  <Search className="w-4 h-4 text-teal-600" />
-                  <span>{language === 'es' ? 'Consultar Estado de Matrícula' : 'Check Enrollment Status'}</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setActiveTab('wizard');
-                    setShowMobileNav(false);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-xs cursor-pointer"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>{language === 'es' ? 'Iniciar Nueva Matrícula en Línea' : 'Start Online Enrollment'}</span>
-                </button>
-              </div>
-            </>
-          )}
+            <button
+              onClick={() => {
+                setActiveTab('wizard');
+                setShowMobileNav(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs font-bold shadow-xs cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>{language === 'es' ? 'Iniciar Nueva Matrícula en Línea' : 'Start Online Enrollment'}</span>
+            </button>
+          </div>
         </div>
+      )}
+
+      {/* Avatar Customization Modal for Student */}
+      {currentUser && currentUser.role === 'student' && (
+        <AvatarChangeModal
+          isOpen={showAvatarModal}
+          onClose={() => setShowAvatarModal(false)}
+          studentName={currentUser.name}
+          studentGender={currentUser.gender}
+          currentAvatarUrl={currentUser.avatarUrl}
+        />
       )}
     </header>
   );

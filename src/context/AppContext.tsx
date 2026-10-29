@@ -18,7 +18,14 @@ import {
 } from '../types';
 import { defaultPortalConfigs } from '../data/defaultPortalConfigs';
 import { translations } from '../i18n/translations';
-import { initialStudents, initialGuardians, initialEnrollments, initialDocuments, initialActivities } from '../data/mockData';
+import { 
+  initialStudents, 
+  initialGuardians, 
+  initialEnrollments, 
+  initialDocuments, 
+  initialActivities,
+  initialStaffUsers 
+} from '../data/mockData';
 import { 
   getDefaultAvatarByGender, 
   isMaleGender, 
@@ -29,7 +36,6 @@ import {
   resolveStudentAvatar,
   isDefaultIllustratedAvatar 
 } from '../utils/avatarUtils';
-import { sendFirebasePasswordResetEmail, isFirebaseConfigured } from '../config/firebase';
 
 interface AppContextType {
   language: Language;
@@ -72,7 +78,7 @@ interface AppContextType {
   }) => { success: boolean; message?: string };
   isEmailRegistered: (email: string) => boolean;
   logout: () => void;
-  requestPasswordResetCode: (email: string) => Promise<{ success: boolean; message?: string; code?: string }>;
+  requestPasswordResetCode: (email: string) => Promise<{ success: boolean; message?: string }>;
   verifyPasswordResetCode: (email: string, code: string) => Promise<{ success: boolean; message?: string }>;
   resetPasswordWithCode: (email: string, code: string, newPassword: string) => Promise<{ success: boolean; message?: string }>;
   customLogoUrl: string;
@@ -86,41 +92,25 @@ interface AppContextType {
 
   updateDocumentStatus: (docId: string, status: DocumentStatus, rejectionReason?: string) => void;
   updateEnrollmentStatus: (enrollmentId: string, status: EnrollmentStatus) => void;
-  approveAllStudentDocumentsAndEnrollment: (studentId: string) => void;
   addStudent: (student: Omit<Student, 'id'>) => string;
   addGuardian: (guardian: Omit<Guardian, 'id'>) => string;
   linkGuardianToStudent: (studentId: string, guardianData: { name: string; relationship: string; phone: string; email: string; isPrimary: boolean; livesWithStudent: boolean }) => void;
   submitNewEnrollment: (data: { student: Partial<Student>; guardian: Partial<Guardian>; documents: { name: string; file: File | null }[] }) => string;
-  addStudentDocument: (docData: {
-    studentId: string;
-    name: string;
-    category?: 'identity' | 'health' | 'academic' | 'other';
-    fileName: string;
-    fileSize: string;
-    fileUrl?: string;
-    file?: File | null;
-  }) => string;
   notifications: AppNotification[];
   markNotificationsAsRead: () => void;
   unreadCount: number;
-  notifyStudentAssignment: (data: {
-    studentId: string;
-    studentName: string;
-    studentEmail?: string;
-    studentDoc?: string;
-    grade: string;
-    shift: string;
-    classroom?: string;
-    homeroomTeacher?: string;
-    customNote?: string;
-  }) => boolean;
 
-  portalConfigs: Record<'admin' | 'guardian' | 'student', RolePortalConfig>;
-  updateRolePortalConfig: (role: 'admin' | 'guardian' | 'student', updatedConfig: RolePortalConfig) => Promise<{ success: boolean; message?: string }>;
-  resetRolePortalConfig: (role?: 'admin' | 'guardian' | 'student') => Promise<{ success: boolean; message?: string }>;
+  portalConfigs: Record<'admin' | 'guardian' | 'student' | 'directivo', RolePortalConfig>;
+  updateRolePortalConfig: (role: 'admin' | 'guardian' | 'student' | 'directivo', updatedConfig: RolePortalConfig) => Promise<{ success: boolean; message?: string }>;
+  resetRolePortalConfig: (role?: 'admin' | 'guardian' | 'student' | 'directivo') => Promise<{ success: boolean; message?: string }>;
   isModuleEnabled: (role: UserRole, moduleId: string) => boolean;
   isWidgetEnabled: (role: UserRole, widgetId: string) => boolean;
   hasPermission: (role: UserRole, permissionKey: keyof RolePermissions) => boolean;
+  loginAdminDirectivo: (
+    identifier: string,
+    pass: string,
+    userType: 'Administrativo' | 'Directivo'
+  ) => { success: boolean; message?: string; notFound?: boolean; unauthorizedRole?: boolean };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -182,38 +172,67 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [students, setStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem('edumed_students');
-    return saved ? JSON.parse(saved) : initialStudents;
+    if (saved) {
+      try {
+        const parsed: Student[] = JSON.parse(saved);
+        const existingIds = new Set(parsed.map(s => s.id));
+        const missing = initialStudents.filter(s => !existingIds.has(s.id));
+        if (missing.length > 0) {
+          const merged = [...parsed, ...missing];
+          localStorage.setItem('edumed_students', JSON.stringify(merged));
+          return merged;
+        }
+        return parsed;
+      } catch (e) {
+        return initialStudents;
+      }
+    }
+    return initialStudents;
   });
 
   const [guardians, setGuardians] = useState<Guardian[]>(() => {
     const saved = localStorage.getItem('edumed_guardians');
-    return saved ? JSON.parse(saved) : initialGuardians;
+    if (saved) {
+      try {
+        const parsed: Guardian[] = JSON.parse(saved);
+        const existingIds = new Set(parsed.map(g => g.id));
+        const missing = initialGuardians.filter(g => !existingIds.has(g.id));
+        if (missing.length > 0) {
+          const merged = [...parsed, ...missing];
+          localStorage.setItem('edumed_guardians', JSON.stringify(merged));
+          return merged;
+        }
+        return parsed;
+      } catch (e) {
+        return initialGuardians;
+      }
+    }
+    return initialGuardians;
   });
 
   const [enrollments, setEnrollments] = useState<EnrollmentRecord[]>(() => {
     const saved = localStorage.getItem('edumed_enrollments');
-    if (!saved) return initialEnrollments;
-    try {
-      const parsed: EnrollmentRecord[] = JSON.parse(saved);
-      const existingIds = new Set(parsed.map((e) => e.id));
-      const missing = initialEnrollments.filter((e) => !existingIds.has(e.id));
-      return [...parsed, ...missing];
-    } catch {
-      return initialEnrollments;
+    if (saved) {
+      try {
+        const parsed: EnrollmentRecord[] = JSON.parse(saved);
+        const existingIds = new Set(parsed.map(e => e.id));
+        const missing = initialEnrollments.filter(e => !existingIds.has(e.id));
+        if (missing.length > 0) {
+          const merged = [...parsed, ...missing];
+          localStorage.setItem('edumed_enrollments', JSON.stringify(merged));
+          return merged;
+        }
+        return parsed;
+      } catch (e) {
+        return initialEnrollments;
+      }
     }
+    return initialEnrollments;
   });
 
   const [documents, setDocuments] = useState<StudentDocument[]>(() => {
     const saved = localStorage.getItem('edumed_documents');
-    if (!saved) return initialDocuments;
-    try {
-      const parsed: StudentDocument[] = JSON.parse(saved);
-      const existingIds = new Set(parsed.map((d) => d.id));
-      const missing = initialDocuments.filter((d) => !existingIds.has(d.id));
-      return [...parsed, ...missing];
-    } catch {
-      return initialDocuments;
-    }
+    return saved ? JSON.parse(saved) : initialDocuments;
   });
 
   const [activities, setActivities] = useState<ActivityItem[]>(() => {
@@ -221,14 +240,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : initialActivities;
   });
 
+  // Seed institutional staff users (Alexander Miranda and Juan Jose Torres)
+  React.useEffect(() => {
+    try {
+      const savedUsers: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+      const userEmails = new Set(savedUsers.map((u: any) => (u.email || '').toLowerCase().trim()));
+      const toAdd = initialStaffUsers.filter(s => !userEmails.has(s.email.toLowerCase().trim()));
+      if (toAdd.length > 0) {
+        localStorage.setItem('edumed_registered_users', JSON.stringify([...savedUsers, ...toAdd]));
+      }
+    } catch (e) {
+      console.error('Failed to seed staff users:', e);
+    }
+  }, []);
+
   const initialNotifications: AppNotification[] = [
     // 1. Personal Administrativo y Directivos
     {
       id: 'notif-adm-1',
       title: 'Nuevas Solicitudes de Matrícula',
       titleEn: 'New Enrollment Applications',
-      message: 'Hay 5 solicitudes de matrícula pendientes por validación documental y asignación de cupos.',
-      messageEn: 'There are 5 pending enrollment applications awaiting document review and quota allocation.',
+      message: 'Hay 5 solicitudes de matrícula pendientes por validación documental y asignación en SIMAT.',
+      messageEn: 'There are 5 pending enrollment applications awaiting document review and SIMAT quota allocation.',
       date: 'Hace 15 min',
       dateEn: '15 min ago',
       read: false,
@@ -261,8 +294,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     },
     {
       id: 'notif-adm-4',
-      title: 'Cierre de Auditoría de Matrículas 2026',
-      titleEn: 'Enrollment 2026 Audit Closing Notice',
+      title: 'Cierre de Auditoría SIMAT 2025',
+      titleEn: 'SIMAT 2025 Audit Closing Notice',
       message: 'Recordatorio oficial: Plazo de consolidación de cupos escolares ante Secretaría de Educación de Medellín.',
       messageEn: 'Official reminder: Deadline for consolidating school quotas with the Medellín Education Secretariat.',
       date: 'Ayer',
@@ -339,8 +372,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       id: 'notif-std-2',
       title: 'Horario y Asignación de Grupo',
       titleEn: 'Schedule & Classroom Assignment',
-      message: 'Tu salón y directores de área para el periodo 2026 ya están disponibles en tu expediente escolar.',
-      messageEn: 'Your classroom and subject teachers for the 2026 school year are now available in your portal.',
+      message: 'Tu salón y directores de área para el periodo 2025 ya están disponibles en tu expediente escolar.',
+      messageEn: 'Your classroom and subject teachers for the 2025 school year are now available in your portal.',
       date: 'Hace 2 horas',
       dateEn: '2 hours ago',
       read: false,
@@ -375,8 +408,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     // 4. Circular Institucional General
     {
       id: 'notif-gen-1',
-      title: 'Calendario Escolar y Recesos 2026',
-      titleEn: '2026 School Calendar & Holidays',
+      title: 'Calendario Escolar y Recesos 2025',
+      titleEn: '2025 School Calendar & Holidays',
       message: 'Publicado el cronograma oficial de semanas pedagógicas, evaluaciones institucionales y actos cívicos.',
       messageEn: 'The official schedule of pedagogical weeks, term exams, and civic assemblies is now published.',
       date: 'Esta semana',
@@ -451,13 +484,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // =========================================================================
   // PORTAL CONFIGURATION PER ROLE (ADMIN, GUARDIAN, STUDENT)
   // =========================================================================
-  const [portalConfigs, setPortalConfigs] = useState<Record<'admin' | 'guardian' | 'student', RolePortalConfig>>(() => {
+  const [portalConfigs, setPortalConfigs] = useState<Record<'admin' | 'guardian' | 'student' | 'directivo', RolePortalConfig>>(() => {
     const saved = localStorage.getItem('edumed_portal_configs');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.admin && parsed.guardian && parsed.student) {
-          return parsed;
+          return {
+            ...defaultPortalConfigs,
+            ...parsed
+          };
         }
       } catch (e) {
         console.error('Error parsing stored portal configs:', e);
@@ -500,7 +536,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, [currentUser?.role, activeRole]);
 
   const updateRolePortalConfig = async (
-    role: 'admin' | 'guardian' | 'student', 
+    role: 'admin' | 'guardian' | 'student' | 'directivo', 
     updatedConfig: RolePortalConfig
   ): Promise<{ success: boolean; message?: string }> => {
     const finalizedConfig: RolePortalConfig = {
@@ -537,7 +573,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const resetRolePortalConfig = async (
-    role?: 'admin' | 'guardian' | 'student'
+    role?: 'admin' | 'guardian' | 'student' | 'directivo'
   ): Promise<{ success: boolean; message?: string }> => {
     if (role) {
       const freshDefault = JSON.parse(JSON.stringify(defaultPortalConfigs[role]));
@@ -574,8 +610,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isModuleEnabled = (role: UserRole, moduleId: string): boolean => {
     if (role === 'public') return true;
-    if (role === 'student') return moduleId === 'dashboard';
-    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student' | 'directivo'] || portalConfigs.admin;
     if (!config || !config.modules) return true;
     const mod = config.modules.find(m => m.id === moduleId);
     return mod ? mod.enabled : true;
@@ -583,7 +618,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const isWidgetEnabled = (role: UserRole, widgetId: string): boolean => {
     if (role === 'public') return true;
-    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student' | 'directivo'] || portalConfigs.admin;
     if (!config || !config.widgets) return true;
     const widget = config.widgets.find(w => w.id === widgetId);
     return widget ? widget.enabled : true;
@@ -591,7 +626,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const hasPermission = (role: UserRole, permissionKey: keyof RolePermissions): boolean => {
     if (role === 'public') return false;
-    const config = portalConfigs[role as 'admin' | 'guardian' | 'student'];
+    const config = portalConfigs[role as 'admin' | 'guardian' | 'student' | 'directivo'] || portalConfigs.admin;
     if (!config || !config.permissions) return false;
     return Boolean(config.permissions[permissionKey]);
   };
@@ -628,172 +663,44 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateDocumentStatus = (docId: string, status: DocumentStatus, rejectionReason?: string) => {
-    let affectedStudentId: string | undefined;
-    let targetDocName: string = '';
-
     setDocuments((prev) =>
-      prev.map((d) => {
-        if (d.id === docId) {
-          affectedStudentId = d.studentId;
-          targetDocName = d.name;
-          return {
-            ...d,
-            status,
-            rejectionReason: status === 'rejected' ? rejectionReason || 'Documento no cumple requisitos.' : undefined
-          };
-        }
-        return d;
-      })
+      prev.map((d) =>
+        d.id === docId
+          ? {
+              ...d,
+              status,
+              rejectionReason: status === 'rejected' ? rejectionReason || 'Documento no cumple requisitos.' : undefined
+            }
+          : d
+      )
     );
 
-    const doc = documents.find((d) => d.id === docId);
-    const studentId = affectedStudentId || doc?.studentId;
-    const docName = targetDocName || doc?.name || 'Documento';
-
-    if (doc || targetDocName) {
+    const doc = documents.find(d => d.id === docId);
+    if (doc) {
       const newActivity: ActivityItem = {
         id: 'act-' + Date.now(),
         timeAgo: 'Justo ahora',
         timeAgoEn: 'Just now',
-        description: `Documento "${docName}" ${status === 'approved' ? 'aprobado' : status === 'rejected' ? 'rechazado' : 'actualizado'} por Administración General`,
-        descriptionEn: `Document "${docName}" ${status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'updated'} by General Administration`,
+        description: `Documento "${doc.name}" ${status === 'approved' ? 'aprobado' : status === 'rejected' ? 'rechazado' : 'actualizado'} por Administración`,
+        descriptionEn: `Document "${doc.name}" ${status === 'approved' ? 'approved' : status === 'rejected' ? 'rejected' : 'updated'} by Administration`,
         type: status === 'approved' ? 'completed' : status === 'rejected' ? 'warning' : 'review'
       };
       setActivities((prev) => [newActivity, ...prev]);
     }
-
-    // Al momento de aprobar documentos, verificar si la matrícula del estudiante debe quedar Aprobada
-    if (status === 'approved' && studentId) {
-      const studentOtherDocs = documents.filter((d) => d.studentId === studentId && d.id !== docId);
-      const allDocsApproved = studentOtherDocs.every((d) => d.status === 'approved');
-
-      if (allDocsApproved) {
-        setEnrollments((prev) =>
-          prev.map((e) => {
-            if (e.studentId === studentId && e.status !== 'approved') {
-              return {
-                ...e,
-                status: 'approved',
-                step: 6,
-                lastUpdated: new Date().toLocaleDateString('es-CO', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }),
-                notes: 'Matrícula Aprobada: Expediente digital validado y documentos aprobados oficialmente por Administración General.'
-              };
-            }
-            return e;
-          })
-        );
-
-        const std = students.find((s) => s.id === studentId);
-        setActivities((prev) => [
-          {
-            id: 'act-mat-' + Date.now(),
-            timeAgo: 'Justo ahora',
-            timeAgoEn: 'Just now',
-            description: `Solicitud de matrícula para ${std?.fullName || 'el estudiante'} formalmente Aprobada tras la verificación y aprobación de todos los documentos del expediente digital.`,
-            descriptionEn: `Enrollment application for ${std?.fullName || 'student'} officially Approved after full verification and approval of digital record documents.`,
-            type: 'completed',
-            studentName: std?.fullName
-          },
-          ...prev
-        ]);
-      }
-    }
   };
 
-  const approveAllStudentDocumentsAndEnrollment = (studentId: string) => {
-    // 1. Aprobar todos los documentos del estudiante
-    setDocuments((prev) =>
-      prev.map((d) =>
-        d.studentId === studentId ? { ...d, status: 'approved' as DocumentStatus, rejectionReason: undefined } : d
-      )
-    );
-
-    // 2. Aprobar matrícula del estudiante
+  const updateEnrollmentStatus = (enrollmentId: string, status: EnrollmentStatus) => {
     setEnrollments((prev) =>
       prev.map((e) =>
-        e.studentId === studentId
+        e.id === enrollmentId
           ? {
               ...e,
-              status: 'approved' as EnrollmentStatus,
-              step: 6,
-              lastUpdated: new Date().toLocaleDateString('es-CO', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              }),
-              notes: 'Matrícula Aprobada: Expediente digital completo validado y aprobado en bloque por Administración General.'
+              status,
+              lastUpdated: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
             }
           : e
       )
     );
-
-    // 3. Activar estudiante si estaba in_process
-    setStudents((prev) =>
-      prev.map((s) => (s.id === studentId && s.status !== 'active' ? { ...s, status: 'active' } : s))
-    );
-
-    // 4. Registro de actividad institucional
-    const std = students.find((s) => s.id === studentId);
-    setActivities((prev) => [
-      {
-        id: 'act-all-' + Date.now(),
-        timeAgo: 'Justo ahora',
-        timeAgoEn: 'Just now',
-        description: `Expediente digital auditado: Todos los documentos aprobados y Matrícula Aprobada formalmente para ${std?.fullName || 'el estudiante'} por Administración General.`,
-        descriptionEn: `Digital record audited: All documents approved and Enrollment officially Approved for ${std?.fullName || 'the student'} by General Administration.`,
-        type: 'completed',
-        studentName: std?.fullName
-      },
-      ...prev
-    ]);
-  };
-
-  const updateEnrollmentStatus = (enrollmentId: string, status: EnrollmentStatus) => {
-    let affectedStudentId: string | undefined;
-
-    setEnrollments((prev) =>
-      prev.map((e) => {
-        if (e.id === enrollmentId) {
-          affectedStudentId = e.studentId;
-          return {
-            ...e,
-            status,
-            lastUpdated: new Date().toLocaleDateString('es-CO', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            }),
-            notes:
-              status === 'approved'
-                ? 'Matrícula Aprobada oficialmente por Administración General.'
-                : status === 'rejected'
-                ? 'Matrícula rechazada por requisitos documentales o cupo no disponible.'
-                : e.notes
-          };
-        }
-        return e;
-      })
-    );
-
-    // Si se aprueba la matrícula, sincronizar documentos a aprobados y estudiante activo
-    if (status === 'approved' && affectedStudentId) {
-      setStudents((prev) =>
-        prev.map((s) => (s.id === affectedStudentId ? { ...s, status: 'active' } : s))
-      );
-      setDocuments((prev) =>
-        prev.map((d) => (d.studentId === affectedStudentId ? { ...d, status: 'approved', rejectionReason: undefined } : d))
-      );
-    }
   };
 
   const addStudent = (studentData: Omit<Student, 'id'>): string => {
@@ -862,7 +769,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     guardian: Partial<Guardian>;
     documents: { name: string; file: File | null }[];
   }): string => {
-    const radicado = `#MAT-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const radicado = `#MAT-2024-${Math.floor(1000 + Math.random() * 9000)}`;
     const newStudentId = 'std-' + (students.length + 1);
 
     const newStudent: Student = {
@@ -903,7 +810,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       studentId: newStudentId,
       studentName: newStudent.fullName,
       studentDoc: newStudent.documentNumber,
-      academicYear: '2026',
+      academicYear: '2024 - 2025',
       grade: newStudent.grade,
       submissionDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }),
       status: 'in_review',
@@ -926,7 +833,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       fileSize: '1.5 MB',
       uploadDate: 'Hoy',
       status: 'in_review',
-      fileUrl: doc.file ? URL.createObjectURL(doc.file) : '#'
+      fileUrl: '#'
     }));
 
     setStudents((prev) => [newStudent, ...prev]);
@@ -949,47 +856,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     ]);
 
     return radicado;
-  };
-
-  const addStudentDocument = (docData: {
-    studentId: string;
-    name: string;
-    category?: 'identity' | 'health' | 'academic' | 'other';
-    fileName: string;
-    fileSize: string;
-    fileUrl?: string;
-    file?: File | null;
-  }): string => {
-    const newId = 'doc-upload-' + Date.now();
-    const generatedUrl = docData.fileUrl || (docData.file ? URL.createObjectURL(docData.file) : '#');
-    const newDoc: StudentDocument = {
-      id: newId,
-      studentId: docData.studentId,
-      name: docData.name,
-      category: docData.category || 'other',
-      fileName: docData.fileName,
-      fileSize: docData.fileSize,
-      uploadDate: new Date().toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-      status: 'in_review',
-      fileUrl: generatedUrl
-    };
-
-    setDocuments((prev) => [newDoc, ...prev]);
-
-    const std = students.find((s) => s.id === docData.studentId);
-    setActivities((prev) => [
-      {
-        id: 'act-' + Date.now(),
-        timeAgo: 'Justo ahora',
-        timeAgoEn: 'Just now',
-        description: `Nuevo documento "${docData.name}" subido para el estudiante ${std?.fullName || docData.studentId}`,
-        descriptionEn: `New document "${docData.name}" uploaded for student ${std?.fullName || docData.studentId}`,
-        type: 'review'
-      },
-      ...prev
-    ]);
-
-    return newId;
   };
 
   const lookupEnrollmentStatus = (query: string): EnrollmentRecord | null => {
@@ -1059,21 +925,35 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     // 2. Check predefined demo / seed users
+    const isDirectivoMatch =
+      cleanId === 'rectoria@edumed.edu.co' ||
+      cleanId === 'rector@edumed.edu.co' ||
+      cleanId === 'directivo@edumed.edu.co' ||
+      cleanId === 'coordinacion@edumed.edu.co' ||
+      cleanId === 'digitaledumed@gmail.com' ||
+      cleanId === '1013346890' ||
+      cleanId === 'digitaledumed' ||
+      cleanId === '71654321';
+
     const isAdminMatch = cleanId === 'admin@edumed.edu.co' || 
       cleanId === 'admin' || 
       cleanId === '43981245' || 
-      cleanId === 'rector@edumed.edu.co' || 
       cleanId === 'coordinador@edumed.edu.co' || 
-      cleanId === 'secretaria@edumed.edu.co';
+      cleanId === 'secretaria@edumed.edu.co' ||
+      cleanId === 'admisiones@edumed.edu.co' ||
+      cleanId === 'alexandermiranda270608@gmail.com' ||
+      cleanId === '1033184935' ||
+      cleanId === 'alexandermiranda' ||
+      cleanId === '32456781';
     const isStudentMatch = cleanId === 'mateo.restrepo@edumed.edu.co' || cleanId === 'mateo' || cleanId === '1035982147' || cleanId === 'ti 1035982147';
     const isGuardianMatch = cleanId === 'maria.gonzalez@gmail.com' || cleanId === 'maria' || cleanId === '43892104' || cleanId === 'cc 43892104';
 
     // 3. Check existing guardians and students in database
-    const foundGuardian = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered
-      ? guardians.find(g => g.email?.toLowerCase() === cleanId || g.name?.toLowerCase() === cleanId || (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits))
+    const foundGuardian = !isDirectivoMatch && !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered
+      ? guardians.find(g => g.email?.toLowerCase() === cleanId || g.fullName?.toLowerCase() === cleanId || (g.documentNumber && g.documentNumber.replace(/\D/g, '') === rawIdDigits) || (g.phone && g.phone.replace(/\D/g, '') === rawIdDigits))
       : null;
 
-    const foundStudent = !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered && !foundGuardian
+    const foundStudent = !isDirectivoMatch && !isAdminMatch && !isStudentMatch && !isGuardianMatch && !foundRegistered && !foundGuardian
       ? students.find(s => 
           s.email?.toLowerCase() === cleanId || 
           s.fullName?.toLowerCase() === cleanId || 
@@ -1082,7 +962,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       : null;
 
     // Determine if ANY account exists
-    const accountExists = Boolean(foundRegistered || isAdminMatch || isStudentMatch || isGuardianMatch || foundGuardian || foundStudent);
+    const accountExists = Boolean(foundRegistered || isDirectivoMatch || isAdminMatch || isStudentMatch || isGuardianMatch || foundGuardian || foundStudent);
 
     if (!accountExists) {
       return {
@@ -1132,17 +1012,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           institutionCode: foundRegistered.institutionCode
         };
       }
-    } else if (isAdminMatch) {
-      passwordValid = cleanPass === 'admin2025' || cleanPass === '12345' || cleanPass === 'admin' || isCustomPasswordMatch;
+    } else if (isDirectivoMatch) {
+      const isJuanJose = cleanId.includes('digitaledumed') || cleanId === '1013346890';
+      passwordValid = cleanPass === '13' || cleanPass === 'rector2026' || cleanPass === 'directivo2026' || cleanPass === '12345' || cleanPass === 'admin2025' || isCustomPasswordMatch;
       if (passwordValid) {
-        authUser = {
-          id: 'usr-admin-1',
-          name: 'Lic. Claudia Restrepo',
-          email: 'admin@edumed.edu.co',
-          role: 'admin',
-          documentNumber: '43981245',
-          phone: '300 456 7890'
-        };
+        if (isJuanJose) {
+          authUser = {
+            id: 'usr-staff-juanjose',
+            name: 'Juan Jose Torres',
+            email: 'digitaledumed@gmail.com',
+            role: 'directivo',
+            position: 'Rector — Dirección institucional',
+            department: 'Rectoría y Dirección Institucional',
+            documentNumber: '1013346890',
+            phone: '+57 312 101 3346',
+            guardianValidationCode: '13'
+          };
+        } else {
+          const isRector = cleanId.includes('rector') || cleanId === '71654321';
+          authUser = {
+            id: isRector ? 'usr-rector-1' : 'usr-directivo-1',
+            name: isRector ? 'Mag. Carlos Alberto Henao' : 'Dra. Elena Gómez Restrepo',
+            email: cleanId.includes('@') ? cleanId : (isRector ? 'rectoria@edumed.edu.co' : 'directivo@edumed.edu.co'),
+            role: 'directivo',
+            position: isRector ? 'Rector Institucional' : 'Coordinadora Académica Directiva',
+            department: 'Rectoría y Consejo Directivo',
+            documentNumber: isRector ? '71654321' : '43567890',
+            phone: '310 892 4567'
+          };
+        }
+      }
+    } else if (isAdminMatch) {
+      const isAlexander = cleanId.includes('alexandermiranda') || cleanId === '1033184935';
+      passwordValid = cleanPass === '12' || cleanPass === 'admin2025' || cleanPass === 'secretaria2026' || cleanPass === '12345' || cleanPass === 'admin' || isCustomPasswordMatch;
+      if (passwordValid) {
+        if (isAlexander) {
+          authUser = {
+            id: 'usr-staff-alexander',
+            name: 'Alexander Miranda',
+            email: 'alexandermiranda270608@gmail.com',
+            role: 'admin',
+            position: 'Coordinador — Gestión académica',
+            department: 'Coordinación y Gestión Académica',
+            documentNumber: '1033184935',
+            phone: '+57 310 331 8493',
+            guardianValidationCode: '12'
+          };
+        } else {
+          authUser = {
+            id: 'usr-admin-1',
+            name: 'Lic. Claudia Restrepo',
+            email: cleanId.includes('@') ? cleanId : 'admin@edumed.edu.co',
+            role: 'admin',
+            position: 'Secretaría Académica General',
+            department: 'Administración y Registro Escolar',
+            documentNumber: '43981245',
+            phone: '300 456 7890'
+          };
+        }
       }
     } else if (isStudentMatch) {
       passwordValid = cleanPass === 'mateo2025' || cleanPass === '12345' || cleanPass === 'mateo' || isCustomPasswordMatch;
@@ -1174,18 +1101,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
       }
     } else if (foundGuardian) {
-      passwordValid = cleanPass === '12345' || cleanPass === 'maria2025' || cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
+      const gCode = foundGuardian.verificationCode || '';
+      const gDocDigits = foundGuardian.documentNumber ? foundGuardian.documentNumber.replace(/\D/g, '') : '';
+      passwordValid = cleanPass === '12345' || 
+                      cleanPass === 'maria2025' || 
+                      (Boolean(gCode) && cleanPass === gCode) || 
+                      (Boolean(gDocDigits) && cleanPass === gDocDigits) ||
+                      cleanPass === (foundGuardian.phone ? foundGuardian.phone.replace(/\D/g, '') : '12345') || 
+                      isCustomPasswordMatch;
       if (passwordValid) {
         authUser = {
           id: foundGuardian.id,
-          name: foundGuardian.name,
+          name: foundGuardian.fullName,
           email: foundGuardian.email || `${cleanId}@edumed.edu.co`,
           role: 'guardian',
-          phone: foundGuardian.phone
+          documentNumber: foundGuardian.documentNumber,
+          phone: foundGuardian.phone,
+          guardianValidationCode: foundGuardian.verificationCode
         };
       }
     } else if (foundStudent) {
-      passwordValid = cleanPass === '12345' || cleanPass === 'mateo2025' || cleanPass === (foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '12345') || isCustomPasswordMatch;
+      const sDocDigits = foundStudent.documentNumber ? foundStudent.documentNumber.replace(/\D/g, '') : '';
+      passwordValid = cleanPass === '12345' || 
+                      cleanPass === 'mateo2025' || 
+                      (Boolean(sDocDigits) && cleanPass === sDocDigits) || 
+                      isCustomPasswordMatch;
       if (passwordValid) {
         const studentGender = foundStudent.gender || undefined;
         const customAvatar = getSavedCustomPhoto(foundStudent.id, foundStudent.email) ||
@@ -1199,7 +1139,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           gender: studentGender,
           avatarUrl: effectiveAvatar,
           documentNumber: foundStudent.documentNumber,
-          phone: '318 765 4321'
+          phone: foundStudent.phone || '318 765 4321'
         };
       }
     }
@@ -1257,6 +1197,266 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: language === 'es' ? '¡Bienvenido al sistema!' : 'Welcome to the platform!' };
   };
 
+  const loginAdminDirectivo = (
+    identifier: string,
+    pass: string,
+    userType: 'Administrativo' | 'Directivo'
+  ): { success: boolean; message?: string; notFound?: boolean; unauthorizedRole?: boolean } => {
+    const cleanId = (identifier || '').trim().toLowerCase();
+    const cleanPass = (pass || '').trim();
+
+    // Requisito 3: Si faltan campos
+    if (!cleanId || !cleanPass || !userType) {
+      return {
+        success: false,
+        message: language === 'es'
+          ? 'Complete todos los campos obligatorios para continuar'
+          : 'Complete all required fields to continue'
+      };
+    }
+
+    // 1. Cuentas institucionales autorizadas como Directivo:
+    const isDirectivoPredefined =
+      cleanId === 'rectoria@edumed.edu.co' ||
+      cleanId === 'rector@edumed.edu.co' ||
+      cleanId === 'directivo@edumed.edu.co' ||
+      cleanId === 'coordinacion@edumed.edu.co' ||
+      cleanId === 'digitaledumed@gmail.com' ||
+      cleanId === '1013346890' ||
+      cleanId === 'digitaledumed' ||
+      cleanId === '71654321';
+
+    // 2. Cuentas institucionales autorizadas como Administrativo:
+    const isAdministrativoPredefined =
+      cleanId === 'admin@edumed.edu.co' ||
+      cleanId === 'secretaria@edumed.edu.co' ||
+      cleanId === 'admisiones@edumed.edu.co' ||
+      cleanId === 'coordinador@edumed.edu.co' ||
+      cleanId === 'alexandermiranda270608@gmail.com' ||
+      cleanId === '1033184935' ||
+      cleanId === 'alexandermiranda' ||
+      cleanId === 'admin' ||
+      cleanId === '43981245' ||
+      cleanId === '32456781';
+
+    // 3. Cuentas en almacenamiento local
+    const registeredUsers: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    const rawIdDigits = cleanId.replace(/\D/g, '');
+    const foundRegistered = registeredUsers.find((u: any) => {
+      const uEmail = (u.email || '').toLowerCase().trim();
+      const uName = (u.name || '').toLowerCase().trim();
+      const uDoc = (u.documentNumber || '').toLowerCase().trim();
+      const uDocDigits = uDoc.replace(/\D/g, '');
+      return (
+        uEmail === cleanId ||
+        uName === cleanId ||
+        uDoc === cleanId ||
+        (rawIdDigits && uDocDigits && rawIdDigits === uDocDigits)
+      );
+    });
+
+    // Validar si el usuario pertenece a estudiante o acudiente (no autorizado en este portal)
+    const isStudentAccount =
+      cleanId === 'mateo.restrepo@edumed.edu.co' ||
+      cleanId === '1035982147' ||
+      cleanId === 'molina12sara@gmail.com' ||
+      cleanId === '1038809029' ||
+      cleanId === 'yeleidy.davila22@gmail.com' ||
+      cleanId === '1025662108' ||
+      (foundRegistered && foundRegistered.role === 'student');
+
+    const isGuardianAccount =
+      cleanId === 'maria.gonzalez@gmail.com' ||
+      cleanId === '43892104' ||
+      cleanId === 'nicole.roa7729@gmail.com' ||
+      cleanId === '1017287888' ||
+      cleanId === 'luztoscano051@gmail.com' ||
+      cleanId === '1064191482' ||
+      (foundRegistered && foundRegistered.role === 'guardian');
+
+    if (isStudentAccount || isGuardianAccount) {
+      return {
+        success: false,
+        unauthorizedRole: true,
+        message: language === 'es'
+          ? 'La cuenta ingresada no cuenta con autorización para acceder al Portal Administrativo y Directivo. Por favor use el inicio de sesión correspondiente.'
+          : 'The entered account is not authorized to access the Administrative and Leadership Portal.'
+      };
+    }
+
+    // Verificar si la cuenta existe y a qué tipo corresponde
+    let accountAuthorizedType: 'Administrativo' | 'Directivo' | null = null;
+    let authUser: AuthUser | null = null;
+    let passwordValid = false;
+
+    const customPasswords: Record<string, string> = JSON.parse(localStorage.getItem('edumed_custom_passwords') || '{}');
+    const isCustomMatch = (Boolean(customPasswords[cleanId]) && cleanPass === customPasswords[cleanId]);
+
+    if (isDirectivoPredefined) {
+      accountAuthorizedType = 'Directivo';
+      const isJuanJose = cleanId.includes('digitaledumed') || cleanId === '1013346890';
+      passwordValid =
+        (isJuanJose && cleanPass === '13') ||
+        cleanPass === 'rector2026' ||
+        cleanPass === 'directivo2026' ||
+        cleanPass === '12345' ||
+        cleanPass === 'admin2025' ||
+        cleanPass === 'rector' ||
+        cleanPass === 'directivo' ||
+        isCustomMatch;
+
+      if (passwordValid) {
+        if (isJuanJose) {
+          authUser = {
+            id: 'usr-staff-juanjose',
+            name: 'Juan Jose Torres',
+            email: 'digitaledumed@gmail.com',
+            role: 'directivo',
+            position: 'Rector — Dirección institucional',
+            department: 'Rectoría y Dirección Institucional',
+            documentNumber: '1013346890',
+            phone: '+57 312 101 3346',
+            guardianValidationCode: '13'
+          };
+        } else {
+          const isRector = cleanId.includes('rector') || cleanId === '71654321';
+          authUser = {
+            id: isRector ? 'usr-rector-1' : 'usr-directivo-1',
+            name: isRector ? 'Mag. Carlos Alberto Henao' : 'Dra. Elena Gómez Restrepo',
+            email: cleanId.includes('@') ? cleanId : (isRector ? 'rectoria@edumed.edu.co' : 'directivo@edumed.edu.co'),
+            role: 'directivo',
+            position: isRector ? 'Rector Institucional' : 'Coordinadora Académica Directiva',
+            department: 'Rectoría y Consejo Directivo',
+            documentNumber: isRector ? '71654321' : '43567890',
+            phone: '310 892 4567'
+          };
+        }
+      }
+    } else if (isAdministrativoPredefined) {
+      accountAuthorizedType = 'Administrativo';
+      const isAlexander = cleanId.includes('alexandermiranda') || cleanId === '1033184935';
+      passwordValid =
+        (isAlexander && cleanPass === '12') ||
+        cleanPass === 'admin2025' ||
+        cleanPass === 'secretaria2026' ||
+        cleanPass === '12345' ||
+        cleanPass === 'admin' ||
+        cleanPass === 'secretaria' ||
+        isCustomMatch;
+
+      if (passwordValid) {
+        if (isAlexander) {
+          authUser = {
+            id: 'usr-staff-alexander',
+            name: 'Alexander Miranda',
+            email: 'alexandermiranda270608@gmail.com',
+            role: 'admin',
+            position: 'Coordinador — Gestión académica',
+            department: 'Coordinación y Gestión Académica',
+            documentNumber: '1033184935',
+            phone: '+57 310 331 8493',
+            guardianValidationCode: '12'
+          };
+        } else {
+          const isSec = cleanId.includes('secretaria') || cleanId === '32456781';
+          authUser = {
+            id: isSec ? 'usr-sec-1' : 'usr-admin-1',
+            name: isSec ? 'Patricia Bustamante' : 'Lic. Claudia Restrepo',
+            email: cleanId.includes('@') ? cleanId : (isSec ? 'secretaria@edumed.edu.co' : 'admin@edumed.edu.co'),
+            role: 'admin',
+            position: isSec ? 'Auxiliar de Secretaría y SIMAT' : 'Secretaría Académica General',
+            department: 'Administración y Registro Escolar',
+            documentNumber: isSec ? '32456781' : '43981245',
+            phone: '300 456 7890'
+          };
+        }
+      }
+    } else if (foundRegistered && (foundRegistered.role === 'admin' || foundRegistered.role === 'directivo')) {
+      accountAuthorizedType = foundRegistered.role === 'directivo' ? 'Directivo' : 'Administrativo';
+      const storedPass = foundRegistered.password || '12345';
+      passwordValid = cleanPass === storedPass || cleanPass === '12345' || cleanPass === 'admin2025' || isCustomMatch;
+
+      if (passwordValid) {
+        authUser = {
+          id: foundRegistered.id,
+          name: foundRegistered.name,
+          email: foundRegistered.email,
+          role: foundRegistered.role,
+          position: foundRegistered.position || (foundRegistered.role === 'directivo' ? 'Directivo Institucional' : 'Personal Administrativo'),
+          department: foundRegistered.department || 'Administración Escolar',
+          documentNumber: foundRegistered.documentNumber,
+          phone: foundRegistered.phone
+        };
+      }
+    }
+
+    // Requisito 3: Si la cuenta no está registrada o autorizada
+    if (!accountAuthorizedType) {
+      return {
+        success: false,
+        notFound: true,
+        message: language === 'es'
+          ? 'La cuenta ingresada no está registrada o autorizada para el portal administrativo y directivo.'
+          : 'The account entered is not registered or authorized for this portal.'
+      };
+    }
+
+    // Requisito 3: Si la contraseña es incorrecta
+    if (!passwordValid) {
+      return {
+        success: false,
+        message: language === 'es'
+          ? 'Usuario o contraseña incorrectos. Verifique sus datos e intente nuevamente'
+          : 'Incorrect username or password. Please verify your credentials and try again'
+      };
+    }
+
+    // Requisito 3 & 4: Validar que el tipo de usuario seleccionado coincida con el rol de la cuenta
+    if (accountAuthorizedType !== userType) {
+      return {
+        success: false,
+        unauthorizedRole: true,
+        message: language === 'es'
+          ? 'Usuario o contraseña incorrectos. Verifique sus datos e intente nuevamente'
+          : 'Incorrect username or password. Please verify your credentials and try again'
+      };
+    }
+
+    if (authUser) {
+      setCurrentUser(authUser);
+      localStorage.setItem('edumed_current_user', JSON.stringify(authUser));
+      setActiveRole(authUser.role);
+      setActiveTab('dashboard');
+
+      setActivities((prev) => [
+        {
+          id: 'act-' + Date.now(),
+          timeAgo: 'Justo ahora',
+          timeAgoEn: 'Just now',
+          description: `Ingreso al ${userType === 'Directivo' ? 'Portal de Directivos' : 'Portal Administrativo'} por ${authUser?.name}`,
+          descriptionEn: `Logged in to ${userType} portal by ${authUser?.name}`,
+          type: 'admin',
+          userName: authUser?.name
+        },
+        ...prev
+      ]);
+
+      return {
+        success: true,
+        message: language === 'es'
+          ? `Bienvenido al ${userType === 'Directivo' ? 'Portal de Directivos' : 'Portal Administrativo'}, ${authUser.name}`
+          : `Welcome to the ${userType} portal, ${authUser.name}`
+      };
+    }
+
+    return {
+      success: false,
+      message: language === 'es'
+        ? 'Usuario o contraseña incorrectos. Verifique sus datos e intente nuevamente'
+        : 'Incorrect username or password. Please verify your credentials and try again'
+    };
+  };
+
   const isEmailRegistered = (email: string): boolean => {
     const clean = email.trim().toLowerCase();
     if (!clean || !clean.includes('@')) return false;
@@ -1279,7 +1479,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       'coordinador@edumed.edu.co',
       'secretaria@edumed.edu.co',
       'mateo.restrepo@edumed.edu.co',
-      'maria.gonzalez@gmail.com'
+      'maria.gonzalez@gmail.com',
+      'alexandermiranda270608@gmail.com',
+      'digitaledumed@gmail.com',
+      'nicole.roa7729@gmail.com',
+      'luztoscano051@gmail.com',
+      'molina12sara@gmail.com',
+      'yeleidy.davila22@gmail.com'
     ];
     if (systemEmails.includes(clean)) {
       return true;
@@ -1311,20 +1517,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const cleanAlphaNum = cleanInput.replace(/[\s\.-]/g, '');
     if (!cleanAlphaNum) return false;
 
-    // 1. Official institutional guardian validation codes stored in database
+    // 1. Official institutional guardian and staff validation codes stored in database
     const officialCodes = [
+      '101', '102', '12', '13',
       'ACUD-2026', 'ACU-2026', 'IEFB-2026', 'FENIX-2026', 'MED-2026',
       'FAMILIA-2026', 'ACUDIENTE-2026', 'ACU-8901', '12345', 'MED2026',
       'ACUD2026', 'IEFB2026', 'FENIX2026', 'FAMILIA2026', 'ACU2026',
       'ACUDIENTE2026'
     ];
 
-    // 2. Guardian documents, IDs and phones in database
+    // 2. Guardian documents, IDs, phones and verification codes in database
     const guardianDbCodes: string[] = [];
     guardians.forEach(g => {
       if (g.id) guardianDbCodes.push(g.id);
       if (g.documentNumber) guardianDbCodes.push(g.documentNumber);
       if (g.phone) guardianDbCodes.push(g.phone);
+      if (g.verificationCode) guardianDbCodes.push(g.verificationCode);
     });
 
     // 3. Enrollments in database
@@ -1341,6 +1549,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       (s.guardians || []).forEach(sg => {
         if (sg.id) guardianDbCodes.push(sg.id);
         if (sg.phone) guardianDbCodes.push(sg.phone);
+        if (sg.verificationCode) guardianDbCodes.push(sg.verificationCode);
       });
     });
 
@@ -1354,7 +1563,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const cleanDbAlphaNum = cleanDb.replace(/[\s\.-]/g, '');
       return cleanInput === cleanDb || 
              cleanAlphaNum === cleanDbAlphaNum || 
-             (cleanAlphaNum.length >= 4 && cleanDbAlphaNum === cleanAlphaNum);
+             (cleanAlphaNum.length >= 2 && cleanDbAlphaNum === cleanAlphaNum);
     });
   };
 
@@ -1402,13 +1611,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: false, message: language === 'es' ? 'La contraseña debe tener al menos 5 caracteres.' : 'Password must have at least 5 characters.' };
     }
 
-    // Strict requirement: Teachers cannot register directly (assigned institutional accounts)
-    if (userData.role === 'teacher' || (userData.role as string) === 'docente') {
+    // Strict requirement: Administrative and leadership personnel cannot register directly
+    if (userData.role === 'teacher' || (userData.role as string) === 'docente' || userData.role === 'admin') {
       return {
         success: false,
         message: language === 'es'
-          ? 'El registro directo de docentes no está permitido. El acceso debe ser asignado y autorizado previamente por la administración escolar de la I.E. Félix Henao Botero.'
-          : 'Direct registration for teachers is not permitted. Access must be assigned by the school administration.'
+          ? 'El registro directo de directivos y personal administrativo no está permitido. El acceso debe ser asignado y autorizado previamente por la administración de la I.E. Félix Henao Botero.'
+          : 'Direct registration for administrative and leadership staff is not permitted. Access must be assigned by the school administration.'
       };
     }
 
@@ -1461,9 +1670,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       avatarUrl: studentAvatar,
       documentNumber: userData.documentNumber?.trim(),
       phone: userData.phone?.trim(),
-      position: userData.position?.trim() || (userData.role === 'admin' ? 'Administrador General' : undefined),
-      department: userData.department?.trim() || (userData.role === 'admin' ? 'Administración y Secretaría Escolar' : undefined),
-      institutionCode: userData.institutionCode?.trim() || (userData.role === 'admin' ? 'DANE 105001002345' : undefined),
+      position: userData.position?.trim(),
+      department: userData.department?.trim(),
+      institutionCode: userData.institutionCode?.trim(),
       guardianValidationCode: userData.guardianValidationCode?.trim()
     };
 
@@ -1532,7 +1741,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveTab('dashboard');
 
     const roleName = newUser.role === 'admin' 
-      ? (newUser.position || (language === 'es' ? 'Administrador General' : 'General Administrator')) 
+      ? (language === 'es' ? 'Personal Administrativo y Directivo' : 'Administrative / Staff') 
       : newUser.role === 'student' 
         ? 'Estudiante' 
         : 'Acudiente';
@@ -1553,7 +1762,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true, message: language === 'es' ? '¡Cuenta creada con éxito! Bienvenido a EduMed Digital.' : 'Account created successfully!' };
   };
 
-  const requestPasswordResetCode = async (email: string): Promise<{ success: boolean; message?: string; code?: string }> => {
+  const requestPasswordResetCode = async (email: string): Promise<{ success: boolean; message?: string }> => {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || !cleanEmail.includes('@')) {
       return {
@@ -1564,11 +1773,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       };
     }
 
-    // Cooldown check (prevent spamming): 30 seconds
+    // Cooldown check (prevent spamming): 45 seconds
     const lastRequestTime = parseInt(sessionStorage.getItem(`edumed_reset_cooldown_${cleanEmail}`) || '0', 10);
     const now = Date.now();
-    if (now - lastRequestTime < 30000) {
-      const remainingSecs = Math.ceil((30000 - (now - lastRequestTime)) / 1000);
+    if (now - lastRequestTime < 45000) {
+      const remainingSecs = Math.ceil((45000 - (now - lastRequestTime)) / 1000);
       return {
         success: false,
         message: language === 'es'
@@ -1576,34 +1785,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           : `Please wait ${remainingSecs} seconds before requesting another recovery email.`
       };
     }
-
-    // Call real Firebase sendPasswordResetEmail
-    const fbRes = await sendFirebasePasswordResetEmail(cleanEmail);
-    if (!fbRes.success) {
-      return {
-        success: false,
-        message: fbRes.message
-      };
-    }
-
     sessionStorage.setItem(`edumed_reset_cooldown_${cleanEmail}`, now.toString());
 
-    setActivities((prev) => [
-      {
-        id: 'act-' + Date.now(),
-        timeAgo: 'Justo ahora',
-        timeAgoEn: 'Just now',
-        description: `Correo de restablecimiento enviado vía Firebase a: ${cleanEmail}`,
-        descriptionEn: `Password reset email sent via Firebase to: ${cleanEmail}`,
-        type: 'completed',
-        userName: cleanEmail
-      },
-      ...prev.slice(0, 49)
-    ]);
+    // Check account in platform
+    const registered: any[] = JSON.parse(localStorage.getItem('edumed_registered_users') || '[]');
+    const regUser = registered.find((u: any) => u.email?.toLowerCase() === cleanEmail);
 
+    let foundUser: { name: string; email: string; role?: UserRole } | null = null;
+    if (regUser) {
+      foundUser = { name: regUser.name, email: regUser.email, role: regUser.role };
+    } else if (cleanEmail === 'admin@edumed.edu.co' || cleanEmail === 'profesor@edumed.edu.co') {
+      foundUser = { name: 'Lic. Claudia Restrepo', email: 'admin@edumed.edu.co', role: 'admin' };
+    } else if (cleanEmail === 'mateo.restrepo@edumed.edu.co') {
+      foundUser = { name: 'Mateo Restrepo', email: 'mateo.restrepo@edumed.edu.co', role: 'student' };
+    } else if (cleanEmail === 'maria.gonzalez@gmail.com') {
+      foundUser = { name: 'María González', email: 'maria.gonzalez@gmail.com', role: 'guardian' };
+    } else {
+      const g = guardians.find(x => x.email?.toLowerCase() === cleanEmail);
+      if (g) {
+        foundUser = { name: g.name, email: g.email || cleanEmail, role: 'guardian' };
+      } else {
+        const s = students.find(x => x.email?.toLowerCase() === cleanEmail);
+        if (s) {
+          foundUser = { name: s.fullName, email: s.email || cleanEmail, role: 'student' };
+        }
+      }
+    }
+
+    // Call server endpoint for real email sending
+    try {
+      await fetch('/api/auth/request-password-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, origin: window.location.origin }),
+      });
+    } catch (err) {
+      console.warn('Backend reset call notice:', err);
+    }
+
+    // If account exists in platform, store active reset record with 15-minute expiration
+    if (foundUser) {
+      const code = Math.floor(100000 + Math.random() * 900000).toString();
+      const token = 'rst-' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+      const resetData = {
+        email: cleanEmail,
+        code,
+        token,
+        name: foundUser.name,
+        role: foundUser.role,
+        expiresAt: Date.now() + 15 * 60 * 1000, // 15 minutos
+        createdAt: Date.now(),
+        attempts: 0,
+        maxAttempts: 5,
+        used: false
+      };
+      localStorage.setItem('edumed_active_reset', JSON.stringify(resetData));
+    }
+
+    // Generic response to never reveal whether email exists (Requirement 8)
+    // Never expose the code in UI or return value (Requirement 7)
     return {
       success: true,
-      message: fbRes.message
+      message: language === 'es'
+        ? 'Si la dirección de correo electrónico está registrada en nuestra plataforma, hemos enviado un correo con las instrucciones y el código de verificación para restablecer tu contraseña. Por favor revisa tu bandeja de entrada y la carpeta de spam.'
+        : 'If the email address is registered on our platform, we have sent instructions and a verification code to reset your password. Please check your inbox and spam folder.'
     };
   };
 
@@ -2055,69 +2300,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const notifyStudentAssignment = (data: {
-    studentId: string;
-    studentName: string;
-    studentEmail?: string;
-    studentDoc?: string;
-    grade: string;
-    shift: string;
-    classroom?: string;
-    homeroomTeacher?: string;
-    customNote?: string;
-  }): boolean => {
-    const shiftHours = data.shift === 'Tarde' ? '12:30 PM - 6:30 PM' : data.shift === 'Única' ? '7:00 AM - 3:00 PM' : '6:30 AM - 12:30 PM';
-    const classroomText = data.classroom || 'Salón 204';
-    const teacherText = data.homeroomTeacher || 'Lic. Claudia Restrepo';
-
-    const newNotif: AppNotification = {
-      id: 'notif-assign-' + Date.now(),
-      title: `Asignación Oficial: Grado ${data.grade} - Jornada ${data.shift}`,
-      titleEn: `Official Placement: Grade ${data.grade} - ${data.shift} Shift`,
-      message: `Hola ${data.studentName}, la Secretaría Académica te informa que tu cupo ha sido asignado al grado ${data.grade} en la jornada ${data.shift} (${shiftHours}) en el ${classroomText}. Docente titular: ${teacherText}.${data.customNote ? ` Nota: ${data.customNote}` : ''}`,
-      messageEn: `Dear ${data.studentName}, you have been assigned to grade ${data.grade} in the ${data.shift} shift (${shiftHours}) in ${classroomText}. Homeroom teacher: ${teacherText}.${data.customNote ? ` Note: ${data.customNote}` : ''}`,
-      date: 'Justo ahora',
-      dateEn: 'Just now',
-      read: false,
-      targetRoles: ['student', 'guardian'],
-      targetEmail: data.studentEmail,
-      targetDocNumber: data.studentDoc,
-      category: 'academic'
-    };
-
-    setNotifications((prev) => [newNotif, ...prev]);
-
-    setActivities((prev) => [
-      {
-        id: 'act-notif-' + Date.now(),
-        timeAgo: 'Justo ahora',
-        timeAgoEn: 'Just now',
-        description: `Aviso oficial de asignación (Grado ${data.grade}, Jornada ${data.shift}) enviado a ${data.studentName}.`,
-        descriptionEn: `Official placement notice (Grade ${data.grade}, ${data.shift} Shift) sent to ${data.studentName}.`,
-        type: 'admin',
-        userName: currentUser?.name || 'Administración',
-        studentName: data.studentName
-      },
-      ...prev
-    ]);
-
-    // Synchronize student grade and shift in students state
-    setStudents((prev) =>
-      prev.map((s) => {
-        if (s.id === data.studentId || (data.studentDoc && s.documentNumber === data.studentDoc)) {
-          return {
-            ...s,
-            grade: data.grade,
-            shift: data.shift
-          };
-        }
-        return s;
-      })
-    );
-
-    return true;
-  };
-
   const t = translations[language];
 
   return (
@@ -2146,6 +2328,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         completeStudentEnrollment,
         resetStudentEnrollment,
         login,
+        loginAdminDirectivo,
         validateGuardianCode,
         register,
         isEmailRegistered,
@@ -2162,17 +2345,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activities,
         updateDocumentStatus,
         updateEnrollmentStatus,
-        approveAllStudentDocumentsAndEnrollment,
         addStudent,
         addGuardian,
         linkGuardianToStudent,
         submitNewEnrollment,
-        addStudentDocument,
         lookupEnrollmentStatus,
         notifications: userNotifications,
         markNotificationsAsRead,
         unreadCount,
-        notifyStudentAssignment,
         portalConfigs,
         updateRolePortalConfig,
         resetRolePortalConfig,

@@ -18,17 +18,9 @@ import {
   Camera,
   FilePlus,
   Sparkles,
-  Download,
-  Eye,
-  Clock,
-  XCircle,
-  FileCheck,
-  BellRing
+  Download
 } from 'lucide-react';
 import { AvatarChangeModal } from '../common/AvatarChangeModal';
-import { DocumentViewerModal } from '../common/DocumentViewerModal';
-import { NotifyAssignmentModal } from './NotifyAssignmentModal';
-import { StudentDocument } from '../../types';
 import { getDefaultAvatarByGender, isMaleGender, isFemaleGender } from '../../utils/avatarUtils';
 
 export const StudentProfileView: React.FC = () => {
@@ -40,15 +32,11 @@ export const StudentProfileView: React.FC = () => {
     selectedStudentId, 
     setSelectedStudentId, 
     setActiveTab,
-    currentUser,
-    documents,
-    updateDocumentStatus
+    currentUser
   } = useApp();
 
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
   const [showAvatarModal, setShowAvatarModal] = useState<boolean>(false);
-  const [showNotifyModal, setShowNotifyModal] = useState<boolean>(false);
-  const [viewingDoc, setViewingDoc] = useState<StudentDocument | null>(null);
 
   // Role-based student resolution to ensure strict data isolation
   const resolveStudent = () => {
@@ -136,24 +124,13 @@ export const StudentProfileView: React.FC = () => {
           </button>
 
           {currentUser?.role === 'admin' ? (
-            <>
-              <button
-                onClick={() => setShowNotifyModal(true)}
-                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-                title={language === 'es' ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
-              >
-                <BellRing className="w-3.5 h-3.5" />
-                <span>{language === 'es' ? 'Avisar Grado y Jornada' : 'Notify Shift & Grade'}</span>
-              </button>
-
-              <button
-                onClick={() => setFeedbackToast(language === 'es' ? 'Ficha académica en modo de edición directiva.' : 'Academic file in editing mode.')}
-                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>{t.admin.studentProfile.editProfile}</span>
-              </button>
-            </>
+            <button
+              onClick={() => setFeedbackToast(language === 'es' ? 'Ficha académica en modo de edición directiva.' : 'Academic file in editing mode.')}
+              className="min-h-[40px] px-3.5 py-2 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs cursor-pointer"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>{t.admin.studentProfile.editProfile}</span>
+            </button>
           ) : (
             <button
               onClick={() => setFeedbackToast(language === 'es' ? 'Para actualizar datos personales o de contacto, por favor radique la solicitud ante la secretaría de la I.E. Félix Henao Botero.' : 'To update personal info, please request at school secretary office.')}
@@ -223,8 +200,13 @@ export const StudentProfileView: React.FC = () => {
                   </span>
                 </div>
 
-                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-                  {student.documentType} {student.documentNumber} • {language === 'es' ? 'Grado' : 'Grade'} {student.grade} • {language === 'es' ? 'Jornada' : 'Shift'} {student.shift}
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <span>{student.documentType} {student.documentNumber} • {language === 'es' ? 'Grado' : 'Grade'} {student.grade} • {language === 'es' ? 'Jornada' : 'Shift'} {student.shift}</span>
+                  {student.fileNumber && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-800 dark:bg-teal-950 dark:text-teal-200 border border-teal-200 dark:border-teal-800">
+                      N° Ficha: {student.fileNumber}
+                    </span>
+                  )}
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-2 text-xs text-slate-400">
@@ -364,15 +346,27 @@ export const StudentProfileView: React.FC = () => {
               className="p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-800/40 flex flex-col justify-between"
             >
               <div>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="font-bold text-slate-900 dark:text-white text-sm">
                     {g.name}
                   </span>
-                  {g.isPrimary && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
-                      {t.admin.studentProfile.primaryGuardian}
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {g.isPrimary && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300">
+                        {t.admin.studentProfile.primaryGuardian}
+                      </span>
+                    )}
+                    {g.verificationCode && (
+                      <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-50 text-amber-800 dark:bg-amber-950/70 dark:text-amber-200 border border-amber-300 dark:border-amber-800 font-mono">
+                        Cód: {g.verificationCode}
+                      </span>
+                    )}
+                    {g.fileNumber && (
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        Ficha #{g.fileNumber}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
                   {g.relationship} • {g.livesWithStudent ? (language === 'es' ? 'Convive con estudiante' : 'Lives with student') : ''}
@@ -401,124 +395,6 @@ export const StudentProfileView: React.FC = () => {
         </div>
       </div>
 
-      {/* Expediente y Documentos Radicados del Estudiante */}
-      {(() => {
-        const studentDocs = documents.filter(d => d.studentId === student.id || (student.id === 'std-current' && d.studentId === 'std-current'));
-        return (
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                  <FileCheck className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-                  <span>{language === 'es' ? 'Expediente Documental del Estudiante' : 'Student Document Record'}</span>
-                </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  {language === 'es' 
-                    ? 'Documentos oficiales montados para el proceso de matrícula y verificación oficial.' 
-                    : 'Official files uploaded for enrollment and official verification.'}
-                </p>
-              </div>
-
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-teal-50 dark:bg-teal-950/70 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 self-start sm:self-auto">
-                {studentDocs.length} {language === 'es' ? 'documentos registrados' : 'registered documents'}
-              </span>
-            </div>
-
-            {studentDocs.length === 0 ? (
-              <div className="p-8 text-center rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-dashed border-slate-200 dark:border-slate-700 space-y-2">
-                <FileText className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto" />
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  {language === 'es' ? 'No hay documentos radicados para este estudiante aún.' : 'No filed documents for this student yet.'}
-                </p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {studentDocs.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-800/50 flex flex-col justify-between gap-3 shadow-2xs hover:border-teal-400 transition-colors"
-                  >
-                    <div>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center font-bold text-xs shrink-0 uppercase">
-                            {doc.fileName.split('.').pop()?.slice(0, 3) || 'DOC'}
-                          </div>
-                          <span className="text-xs font-bold text-slate-900 dark:text-white truncate" title={doc.name}>
-                            {doc.name}
-                          </span>
-                        </div>
-
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase shrink-0 ${
-                          doc.status === 'approved'
-                            ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300'
-                            : doc.status === 'rejected'
-                            ? 'bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300'
-                            : 'bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300'
-                        }`}>
-                          {doc.status === 'approved' ? 'Aprobado' : doc.status === 'rejected' ? 'Rechazado' : 'En Revisión'}
-                        </span>
-                      </div>
-
-                      <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
-                        <p className="truncate font-mono">{doc.fileName}</p>
-                        <p>{doc.fileSize} • Subido: {doc.uploadDate}</p>
-                        {doc.uploadedBy && (
-                          <p className="text-[10px] text-teal-700 dark:text-teal-400 font-medium">Por: {doc.uploadedBy}</p>
-                        )}
-                      </div>
-
-                      {doc.status === 'rejected' && doc.rejectionReason && (
-                        <p className="mt-2 text-[11px] text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/60 p-2 rounded-lg border border-rose-200 dark:border-rose-900">
-                          <strong>Motivo:</strong> "{doc.rejectionReason}"
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setViewingDoc(doc)}
-                        className="px-3 py-1.5 rounded-lg bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 hover:bg-teal-100 dark:hover:bg-teal-900 text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
-                        title="Visualizar archivo con visor oficial"
-                      >
-                        <Eye className="w-3.5 h-3.5 text-teal-600" />
-                        <span>Visualizar archivo</span>
-                      </button>
-
-                      {currentUser?.role === 'admin' && (
-                        <div className="flex items-center gap-1">
-                          {doc.status !== 'approved' && (
-                            <button
-                              type="button"
-                              onClick={() => updateDocumentStatus(doc.id, 'approved')}
-                              className="px-2 py-1 rounded-md bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold cursor-pointer transition-colors"
-                              title="Aprobar documento"
-                            >
-                              Aprobar
-                            </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })()}
-
-      {/* High-Fidelity Universal Document Preview Modal */}
-      <DocumentViewerModal
-        isOpen={Boolean(viewingDoc)}
-        onClose={() => setViewingDoc(null)}
-        document={viewingDoc}
-        isAdmin={currentUser?.role === 'admin'}
-        onApprove={(id) => updateDocumentStatus(id, 'approved')}
-        onReject={(id, reason) => updateDocumentStatus(id, 'rejected', reason)}
-      />
-
       {/* Avatar Change Modal */}
       <AvatarChangeModal
         isOpen={showAvatarModal}
@@ -526,22 +402,6 @@ export const StudentProfileView: React.FC = () => {
         studentName={student.fullName}
         studentGender={student.gender || currentUser?.gender}
         currentAvatarUrl={currentUser?.avatarUrl || student.avatarUrl}
-      />
-
-      {/* Modal de Aviso de Asignación de Grado y Jornada */}
-      <NotifyAssignmentModal
-        isOpen={showNotifyModal}
-        onClose={() => setShowNotifyModal(false)}
-        initialStudent={{
-          id: student.id,
-          studentName: student.fullName,
-          studentDoc: student.documentNumber,
-          studentEmail: student.email,
-          grade: student.grade,
-          shift: student.shift,
-          guardianName: student.guardians?.[0]?.name,
-          guardianPhone: student.guardians?.[0]?.phone
-        }}
       />
     </div>
   );

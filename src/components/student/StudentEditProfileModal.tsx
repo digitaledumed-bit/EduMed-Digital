@@ -52,38 +52,6 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
 
   if (!isOpen || !currentUser) return null;
 
-  if (currentUser.role === 'student') {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-xs animate-in fade-in duration-200">
-        <div 
-          className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-2xl relative text-slate-900 dark:text-white text-center"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950/60 border border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto mb-4">
-            <ShieldCheck className="w-7 h-7" />
-          </div>
-          <h3 className="text-lg font-black text-slate-900 dark:text-white">
-            {language === 'es' ? 'Expediente Oficial Protegido' : 'Official Record Protected'}
-          </h3>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
-            {language === 'es'
-              ? 'Por normatividad institucional de la I.E. Félix Henao Botero, en el perfil de estudiante no está permitido modificar información personal ni subir documentos. Únicamente puedes cambiar tu foto de perfil desde el panel principal.'
-              : 'Per institutional policy, student profiles cannot modify personal information or upload documents. You can only update your profile photo from the main dashboard.'}
-          </p>
-          <div className="mt-5 flex justify-center">
-            <button
-              type="button"
-              onClick={onClose}
-              className="min-h-[44px] px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 text-white text-xs sm:text-sm font-bold shadow-sm transition-all cursor-pointer"
-            >
-              {language === 'es' ? 'Entendido y Cerrar' : 'Understood & Close'}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName.trim() || fullName.trim().length < 3) {
@@ -112,13 +80,13 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/75 backdrop-blur-xs animate-in fade-in duration-200 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/75 backdrop-blur-xs animate-in fade-in duration-200">
       <div 
-        className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 md:p-7 shadow-2xl relative text-slate-900 dark:text-white my-auto"
+        className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 sm:p-7 shadow-2xl overflow-hidden relative text-slate-900 dark:text-white"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4">
+        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center">
               <User className="w-5 h-5 text-teal-600 dark:text-teal-400" />
@@ -163,7 +131,7 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-              placeholder=""
+              placeholder="Ej: Juan David Pérez"
               required
             />
           </div>
@@ -195,7 +163,7 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-                placeholder=""
+                placeholder="315 987 6543"
               />
             </div>
 
@@ -208,7 +176,7 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-                placeholder=""
+                placeholder="estudiante@edumed.edu.co"
               />
             </div>
           </div>
@@ -224,7 +192,7 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-                placeholder=""
+                placeholder="Calle 50 # 40-20"
               />
             </div>
 
@@ -237,16 +205,16 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
                 value={neighborhood}
                 onChange={(e) => setNeighborhood(e.target.value)}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 text-slate-900 dark:text-white"
-                placeholder=""
+                placeholder="Boston, Laureles..."
               />
             </div>
           </div>
 
-          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 sm:gap-3">
+          <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer flex items-center justify-center"
+              className="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
             >
               {language === 'es' ? 'Cancelar' : 'Cancel'}
             </button>
@@ -254,7 +222,7 @@ export const StudentEditProfileModal: React.FC<StudentEditProfileModalProps> = (
             <button
               type="submit"
               disabled={isSuccess}
-              className="min-h-[44px] px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white text-xs sm:text-sm font-bold shadow-md shadow-teal-700/20 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50"
             >
               <Save className="w-4 h-4" />
               <span>{language === 'es' ? 'Guardar Cambios' : 'Save Changes'}</span>

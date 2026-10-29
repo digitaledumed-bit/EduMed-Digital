@@ -16,10 +16,8 @@ import {
   GraduationCap,
   Inbox,
   ShieldCheck,
-  BookOpen,
-  BellRing
+  BookOpen
 } from 'lucide-react';
-import { NotifyAssignmentModal } from './NotifyAssignmentModal';
 import { 
   ResponsiveContainer, 
   BarChart, 
@@ -43,11 +41,11 @@ export const AdminDashboard: React.FC = () => {
     students, 
     documents, 
     guardians,
-    isWidgetEnabled 
+    isWidgetEnabled,
+    currentUser
   } = useApp();
   
   const [timeframe, setTimeframe] = useState<'monthly' | 'weekly'>('monthly');
-  const [isNotifyModalOpen, setIsNotifyModalOpen] = useState(false);
 
   // Registered users in persistent storage
   const registeredUsers: any[] = JSON.parse(
@@ -134,36 +132,61 @@ export const AdminDashboard: React.FC = () => {
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white">
-              {t.admin.dashboard.title}
+              {currentUser?.role === 'directivo'
+                ? (isEs ? 'Portal de Directivos - Rectoría y Coordinación' : 'Executive Leadership Portal - Rectorate & Academic Direction')
+                : (isEs ? 'Portal Administrativo - Secretaría Académica y SIMAT' : 'Administrative Portal - Academic Registry & SIMAT')}
             </h1>
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800">
-              {isEs ? 'Datos en Tiempo Real' : 'Real-Time Data'}
+            <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${
+              currentUser?.role === 'directivo'
+                ? 'bg-amber-50 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border-amber-300 dark:border-amber-800'
+                : 'bg-teal-50 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300 border border-teal-200 dark:border-teal-800'
+            }`}>
+              {currentUser?.role === 'directivo'
+                ? (isEs ? 'Supervisión Institucional' : 'Executive Leadership')
+                : (isEs ? 'Gestión Operativa' : 'Operations')}
             </span>
           </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {t.admin.dashboard.period} • {isEs ? 'I.E. Félix Henao Botero' : 'Félix Henao School'}
+            {currentUser?.role === 'directivo'
+              ? (isEs ? 'I.E. Félix Henao Botero • Panel de Alta Dirección, Auditoría y Control SIMAT' : 'Félix Henao School • Leadership & SIMAT Control')
+              : (isEs ? 'I.E. Félix Henao Botero • Control de Matrículas, Expedientes y Cupos' : 'Félix Henao School • Enrollment & Records Control')}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => setIsNotifyModalOpen(true)}
-            className="min-h-[44px] px-4 py-2.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-colors shadow-xs flex items-center gap-2 cursor-pointer"
-            title={isEs ? 'Avisarle al estudiante en qué jornada y grado fue asignado' : 'Notify student of assigned shift and grade'}
-          >
-            <BellRing className="w-4 h-4" />
-            <span>{isEs ? 'Avisar Grado y Jornada' : 'Notify Shift & Grade'}</span>
-          </button>
-
+        <div className="flex items-center gap-3">
           <button
             onClick={() => setActiveTab('enrollments')}
             className="min-h-[44px] px-4 py-2.5 bg-teal-700 hover:bg-teal-800 dark:bg-teal-600 dark:hover:bg-teal-700 text-white font-semibold text-xs sm:text-sm rounded-xl transition-colors shadow-xs flex items-center gap-2 cursor-pointer"
           >
             <FileText className="w-4 h-4" />
-            <span>{t.admin.enrollments.title}</span>
+            <span>{currentUser?.role === 'directivo' ? (isEs ? 'Monitoreo de Matrículas' : 'Enrollment Oversight') : t.admin.enrollments.title}</span>
           </button>
         </div>
       </div>
+
+      {/* Directivo Executive Banner */}
+      {currentUser?.role === 'directivo' && (
+        <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-teal-500/10 to-transparent border border-amber-500/30 dark:border-amber-400/20 text-left flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-black shrink-0 shadow-sm">
+              <ShieldCheck className="w-5 h-5 text-slate-950" />
+            </div>
+            <div>
+              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white">
+                {isEs ? 'Sesión Directiva Activa: Rectoría / Coordinación General' : 'Executive Leadership Session: Rectorate & Direction'}
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-400">
+                {isEs 
+                  ? 'Acceso autorizado a la supervisión general de cupos, consolidados de estudiantes, actas y comités de familias.' 
+                  : 'Authorized access to quota oversight, student directory, files, and family committees.'}
+              </p>
+            </div>
+          </div>
+          <span className="text-xs font-black px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-700 shrink-0">
+            {currentUser?.position || (isEs ? 'Alta Dirección' : 'Executive')}
+          </span>
+        </div>
+      )}
 
       {/* 6 Real KPI Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -369,7 +392,7 @@ export const AdminDashboard: React.FC = () => {
 
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700 self-start sm:self-auto">
               <span className="px-3 py-1 text-xs font-bold text-teal-700 dark:text-teal-300">
-                {isEs ? 'Periodo Académico 2026' : 'Academic Period 2026'}
+                {isEs ? 'Periodo 2024 - 2025' : 'Period 2024 - 2025'}
               </span>
             </div>
           </div>
@@ -561,12 +584,6 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
       </div>
-
-      {/* Modal de Asignación de Grado y Jornada */}
-      <NotifyAssignmentModal
-        isOpen={isNotifyModalOpen}
-        onClose={() => setIsNotifyModalOpen(false)}
-      />
 
     </div>
   );

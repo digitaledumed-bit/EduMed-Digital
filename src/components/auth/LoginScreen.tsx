@@ -33,8 +33,7 @@ import {
   Lock,
   Smartphone,
   MessageSquare,
-  Menu,
-  ArrowUp
+  Menu
 } from 'lucide-react';
 
 interface LoginScreenProps {
@@ -47,8 +46,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
     setLanguage, 
     theme, 
     toggleTheme, 
-    customLogoUrl,
-    setActiveTab
+    customLogoUrl
   } = useApp();
 
   const isEs = language === 'es';
@@ -109,7 +107,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
       action: 'matriculas',
       keyBenefits: [
         isEs ? '100% Gratuito y Oficial' : '100% Tuition-Free & Official',
-        isEs ? 'Registro Oficial Institucional' : 'Official Institutional Records',
+        isEs ? 'Conexión Directa SIMAT' : 'Direct SIMAT Records',
         isEs ? 'Gestión Virtual 24/7' : '24/7 Online Management'
       ],
       image: slideMatriculasImg,
@@ -308,49 +306,49 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
 
             <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <span className="text-base sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
+                <span className="text-base sm:text-xl font-black tracking-tight text-slate-900 dark:text-white truncate">
                   edumed <span className="text-teal-600 dark:text-teal-400 font-extrabold">digital</span>
                 </span>
-                <span className="hidden md:inline-block px-2 py-0.5 rounded text-[10px] font-bold bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800 uppercase tracking-wide shrink-0">
+                <span className="hidden md:inline-block px-2.5 py-0.5 rounded text-xs font-bold bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200/60 dark:border-teal-800 uppercase tracking-wide shrink-0">
                   {isEs ? 'Portal Oficial' : 'Official Portal'}
                 </span>
               </div>
-              <span className="text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 leading-tight truncate">
+              <span className="text-xs sm:text-base font-bold text-slate-700 dark:text-slate-300 leading-tight truncate">
                 I.E. Félix Henao Botero
               </span>
-              <span className="hidden sm:inline-block text-[11px] text-slate-500 dark:text-slate-400 truncate">
+              <span className="hidden sm:inline-block text-xs sm:text-sm text-slate-500 dark:text-slate-400 truncate">
                 Medellín • Comuna 8 • DANE 105001002345
               </span>
             </div>
           </div>
 
           {/* Menú de Navegación Desktop */}
-          <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300">
+          <nav className="hidden lg:flex items-center gap-1 xl:gap-2 text-base font-bold text-slate-600 dark:text-slate-300">
             <button 
               type="button"
               onClick={scrollToHero}
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-teal-700 dark:text-teal-400 font-semibold transition-colors cursor-pointer flex items-center"
+              className="px-3.5 py-2 min-h-[44px] rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-teal-700 dark:text-teal-400 transition-colors cursor-pointer flex items-center"
             >
               {isEs ? 'Inicio' : 'Home'}
             </button>
             <button
               type="button"
               onClick={scrollToAuthSection}
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center"
+              className="px-3.5 py-2 min-h-[44px] rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center"
             >
-              {isEs ? 'Iniciar Sesión' : 'Sign In'}
+              {isEs ? 'Portal Administrativo' : 'Administrative Portal'}
             </button>
             <button
               type="button"
               onClick={scrollToBenefitsSection}
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center"
+              className="px-3.5 py-2 min-h-[44px] rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center"
             >
               {isEs ? '¿Por qué EduMed?' : 'Why EduMed?'}
             </button>
             <button
               type="button"
               onClick={scrollToSedesSection}
-              className="px-3 py-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center"
+              className="px-3.5 py-2 min-h-[44px] rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer flex items-center"
             >
               {isEs ? 'Sedes y Contacto' : 'Campuses & Contact'}
             </button>
@@ -419,7 +417,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               }}
               className="w-full min-h-[44px] px-4 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 text-left font-bold text-sm sm:text-base flex items-center justify-between"
             >
-              <span>{isEs ? 'Iniciar Sesión / Acceso Portales' : 'Sign In / Portal Access'}</span>
+              <span>{isEs ? 'Portal Administrativo / Directivo' : 'Administrative / Leadership Portal'}</span>
               <ChevronRight className="w-4 h-4 text-slate-400" />
             </button>
             <button
@@ -461,7 +459,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
       >
         <div className="w-full max-w-[1700px] mx-auto px-3 sm:px-6 lg:px-10 xl:px-12">
           
-          <div className="relative min-h-[620px] xs:min-h-[580px] sm:min-h-[540px] md:min-h-[520px] lg:min-h-[560px] xl:min-h-[580px] rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-xl overflow-hidden flex items-center pb-16 lg:pb-0">
+          <div className="relative min-h-[660px] xs:min-h-[620px] sm:min-h-[580px] md:min-h-[540px] lg:min-h-[560px] xl:min-h-[580px] rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800 shadow-xl overflow-hidden flex items-center pb-16 lg:pb-0">
             
             {/* Diapositivas */}
             {heroSlides.map((slide, index) => {
@@ -469,30 +467,30 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               return (
                 <div
                   key={slide.id}
-                  className={`absolute inset-0 p-4 xs:p-5 sm:p-8 md:p-10 lg:p-12 xl:p-16 flex items-center transition-all duration-700 ease-in-out ${
+                  className={`absolute inset-0 p-4 xs:p-5 sm:p-8 md:p-12 lg:p-14 xl:p-16 flex items-center transition-all duration-700 ease-in-out ${
                     isActive ? 'opacity-100 scale-100 z-10 pointer-events-auto' : 'opacity-0 scale-98 z-0 pointer-events-none'
                   }`}
                 >
                   {/* Resplandor ambiental */}
-                  <div className={`absolute -right-10 -bottom-10 w-[260px] sm:w-[450px] h-[260px] sm:h-[450px] bg-gradient-to-br ${slide.palette.glow} rounded-full blur-3xl pointer-events-none`} />
-                  <div className="absolute left-10 top-10 w-40 sm:w-64 h-40 sm:h-64 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
+                  <div className={`absolute -right-10 -bottom-10 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-gradient-to-br ${slide.palette.glow} rounded-full blur-3xl pointer-events-none`} />
+                  <div className="absolute left-10 top-10 w-48 sm:w-72 h-48 sm:h-72 bg-teal-500/5 rounded-full blur-2xl pointer-events-none" />
 
                   {/* Grid equilibrado */}
-                  <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 lg:gap-12 xl:gap-16 items-center">
+                  <div className="relative z-10 w-full grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 xl:gap-16 items-center">
                     
                     {/* Columna de Texto: Tipografía amplia y legible */}
-                    <div className="lg:col-span-7 xl:col-span-7 space-y-2.5 sm:space-y-4 text-left">
+                    <div className="lg:col-span-7 xl:col-span-7 space-y-3 sm:space-y-5 text-left">
                       
                       <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-xs sm:text-sm font-bold uppercase tracking-wider shadow-2xs">
                         <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-teal-600 dark:text-teal-400" />
                         <span className={slide.palette.badge}>{slide.badge}</span>
                       </div>
 
-                      <h1 className="heading-hero text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
+                      <h1 className="text-xl xs:text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black text-slate-900 dark:text-white tracking-tight leading-[1.15]">
                         {slide.title}
                       </h1>
 
-                      <p className="text-xs xs:text-sm sm:text-base md:text-lg lg:text-xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-2xl">
+                      <p className="text-xs xs:text-sm sm:text-lg md:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-2xl">
                         {slide.subtitle}
                       </p>
 
@@ -500,7 +498,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                         {slide.keyBenefits.map((benefit, i) => (
                           <div 
                             key={i} 
-                            className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl text-xs sm:text-sm font-semibold border ${slide.palette.pill}`}
+                            className={`flex items-center gap-1.5 px-2.5 py-1 sm:px-3.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold border ${slide.palette.pill}`}
                           >
                             <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                             <span>{benefit}</span>
@@ -508,11 +506,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                         ))}
                       </div>
 
-                      <div className="pt-2 sm:pt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3.5">
+                      <div className="pt-2 sm:pt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-4">
                         <button
                           type="button"
                           onClick={() => handleSlideAction(slide.action)}
-                          className={`w-full sm:w-auto min-h-[44px] px-5 sm:px-7 py-3 rounded-xl sm:rounded-2xl font-bold text-xs xs:text-sm sm:text-base shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer hover:scale-102 active:scale-95 group ${slide.palette.cta}`}
+                          className={`w-full sm:w-auto min-h-[44px] px-5 sm:px-8 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs xs:text-sm sm:text-base shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer hover:scale-102 active:scale-95 group ${slide.palette.cta}`}
                         >
                           <span>{slide.ctaText}</span>
                           <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1.5 transition-transform" />
@@ -527,7 +525,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                               scrollToSedesSection();
                             }
                           }}
-                          className="w-full sm:w-auto min-h-[44px] px-4 sm:px-6 py-3 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs xs:text-sm sm:text-base border border-slate-200 dark:border-slate-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center"
+                          className="w-full sm:w-auto min-h-[44px] px-4 sm:px-7 py-3 sm:py-4 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs xs:text-sm sm:text-base border border-slate-200 dark:border-slate-700 transition-all cursor-pointer active:scale-95 text-center flex items-center justify-center"
                         >
                           <span>{slide.secondaryText}</span>
                         </button>
@@ -536,15 +534,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                     </div>
 
                     {/* Columna de Ilustración con escalado responsive */}
-                    <div className="hidden sm:flex lg:col-span-5 xl:col-span-5 justify-center items-center">
-                      <div className="relative w-full max-w-[260px] xs:max-w-xs sm:max-w-sm md:max-w-md lg:max-w-xl aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 dark:border-slate-700/90 bg-slate-50 dark:bg-slate-800 group animate-subtle-float">
+                    <div className="lg:col-span-5 xl:col-span-5 flex justify-center items-center">
+                      <div className="relative w-full max-w-[280px] xs:max-w-xs sm:max-w-md lg:max-w-xl aspect-[16/10] sm:aspect-[16/9] lg:aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 border-slate-200/90 dark:border-slate-700/90 bg-slate-50 dark:bg-slate-800 group animate-subtle-float">
                         <img 
                           src={slide.image} 
                           alt={slide.alt}
                           className="w-full h-full object-cover object-center transform transition-transform duration-700 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent pointer-events-none" />
-                        <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-md flex items-center justify-between">
+                        <div className="absolute bottom-2 left-2 right-2 sm:bottom-3 sm:left-3 sm:right-3 p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-md flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <span className="w-2.5 h-2.5 rounded-full bg-teal-500 animate-pulse" />
                             <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">EduMed Digital</span>
@@ -562,11 +560,11 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               );
             })}
 
-            {/* Flechas de navegación con touch-target de 44px (ocultas en < sm para evitar superposición en pantallas pequeñas) */}
+            {/* Flechas de navegación con touch-target de 44px */}
             <button
               type="button"
               onClick={handlePrevSlide}
-              className="hidden sm:flex absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer items-center justify-center hover:scale-105 active:scale-95"
+              className="absolute left-1.5 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
               aria-label={isEs ? 'Diapositiva anterior' : 'Previous slide'}
             >
               <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -575,14 +573,14 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
             <button
               type="button"
               onClick={handleNextSlide}
-              className="hidden sm:flex absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer items-center justify-center hover:scale-105 active:scale-95"
+              className="absolute right-1.5 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-11 h-11 rounded-full bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-md transition-all cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95"
               aria-label={isEs ? 'Siguiente diapositiva' : 'Next slide'}
             >
               <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
 
-            {/* Indicadores inferiores elegantes y accesibles */}
-            <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2.5 bg-white/95 dark:bg-slate-900/95 px-3 sm:px-5 py-1.5 sm:py-2 rounded-full border border-slate-200/90 dark:border-slate-700/90 shadow-md backdrop-blur-md">
+            {/* Indicadores inferiores elegantes */}
+            <div className="absolute bottom-3 sm:bottom-5 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 sm:gap-2.5 bg-white/90 dark:bg-slate-900/90 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full border border-slate-200/90 dark:border-slate-700/90 shadow-md backdrop-blur-md">
               {heroSlides.map((slide, idx) => {
                 const isActive = idx === currentSlide;
                 return (
@@ -593,32 +591,28 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                       setSlideProgress(0);
                       setCurrentSlide(idx);
                     }}
-                    className="p-1.5 flex items-center justify-center cursor-pointer min-h-[36px] touch-manipulation"
-                    title={`Diapositiva ${idx + 1}: ${slide.title}`}
-                    aria-label={`Ir a diapositiva ${idx + 1}: ${slide.title}`}
-                  >
-                    <span className={`relative h-2.5 rounded-full overflow-hidden transition-all flex items-center block ${
+                    className={`relative h-2.5 rounded-full overflow-hidden transition-all cursor-pointer flex items-center ${
                       isActive ? 'w-8 xs:w-12 sm:w-14 bg-slate-200 dark:bg-slate-700' : 'w-2.5 sm:w-3 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400'
-                    }`}>
-                      {isActive && (
-                        <span 
-                          className="absolute inset-y-0 left-0 bg-teal-600 dark:bg-teal-400 rounded-full transition-all duration-75"
-                          style={{ width: `${slideProgress}%` }}
-                        />
-                      )}
-                    </span>
+                    }`}
+                    title={`Diapositiva ${idx + 1}: ${slide.title}`}
+                  >
+                    {isActive && (
+                      <span 
+                        className="absolute inset-y-0 left-0 bg-teal-600 dark:bg-teal-400 rounded-full transition-all duration-75"
+                        style={{ width: `${slideProgress}%` }}
+                      />
+                    )}
                   </button>
                 );
               })}
 
-              <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-0.5 sm:mx-1.5" />
+              <span className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1 sm:mx-1.5" />
 
               <button
                 type="button"
                 onClick={() => setIsCarouselPaused(!isCarouselPaused)}
-                className="w-8 h-8 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 title={isCarouselPaused ? (isEs ? 'Reanudar carrusel' : 'Play') : (isEs ? 'Pausar carrusel' : 'Pause')}
-                aria-label={isCarouselPaused ? (isEs ? 'Reanudar carrusel automático' : 'Resume slideshow') : (isEs ? 'Pausar carrusel automático' : 'Pause slideshow')}
               >
                 {isCarouselPaused ? <Play className="w-4 h-4 text-teal-600 dark:text-teal-400" /> : <Pause className="w-4 h-4" />}
               </button>
@@ -642,71 +636,64 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
           
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center">
             
-            {/* Información institucional de los portales */}
+            {/* Información institucional del Portal Administrativo y Directivo */}
             <div className="lg:col-span-6 space-y-6 text-left">
               
               <div className="inline-flex items-center gap-2 px-4.5 py-2 rounded-full bg-teal-50 dark:bg-teal-950 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800 text-sm sm:text-base font-bold shadow-2xs">
-                <Sparkles className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400" />
-                <span>{isEs ? 'Acceso Seguro y Oficial' : 'Secure Official Access'}</span>
+                <ShieldCheck className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400" />
+                <span>{isEs ? 'Portal Oficial Administrativo y Directivo' : 'Official Administrative & Leadership Portal'}</span>
               </div>
 
               <h2 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-                {isEs ? 'Ingresa o Regístrate en tu Portal' : 'Sign In or Create Your Account'}
+                {isEs ? 'Portal Administrativo y Directivo' : 'Administrative & Leadership Portal'}
               </h2>
 
               <p className="text-lg sm:text-xl lg:text-2xl text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
                 {isEs
-                  ? 'Accede a tu cuenta institucional en EduMed Digital. Si eres acudiente, recuerda que puedes usar el código oficial asignado ACUD-2026 o tu número de documento de identidad registrado para completar tu vinculación.'
-                  : 'Access your official EduMed Digital account. Guardians can use the official code ACUD-2026 or their registered document number to complete registration.'}
+                  ? 'Acceso exclusivo y seguro para rectoría, secretaría académica, coordinación y equipo administrativo de la Institución Educativa Félix Henao Botero. Control integral de matrículas, auditoría SIMAT y gestión documental.'
+                  : 'Exclusive, secure access for rectorate, academic registry, coordination, and administrative staff of I.E. Félix Henao Botero. Comprehensive enrollment control, SIMAT audits, and document management.'}
               </p>
 
-              {/* Roles visuales interactivos */}
+              {/* Tarjeta institucional exclusiva del Portal Directivo y Administrativo */}
               <div className="space-y-4 pt-2">
-                <div className="flex items-start gap-4 p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-400 transition-colors">
-                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center shrink-0">
-                    <GraduationCap className="w-7 h-7" />
+                <div className="p-6 sm:p-7 rounded-3xl bg-slate-50 dark:bg-slate-800/70 border-2 border-teal-500/40 dark:border-teal-500/30 shadow-md">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-2xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <Building2 className="w-7 h-7" />
+                    </div>
+                    <div>
+                      <h3 className="font-black text-xl sm:text-2xl text-slate-900 dark:text-white">
+                        {isEs ? 'Gestión Directiva y Secretaría Académica' : 'Leadership & Registry Management'}
+                      </h3>
+                      <span className="text-xs sm:text-sm font-bold text-teal-700 dark:text-teal-400">
+                        {isEs ? 'I.E. Félix Henao Botero • DANE 105001002345' : 'I.E. Félix Henao Botero • Official System'}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-black text-lg sm:text-xl text-slate-900 dark:text-white">
-                      {isEs ? 'Portal del Estudiante' : 'Student Portal'}
-                    </h3>
-                    <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-normal">
-                      {isEs 
-                        ? 'Carnet escolar oficial con código QR, notas periódicas, horario de clases y observador formativo.' 
-                        : 'Official digital ID with QR code, report cards, class schedule, and academic tracking.'}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="flex items-start gap-4 p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-amber-400 transition-colors">
-                  <div className="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center shrink-0">
-                    <Users className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-lg sm:text-xl text-slate-900 dark:text-white">
-                      {isEs ? 'Portal Familias y Acudientes' : 'Guardians & Families Portal'}
-                    </h3>
-                    <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-normal">
-                      {isEs 
-                        ? 'Registro protegido con código oficial ACUD-2026, seguimiento académico directo y circulares escolares.' 
-                        : 'Protected sign-up with official code ACUD-2026, student academic monitoring, and school notices.'}
-                    </p>
-                  </div>
-                </div>
+                  <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                    {isEs 
+                      ? 'Herramientas institucionales para la verificación y aprobación de solicitudes de cupo, consulta y auditoría documental, vinculación de acudientes legales y emisión de certificados académicos oficiales.' 
+                      : 'Institutional toolset for enrollment quota review, document audits, guardian linkage, and official academic certificate generation.'}
+                  </p>
 
-                <div className="flex items-start gap-4 p-5 sm:p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 shadow-xs hover:border-teal-400 transition-colors">
-                  <div className="w-14 h-14 rounded-2xl bg-teal-50 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center shrink-0">
-                    <Building2 className="w-7 h-7" />
-                  </div>
-                  <div>
-                    <h3 className="font-black text-lg sm:text-xl text-slate-900 dark:text-white">
-                      {isEs ? 'Portal Directivo y Administrativo' : 'Administrative & Staff Portal'}
-                    </h3>
-                    <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-normal">
-                      {isEs 
-                        ? 'Gestión institucional, validación documental, control de cupos y expedición de certificados oficiales.' 
-                        : 'Institutional management, document approval, spot quota allocation, and official certificate issuance.'}
-                    </p>
+                  <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-700/80 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span>{isEs ? 'Auditoría y conciliación SIMAT' : 'SIMAT audits and records'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span>{isEs ? 'Control de cupos y matrículas' : 'Quota and enrollment control'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span>{isEs ? 'Validación documental de expedientes' : 'Student file verification'}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-teal-600 dark:text-teal-400 shrink-0" />
+                      <span>{isEs ? 'Expedición de certificados oficiales' : 'Official certificate issuance'}</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -716,7 +703,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
             {/* Tarjeta de Autenticación */}
             <div className="lg:col-span-6 w-full max-w-lg mx-auto">
               <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-3 sm:p-4">
-                <AuthCard defaultMode="login" />
+                <AuthCard defaultMode="login" initialRole="admin" />
               </div>
             </div>
 
@@ -801,417 +788,255 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
       <footer 
         id="sedes" 
         ref={sedesSectionRef}
-        className="relative w-full bg-slate-950 text-slate-300 border-t border-slate-800/90 pt-10 sm:pt-14 pb-10 overflow-hidden select-none"
+        className="w-full bg-[#001e30] text-slate-200 border-t border-slate-800 pt-16 pb-12 text-base sm:text-lg text-left"
       >
-        {/* Línea superior decorativa con sutil gradiente institucional */}
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-teal-400/60 to-transparent" />
-
-        {/* Resplandores ambientales decorativos sutiles */}
-        <div className="absolute top-0 left-1/4 w-[500px] h-[250px] bg-teal-500/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 right-10 w-[450px] h-[250px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-[1700px] mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* =====================================================================
-              A. BANDA SUPERIOR DE ACCIONES RÁPIDAS Y ESTADO ACADÉMICO
-              ===================================================================== */}
-          <div className="mb-10 p-5 sm:p-6 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-xl backdrop-blur-md flex flex-col lg:flex-row items-center justify-between gap-5">
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3.5 text-center sm:text-left">
-              <div className="w-11 h-11 rounded-xl bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400 shrink-0 shadow-xs">
-                <GraduationCap className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-400">
-                    {isEs ? 'Portal Oficial' : 'Official Portal'} • EduMed Digital
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-10 pb-12 border-b border-slate-800/90">
+            
+            {/* Col 1: Identidad Institucional */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3.5">
+                <img 
+                  src={customLogoUrl} 
+                  alt="Escudo Institución Educativa Félix Henao Botero" 
+                  className="w-14 h-14 rounded-full object-cover border-2 border-amber-400 bg-white shrink-0"
+                  onError={(e) => {
+                    (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
+                  }}
+                />
+                <div>
+                  <span className="font-black text-white text-lg sm:text-xl block leading-tight">
+                    I.E. Félix Henao Botero
                   </span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-[10px] font-semibold">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    {isEs ? 'Año Escolar 2026 · Matrículas Abiertas' : 'School Year 2026 · Admissions Open'}
+                  <span className="text-sm sm:text-base text-teal-400 font-bold block mt-1">
+                    EduMed Digital • {isEs ? 'Sistema Educativo Oficial' : 'Official School System'}
                   </span>
                 </div>
-                <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
-                  {isEs ? 'Institución Educativa Félix Henao Botero' : 'Félix Henao Botero Educational Institution'}
-                </h3>
-                <p className="text-xs text-slate-400 mt-0.5 max-w-lg leading-relaxed">
-                  {isEs 
-                    ? 'Comuna 8 de Medellín • Educación pública incluyente, gratuita y con excelencia académica' 
-                    : 'Comuna 8, Medellín • Quality, free and inclusive public education'}
-                </p>
+              </div>
+              <p className="text-base text-slate-300 leading-relaxed">
+                {isEs
+                  ? 'Institución Educativa Oficial de carácter público en la Comuna 8 de Medellín. Comprometida con la formación integral, inclusión social y excelencia pedagógica.'
+                  : 'Official public educational institution in Medellín providing quality inclusive education and academic excellence.'}
+              </p>
+              <div className="p-4.5 rounded-2xl bg-slate-900/60 border border-slate-800 text-sm sm:text-base text-slate-300 space-y-1.5">
+                <div><strong>DANE:</strong> 105001002345</div>
+                <div><strong>NIT:</strong> 890980123-1</div>
+                <div><strong>Código ICFES:</strong> 014522</div>
+                <div><strong>{isEs ? 'Resolución:' : 'Approval:'}</strong> Alcaldía de Medellín N° 16212</div>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2 w-full lg:w-auto">
-              <button
-                type="button"
-                onClick={scrollToAuthSection}
-                className="w-full sm:w-auto px-4 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-              >
-                <Users className="w-3.5 h-3.5" />
-                <span>{isEs ? 'Ingreso a Portales' : 'Portals Access'}</span>
-              </button>
+            {/* Col 2: Ubicaciones Oficiales de las Sedes */}
+            <div className="space-y-4">
+              <h4 className="font-black text-white uppercase tracking-wider text-base sm:text-lg mb-3 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-teal-400" />
+                <span>{isEs ? 'Sedes Institucionales' : 'Official Campuses'}</span>
+              </h4>
+              
+              {/* Sede Principal */}
+              <div className="p-4.5 rounded-2xl bg-slate-900/50 border border-slate-800/80 space-y-1.5">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-teal-400 shrink-0 mt-1" />
+                  <div>
+                    <strong className="text-white block text-base sm:text-lg font-bold">
+                      {isEs ? 'Sede Principal (Secundaria y Media Técnica)' : 'Main Campus (Middle & High School)'}
+                    </strong>
+                    <p className="text-sm sm:text-base text-slate-300 mt-1">
+                      Calle 52 # 18-40, Barrio Enciso - Los Ángeles / Boston
+                    </p>
+                    <span className="text-xs sm:text-sm text-teal-400 font-semibold block mt-0.5">
+                      {isEs ? 'Comuna 8 • Medellín, Antioquia' : 'Comuna 8 • Medellín, Colombia'}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab('status');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white font-medium text-xs border border-slate-700 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-              >
-                <FileCheck2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span>{isEs ? 'Consultar Matrícula' : 'Enrollment Status'}</span>
-              </button>
+              {/* Sede Infantil */}
+              <div className="p-4.5 rounded-2xl bg-slate-900/50 border border-slate-800/80 space-y-1.5">
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-amber-400 shrink-0 mt-1" />
+                  <div>
+                    <strong className="text-white block text-base sm:text-lg font-bold">
+                      {isEs ? 'Sede Infantil (Preescolar y Primaria)' : 'Elementary Campus (Preschool & Primary)'}
+                    </strong>
+                    <p className="text-sm sm:text-base text-slate-300 mt-1">
+                      Carrera 22 # 54-15, Barrio La Libertad
+                    </p>
+                    <span className="text-xs sm:text-sm text-amber-400 font-semibold block mt-0.5">
+                      {isEs ? 'Comuna 8 • Medellín, Antioquia' : 'Comuna 8 • Medellín, Colombia'}
+                    </span>
+                  </div>
+                </div>
+              </div>
 
+              <div className="flex items-start gap-2.5 pt-1 text-sm sm:text-base text-slate-300">
+                <Clock className="w-4.5 h-4.5 text-teal-400 shrink-0 mt-0.5" />
+                <span>{isEs ? 'Lunes a Viernes: 7:30 a.m. - 12:30 p.m. / 1:30 p.m. - 4:30 p.m.' : 'Monday to Friday: 7:30 a.m. - 12:30 p.m. / 1:30 p.m. - 4:30 p.m.'}</span>
+              </div>
+            </div>
+
+            {/* Col 3: Políticas y Legal */}
+            <div className="space-y-4">
+              <h4 className="font-black text-white uppercase tracking-wider text-base sm:text-lg mb-3 flex items-center gap-2">
+                <Scale className="w-5 h-5 text-teal-400" />
+                <span>{isEs ? 'Información y Políticas' : 'Information & Policies'}</span>
+              </h4>
+              <ul className="space-y-3.5 text-base sm:text-lg">
+                <li>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsPrivacyModalOpen(true);
+                    }}
+                    className="text-slate-300 hover:text-teal-400 transition-colors flex items-center gap-2.5 cursor-pointer text-left"
+                  >
+                    <ShieldCheck className="w-4.5 h-4.5 text-teal-400 shrink-0" />
+                    <span>{isEs ? 'Política de Privacidad y Datos' : 'Privacy & Data Protection Policy'}</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsTermsModalOpen(true);
+                    }}
+                    className="text-slate-300 hover:text-teal-400 transition-colors flex items-center gap-2.5 cursor-pointer text-left"
+                  >
+                    <FileCheck2 className="w-4.5 h-4.5 text-teal-400 shrink-0" />
+                    <span>{isEs ? 'Términos y Condiciones de Uso' : 'Terms & Conditions of Use'}</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setIsLegalModalOpen(true);
+                    }}
+                    className="text-slate-300 hover:text-teal-400 transition-colors flex items-center gap-2.5 cursor-pointer text-left"
+                  >
+                    <Scale className="w-4.5 h-4.5 text-teal-400 shrink-0" />
+                    <span>{isEs ? 'Aviso Legal e Identificación' : 'Legal Notice & School ID'}</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={scrollToBenefitsSection}
+                    className="text-slate-300 hover:text-teal-400 transition-colors flex items-center gap-2.5 cursor-pointer text-left"
+                  >
+                    <Sparkles className="w-4.5 h-4.5 text-teal-400 shrink-0" />
+                    <span>{isEs ? 'Beneficios de la Plataforma' : 'Platform Benefits'}</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={scrollToAuthSection}
+                    className="text-slate-300 hover:text-teal-400 transition-colors flex items-center gap-2.5 cursor-pointer text-left"
+                  >
+                    <Users className="w-4.5 h-4.5 text-teal-400 shrink-0" />
+                    <span>{isEs ? 'Acceso a Portales' : 'Portals Access'}</span>
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Col 4: Atención y Soporte Técnico */}
+            <div className="space-y-4">
+              <h4 className="font-black text-white uppercase tracking-wider text-base sm:text-lg mb-3 flex items-center gap-2">
+                <HelpCircle className="w-5 h-5 text-teal-400" />
+                <span>{isEs ? 'Atención y Soporte Técnico' : 'Support & Technical Help'}</span>
+              </h4>
+              
+              <p className="text-base text-slate-300 leading-relaxed">
+                {isEs 
+                  ? '¿Tienes dudas sobre matrícula, código de acudiente o soporte técnico? Escríbenos o abre nuestra ventana emergente de contacto.'
+                  : 'Questions about admission, guardian code, or technical issues? Write to us or open our contact popup window.'}
+              </p>
+
+              <div className="space-y-3 pt-1 text-slate-300 text-base">
+                <div className="flex items-center gap-2.5">
+                  <Mail className="w-5 h-5 text-teal-400 shrink-0" />
+                  <a href="mailto:digitaledumed@gmail.com" className="hover:text-teal-300 font-bold text-white text-base sm:text-lg">
+                    digitaledumed@gmail.com
+                  </a>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <Phone className="w-5 h-5 text-teal-400 shrink-0" />
+                  <span className="text-base">PBX: (604) 284 56 78</span>
+                </div>
+              </div>
+
+              {/* Botón para abrir Ventana Emergente de Contacto con Soporte */}
               <button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   setIsContactModalOpen(true);
                 }}
-                className="w-full sm:w-auto px-3.5 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium text-xs border border-slate-700/70 transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                className="w-full mt-4 px-6 py-4 rounded-2xl bg-teal-600 hover:bg-teal-500 text-white font-black text-base shadow-lg transition-all flex items-center justify-center gap-2.5 cursor-pointer active:scale-98"
               >
-                <Send className="w-3.5 h-3.5 text-teal-400" />
-                <span>{isEs ? 'Mesa de Ayuda' : 'Help Desk'}</span>
+                <Send className="w-4.5 h-4.5" />
+                <span>{isEs ? 'Contactar a Soporte (Ventana Emergente)' : 'Contact Support (Popup Window)'}</span>
               </button>
             </div>
-          </div>
-
-          {/* =====================================================================
-              B. GRID PRINCIPAL DE 4 COLUMNAS ESTÉTICAS, ESTRUCTURADAS Y BALANCEADAS
-              ===================================================================== */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-7 lg:gap-8 pb-10 border-b border-slate-800/80">
-            
-            {/* Columna 1 (4 cols): Identidad Institucional y Acreditación */}
-            <div className="lg:col-span-4 space-y-3.5">
-              <div className="flex items-center gap-3">
-                <div className="relative shrink-0">
-                  <img 
-                    src={customLogoUrl} 
-                    alt="Escudo Institución Educativa Félix Henao Botero" 
-                    className="w-11 h-11 rounded-full object-cover border-2 border-amber-400 bg-white shadow-sm ring-1 ring-amber-400/20"
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).src = '/school_logo.jpg';
-                    }}
-                  />
-                  <span className="absolute -bottom-1 -right-1 px-1 py-0.2 rounded bg-teal-600 text-white font-bold text-[8.5px] uppercase tracking-wider border border-white/80 shadow-xs">
-                    OFICIAL
-                  </span>
-                </div>
-                <div>
-                  <span className="font-bold text-white text-sm sm:text-base block leading-tight tracking-tight">
-                    I.E. Félix Henao Botero
-                  </span>
-                  <span className="text-[11px] font-medium text-teal-400 block mt-0.5">
-                    {isEs ? 'Alcaldía de Medellín · Secretaría de Educación' : 'Medellín City Hall · Education Ministry'}
-                  </span>
-                </div>
-              </div>
-
-              <p className="text-xs text-slate-300/80 leading-relaxed font-normal">
-                {isEs
-                  ? 'Institución educativa oficial pública de Medellín comprometida con la formación humanística, técnica y ciudadana. Transformando el futuro de nuestros estudiantes y familias en la Comuna 8.'
-                  : 'Official public educational institution in Medellín committed to holistic, technical, and civic development for students and families in Comuna 8.'}
-              </p>
-
-              {/* Ficha técnica oficial con números y etiquetas claras */}
-              <div className="p-3 rounded-xl bg-slate-900/70 border border-slate-800/80 space-y-2">
-                <div className="flex items-center justify-between border-b border-slate-800/70 pb-1.5">
-                  <span className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">
-                    {isEs ? 'Ficha de Registro Oficial' : 'Official Registry Data'}
-                  </span>
-                  <span className="text-[9.5px] font-semibold text-teal-400 flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3" />
-                    Vigilado MEN
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/50">
-                    <span className="text-[9px] text-slate-400 uppercase font-medium tracking-wider block">DANE</span>
-                    <span className="font-mono text-[11px] font-bold text-slate-200">105001002345</span>
-                  </div>
-                  <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/50">
-                    <span className="text-[9px] text-slate-400 uppercase font-medium tracking-wider block">NIT Oficial</span>
-                    <span className="font-mono text-[11px] font-bold text-slate-200">890980123-1</span>
-                  </div>
-                  <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/50">
-                    <span className="text-[9px] text-slate-400 uppercase font-medium tracking-wider block">Código ICFES</span>
-                    <span className="font-mono text-[11px] font-bold text-slate-200">014522</span>
-                  </div>
-                  <div className="bg-slate-950/60 p-2 rounded-lg border border-slate-800/50">
-                    <span className="text-[9px] text-slate-400 uppercase font-medium tracking-wider block">Aprobación</span>
-                    <span className="font-bold text-[11px] text-teal-400 truncate block">Res. N° 16212</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Columna 2 (3 cols): Sedes Oficiales y Horarios */}
-            <div className="lg:col-span-3 space-y-3">
-              <div className="flex items-center gap-2 text-white">
-                <Building2 className="w-4 h-4 text-teal-400" />
-                <h4 className="font-bold uppercase tracking-wider text-xs">
-                  {isEs ? 'Sedes Institucionales' : 'Campuses & Locations'}
-                </h4>
-              </div>
-
-              {/* Sede Principal */}
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/70 hover:border-teal-500/40 transition-colors space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                    {isEs ? 'Sede Principal' : 'Main Campus'}
-                  </span>
-                  <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-md bg-teal-500/10 text-teal-300 border border-teal-500/30">
-                    {isEs ? 'Bachillerato' : 'High School'}
-                  </span>
-                </div>
-                <p className="text-[11.5px] text-slate-300 leading-snug pl-5">
-                  Calle 52 # 18-40, Barrio Enciso - Boston
-                </p>
-                <span className="text-[10px] text-slate-400 block pl-5">
-                  Comuna 8 • Medellín, Antioquia
-                </span>
-              </div>
-
-              {/* Sede Infantil */}
-              <div className="p-3 rounded-xl bg-slate-900/60 border border-slate-800/70 hover:border-amber-500/40 transition-colors space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-white flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                    {isEs ? 'Sede Infantil' : 'Elementary Campus'}
-                  </span>
-                  <span className="text-[9.5px] font-semibold px-1.5 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                    {isEs ? 'Primaria' : 'Elementary'}
-                  </span>
-                </div>
-                <p className="text-[11.5px] text-slate-300 leading-snug pl-5">
-                  Carrera 22 # 54-15, Barrio La Libertad
-                </p>
-                <span className="text-[10px] text-slate-400 block pl-5">
-                  Comuna 8 • Medellín, Antioquia
-                </span>
-              </div>
-
-              {/* Horario de Atención */}
-              <div className="p-2.5 rounded-xl bg-slate-900/40 border border-slate-800/50 flex items-start gap-2.5 text-slate-300">
-                <Clock className="w-3.5 h-3.5 text-teal-400 shrink-0 mt-0.5" />
-                <div>
-                  <span className="font-semibold text-white block text-[10.5px]">
-                    {isEs ? 'Atención en Secretaría:' : 'Office Hours:'}
-                  </span>
-                  <p className="text-[10px] text-slate-400 leading-relaxed mt-0.5">
-                    {isEs 
-                      ? 'Lunes a Viernes: 7:30 a.m. - 12:30 p.m. / 1:30 p.m. - 4:30 p.m.' 
-                      : 'Mon to Fri: 7:30 a.m. - 12:30 p.m. / 1:30 p.m. - 4:30 p.m.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Columna 3 (2 cols): Navegación & Portales */}
-            <div className="lg:col-span-2 space-y-3">
-              <div className="flex items-center gap-2 text-white">
-                <GraduationCap className="w-4 h-4 text-teal-400" />
-                <h4 className="font-bold uppercase tracking-wider text-xs">
-                  {isEs ? 'Portales & Enlaces' : 'Portals & Links'}
-                </h4>
-              </div>
-
-              <nav className="flex flex-col space-y-0.5 text-xs">
-                <button
-                  type="button"
-                  onClick={scrollToHero}
-                  className="w-full text-left py-1.5 px-2 rounded-lg text-slate-300 hover:text-teal-300 hover:bg-slate-900/60 transition-all flex items-center gap-2 cursor-pointer group"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 group-hover:text-teal-400 transition-all shrink-0" />
-                  <span className="text-xs font-normal">{isEs ? 'Inicio del Portal' : 'Portal Home'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={scrollToAuthSection}
-                  className="w-full text-left py-1.5 px-2 rounded-lg text-slate-300 hover:text-teal-300 hover:bg-slate-900/60 transition-all flex items-center gap-2 cursor-pointer group"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 group-hover:text-teal-400 transition-all shrink-0" />
-                  <span className="text-xs font-normal">{isEs ? 'Ingreso / Registro' : 'Login / Register'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('status');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-full text-left py-1.5 px-2 rounded-lg text-slate-300 hover:text-teal-300 hover:bg-slate-900/60 transition-all flex items-center gap-2 cursor-pointer group"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 group-hover:text-teal-400 transition-all shrink-0" />
-                  <span className="text-xs font-normal">{isEs ? 'Consulta Matrícula' : 'Enrollment Status'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('beneficios');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-full text-left py-1.5 px-2 rounded-lg text-slate-300 hover:text-teal-300 hover:bg-slate-900/60 transition-all flex items-center gap-2 cursor-pointer group"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 group-hover:text-teal-400 transition-all shrink-0" />
-                  <span className="text-xs font-normal">{isEs ? 'Beneficios (PAE)' : 'School Benefits'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('institucion');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-full text-left py-1.5 px-2 rounded-lg text-slate-300 hover:text-teal-300 hover:bg-slate-900/60 transition-all flex items-center gap-2 cursor-pointer group"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 group-hover:text-teal-400 transition-all shrink-0" />
-                  <span className="text-xs font-normal">{isEs ? 'Conoce la Institución' : 'About the School'}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveTab('soporte');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="w-full text-left py-1.5 px-2 rounded-lg text-slate-300 hover:text-teal-300 hover:bg-slate-900/60 transition-all flex items-center gap-2 cursor-pointer group"
-                >
-                  <ChevronRight className="w-3 h-3 text-slate-500 group-hover:translate-x-0.5 group-hover:text-teal-400 transition-all shrink-0" />
-                  <span className="text-xs font-normal">{isEs ? 'Soporte y Ayuda' : 'Support & Help'}</span>
-                </button>
-              </nav>
-            </div>
-
-            {/* Columna 4 (3 cols): Mesa de Ayuda y Contacto Oficial */}
-            <div className="lg:col-span-3">
-              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-slate-950 border border-teal-500/30 shadow-lg space-y-3.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-white">
-                    <HelpCircle className="w-4 h-4 text-teal-400" />
-                    <h4 className="font-bold uppercase tracking-wider text-xs">
-                      {isEs ? 'Mesa de Ayuda' : 'Help & Support'}
-                    </h4>
-                  </div>
-                  <span className="flex items-center gap-1.5 text-[9.5px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    Activa
-                  </span>
-                </div>
-
-                <p className="text-[11.5px] text-slate-300/80 leading-relaxed">
-                  {isEs 
-                    ? '¿Dudas con matrículas, código de acudiente o radicado? Contáctanos a través de los canales oficiales:' 
-                    : 'Questions about enrollments, guardian codes, or documents? Contact us directly:'}
-                </p>
-
-                <div className="space-y-1.5 text-xs">
-                  <a 
-                    href="mailto:digitaledumed@gmail.com" 
-                    className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/80 flex items-center gap-2 text-slate-200 hover:text-teal-300 hover:border-teal-500/50 transition-colors"
-                  >
-                    <Mail className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                    <span className="font-medium text-[11px] truncate">digitaledumed@gmail.com</span>
-                  </a>
-
-                  <a 
-                    href="tel:+576042845678"
-                    className="p-2 rounded-lg bg-slate-800/80 border border-slate-700/80 flex items-center gap-2 text-slate-200 hover:text-teal-300 hover:border-teal-500/50 transition-colors"
-                  >
-                    <Phone className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-                    <span className="font-medium text-[11px]">PBX: (604) 284 56 78</span>
-                  </a>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsContactModalOpen(true);
-                  }}
-                  className="w-full py-2 px-3.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-semibold text-xs shadow-xs transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>{isEs ? 'Radicar Consulta / Soporte' : 'Open Support Ticket'}</span>
-                </button>
-              </div>
-            </div>
 
           </div>
 
-          {/* =====================================================================
-              C. CINTA DE CUMPLIMIENTO LEGAL Y TRANSPARENCIA
-              ===================================================================== */}
-          <div className="py-4 border-b border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
-            <div className="flex items-center gap-2 text-slate-400">
-              <ShieldCheck className="w-3.5 h-3.5 text-teal-400 shrink-0" />
-              <span>{isEs ? 'Garantía de Privacidad y Cumplimiento Normativo Escolar:' : 'Privacy Assurance & School Compliance:'}</span>
+          {/* Legal / Copyright inferior */}
+          <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs sm:text-sm text-slate-400">
+            <div>
+              © {new Date().getFullYear()} Institución Educativa Félix Henao Botero • Sistema Oficial EduMed Digital. {isEs ? 'Todos los derechos reservados.' : 'All rights reserved.'}
             </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-5">
+            <div className="flex items-center gap-3">
               <button 
                 type="button" 
                 onClick={(e) => {
                   e.preventDefault();
                   setIsPrivacyModalOpen(true);
                 }} 
-                className="hover:text-teal-300 transition-colors cursor-pointer py-1"
+                className="hover:text-teal-400 transition-colors cursor-pointer"
               >
-                {isEs ? 'Protección de Datos (Ley 1581)' : 'Privacy Policy'}
+                {isEs ? 'Privacidad' : 'Privacy'}
               </button>
-              <span className="text-slate-700 hidden sm:inline">·</span>
+              <span>·</span>
               <button 
                 type="button" 
                 onClick={(e) => {
                   e.preventDefault();
                   setIsTermsModalOpen(true);
                 }} 
-                className="hover:text-teal-300 transition-colors cursor-pointer py-1"
+                className="hover:text-teal-400 transition-colors cursor-pointer"
               >
-                {isEs ? 'Términos de Servicio' : 'Terms of Service'}
+                {isEs ? 'Términos' : 'Terms'}
               </button>
-              <span className="text-slate-700 hidden sm:inline">·</span>
+              <span>·</span>
               <button 
                 type="button" 
                 onClick={(e) => {
                   e.preventDefault();
                   setIsLegalModalOpen(true);
                 }} 
-                className="hover:text-teal-300 transition-colors cursor-pointer py-1"
+                className="hover:text-teal-400 transition-colors cursor-pointer"
               >
-                {isEs ? 'Aviso Legal Institucional' : 'Legal Notice'}
+                {isEs ? 'Aviso Legal' : 'Legal'}
+              </button>
+              <span>·</span>
+              <button 
+                type="button" 
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsContactModalOpen(true);
+                }} 
+                className="hover:text-teal-400 transition-colors cursor-pointer font-bold text-teal-400"
+              >
+                digitaledumed@gmail.com
               </button>
             </div>
-          </div>
-
-          {/* =====================================================================
-              D. SUB-FOOTER CON COPYRIGHT Y BOTÓN ACCESIBLE VOLVER ARRIBA
-              ===================================================================== */}
-          <div className="pt-5 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] text-slate-400">
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 text-center sm:text-left">
-              <span>
-                © {new Date().getFullYear()} Institución Educativa Félix Henao Botero · EduMed Digital.
-              </span>
-              <span className="hidden sm:inline text-slate-700">•</span>
-              <span className="text-slate-400">
-                {isEs ? 'Medellín, Antioquia, Colombia' : 'Medellín, Colombia'}
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={scrollToHero}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-teal-400 hover:text-teal-300 border border-slate-800 hover:border-teal-500/40 text-[11px] font-medium transition-all cursor-pointer shadow-xs active:scale-95"
-              title={isEs ? 'Volver al inicio de la página' : 'Back to top'}
-              aria-label={isEs ? 'Volver arriba' : 'Back to top'}
-            >
-              <ArrowUp className="w-3 h-3" />
-              <span>{isEs ? 'Volver arriba' : 'Back to top'}</span>
-            </button>
           </div>
 
         </div>
@@ -1341,7 +1166,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                       >
                         <option value="guardian">{isEs ? 'Acudiente / Familia' : 'Guardian / Family'}</option>
                         <option value="student">{isEs ? 'Estudiante' : 'Student'}</option>
-                        <option value="staff">{isEs ? 'Docente / Administrativo' : 'Teacher / Administrative'}</option>
+                        <option value="staff">{isEs ? 'Administrativo / Directivo' : 'Administrative / Leadership'}</option>
                         <option value="applicant">{isEs ? 'Aspirante / Matrícula' : 'Applicant / Admission'}</option>
                         <option value="other">{isEs ? 'Otro' : 'Other'}</option>
                       </select>
@@ -1380,13 +1205,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                     />
                   </div>
 
-                  <div className="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                  <div className="pt-2 flex items-center justify-between gap-3">
                     <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-                      {isEs ? 'Soporte oficial:' : 'Official support:'} <strong className="text-teal-600 dark:text-teal-400 break-all">digitaledumed@gmail.com</strong>
+                      {isEs ? 'Soporte oficial:' : 'Official support:'} <strong className="text-teal-600 dark:text-teal-400">digitaledumed@gmail.com</strong>
                     </span>
                     <button
                       type="submit"
-                      className="min-h-[44px] px-7 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm sm:text-base shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+                      className="px-7 py-3 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm sm:text-base shadow-md transition-all flex items-center gap-2 cursor-pointer"
                     >
                       <Send className="w-4 h-4" />
                       <span>{isEs ? 'Enviar Mensaje' : 'Send Message'}</span>
@@ -1451,8 +1276,8 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
                 </h4>
                 <p>
                   {isEs 
-                    ? 'El tratamiento de datos personales de menores responde al interés superior del estudiante, con fines formativos, matrícula oficial y comunicación con acudientes autorizados.'
-                    : 'Personal data handling of minors strictly adheres to the best interests of the student, serving exclusively educational, official enrollment, and verified guardian communication purposes.'}
+                    ? 'El tratamiento de datos personales de menores responde al interés superior del estudiante, con fines formativos, registro SIMAT y comunicación con acudientes autorizados.'
+                    : 'Personal data handling of minors strictly adheres to the best interests of the student, serving exclusively educational, SIMAT registration, and verified guardian communication purposes.'}
                 </p>
               </section>
 
@@ -1473,7 +1298,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               <button
                 type="button"
                 onClick={() => setIsPrivacyModalOpen(false)}
-                className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer flex items-center justify-center"
+                className="px-6 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-500 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer"
               >
                 {isEs ? 'Entendido y Cerrar' : 'Done & Close'}
               </button>
@@ -1544,7 +1369,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               <button
                 type="button"
                 onClick={() => setIsTermsModalOpen(false)}
-                className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer flex items-center justify-center"
+                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer"
               >
                 {isEs ? 'Aceptar y Cerrar' : 'Accept & Close'}
               </button>
@@ -1612,7 +1437,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = () => {
               <button
                 type="button"
                 onClick={() => setIsLegalModalOpen(false)}
-                className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer dark:bg-slate-700 dark:hover:bg-slate-600 flex items-center justify-center"
+                className="px-6 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm sm:text-base transition-colors cursor-pointer dark:bg-slate-700 dark:hover:bg-slate-600"
               >
                 {isEs ? 'Cerrar' : 'Close'}
               </button>
