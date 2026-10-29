@@ -38,7 +38,9 @@ import { getDefaultAvatarByGender } from '../../utils/avatarUtils';
 import { 
   isFirebaseConfigured, 
   sendFirebasePasswordResetEmail, 
-  ensureFirebaseInitialized 
+  ensureFirebaseInitialized,
+  registerWithFirebase,
+  getFirebaseDiagnostics
 } from '../../config/firebase';
 
 interface AuthCardProps {
@@ -335,7 +337,23 @@ export const AuthCard: React.FC<AuthCardProps> = ({
     }
 
     setIsLoading(true);
-    setTimeout(() => {
+
+    (async () => {
+      let fbNotice = '';
+      if (isFirebaseConfigured()) {
+        try {
+          const fbRes = await registerWithFirebase(cleanRegEmail, regPassword);
+          if (!fbRes.success) {
+            setIsLoading(false);
+            setErrorMsg(fbRes.message);
+            return;
+          }
+          fbNotice = fbRes.message;
+        } catch (fbErr: any) {
+          console.warn('Firebase registration error:', fbErr);
+        }
+      }
+
       const res = register({
         name: regName,
         email: cleanRegEmail,
@@ -358,10 +376,13 @@ export const AuthCard: React.FC<AuthCardProps> = ({
           setErrorMsg(res.message || (language === 'es' ? 'Error al registrar usuario.' : 'Registration failed.'));
         }
       } else {
-        setSuccessMsg(language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!');
+        setSuccessMsg(
+          fbNotice ||
+          (language === 'es' ? '¡Cuenta creada con éxito! Bienvenido.' : 'Account created successfully!')
+        );
         if (onSuccess) onSuccess();
       }
-    }, 450);
+    })();
   };
 
   const handleRequestRecoveryCode = async (e?: React.FormEvent) => {
@@ -858,6 +879,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({
                       ? 'Por favor configure las variables de entorno VITE_FIREBASE_* en el archivo .env con las credenciales de Firebase Console para enviar correos reales.'
                       : 'Please configure VITE_FIREBASE_* environment variables in .env file with Firebase Console credentials to send real emails.'}
                   </p>
+                  {getFirebaseDiagnostics().missingRequired.length > 0 && (
+                    <p className="text-[10px] text-amber-700/80 dark:text-amber-400/80 pt-1 border-t border-amber-200/60 dark:border-amber-800/60 font-mono">
+                      {language === 'es' ? 'Variables pendientes: ' : 'Pending variables: '}
+                      {getFirebaseDiagnostics().missingRequired.join(', ')}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

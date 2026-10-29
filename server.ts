@@ -19,24 +19,91 @@ app.use(express.json());
 
 // Public Firebase config extraction for runtime delivery
 function getFirebasePublicConfig() {
-  const apiKey = (process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || '').trim();
-  const authDomain = (process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN || '').trim();
-  const projectId = (process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || '').trim();
-  const storageBucket = (process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || '').trim();
-  const messagingSenderId = (process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || '').trim();
-  const appId = (process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || '').trim();
-  const measurementId = (process.env.VITE_FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID || '').trim();
+  let apiKey = (process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || '').trim();
+  let authDomain = (process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN || '').trim();
+  let projectId = (process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || '').trim();
+  let storageBucket = (process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || '').trim();
+  let messagingSenderId = (process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || '').trim();
+  let appId = (process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || '').trim();
+  let measurementId = (process.env.VITE_FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID || '').trim();
 
-  const isConfigured = Boolean(
-    apiKey &&
-    projectId &&
-    !apiKey.startsWith('your-') &&
-    !projectId.startsWith('your-') &&
-    !apiKey.includes('placeholder')
-  );
+  // Also check candidate config files in workspace if env vars were not passed directly
+  if (!apiKey || !projectId) {
+    // 1. Check TypeScript source file
+    const tsFile = path.resolve(__dirname, 'src', 'config', 'firebaseCredentials.ts');
+    if (fs.existsSync(tsFile)) {
+      try {
+        const text = fs.readFileSync(tsFile, 'utf-8');
+        const getVal = (key: string) => {
+          const match = text.match(new RegExp(`${key}:\\s*['"\`]([^'"\`]*)['"\`]`));
+          return match ? match[1].trim() : '';
+        };
+        apiKey = apiKey || getVal('apiKey');
+        authDomain = authDomain || getVal('authDomain');
+        projectId = projectId || getVal('projectId');
+        storageBucket = storageBucket || getVal('storageBucket');
+        messagingSenderId = messagingSenderId || getVal('messagingSenderId');
+        appId = appId || getVal('appId');
+        measurementId = measurementId || getVal('measurementId');
+      } catch {
+        // ignore
+      }
+    }
+
+    // 2. Check JSON candidate files
+    const candidateFiles = [
+      path.resolve(__dirname, 'firebase-applet-config.json'),
+      path.resolve(__dirname, 'firebase-config.json'),
+      path.resolve(__dirname, 'src', 'config', 'firebase-credentials.json'),
+      path.resolve(__dirname, 'src', 'config', 'firebaseConfig.json'),
+    ];
+    for (const f of candidateFiles) {
+      if (fs.existsSync(f)) {
+        try {
+          const raw = JSON.parse(fs.readFileSync(f, 'utf-8'));
+          apiKey = apiKey || (raw.apiKey || raw.VITE_FIREBASE_API_KEY || '').trim();
+          authDomain = authDomain || (raw.authDomain || raw.VITE_FIREBASE_AUTH_DOMAIN || '').trim();
+          projectId = projectId || (raw.projectId || raw.VITE_FIREBASE_PROJECT_ID || '').trim();
+          storageBucket = storageBucket || (raw.storageBucket || raw.VITE_FIREBASE_STORAGE_BUCKET || '').trim();
+          messagingSenderId = messagingSenderId || (raw.messagingSenderId || raw.VITE_FIREBASE_MESSAGING_SENDER_ID || '').trim();
+          appId = appId || (raw.appId || raw.VITE_FIREBASE_APP_ID || '').trim();
+          measurementId = measurementId || (raw.measurementId || raw.VITE_FIREBASE_MEASUREMENT_ID || '').trim();
+          if (apiKey && projectId) break;
+        } catch {
+          // ignore corrupted JSON file
+        }
+      }
+    }
+  }
+
+  const hasApiKey = Boolean(apiKey && !apiKey.startsWith('your-') && !apiKey.startsWith('TU_') && !apiKey.includes('placeholder'));
+  const hasAuthDomain = Boolean(authDomain);
+  const hasProjectId = Boolean(projectId && !projectId.startsWith('your-') && !projectId.startsWith('tu-') && !projectId.includes('placeholder'));
+  const hasStorageBucket = Boolean(storageBucket);
+  const hasMessagingSenderId = Boolean(messagingSenderId);
+  const hasAppId = Boolean(appId);
+
+  const isConfigured = Boolean(hasApiKey && hasProjectId);
+
+  const missing: string[] = [];
+  if (!hasApiKey) missing.push('VITE_FIREBASE_API_KEY');
+  if (!hasProjectId) missing.push('VITE_FIREBASE_PROJECT_ID');
+  if (!hasAuthDomain) missing.push('VITE_FIREBASE_AUTH_DOMAIN');
+  if (!hasStorageBucket) missing.push('VITE_FIREBASE_STORAGE_BUCKET');
+  if (!hasMessagingSenderId) missing.push('VITE_FIREBASE_MESSAGING_SENDER_ID');
+  if (!hasAppId) missing.push('VITE_FIREBASE_APP_ID');
 
   return {
     configured: isConfigured,
+    variables: {
+      apiKey: hasApiKey,
+      authDomain: hasAuthDomain,
+      projectId: hasProjectId,
+      storageBucket: hasStorageBucket,
+      messagingSenderId: hasMessagingSenderId,
+      appId: hasAppId,
+    },
+    missingRequired: missing,
     config: isConfigured ? {
       apiKey,
       authDomain: authDomain || (projectId ? `${projectId}.firebaseapp.com` : undefined),
